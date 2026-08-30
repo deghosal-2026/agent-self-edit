@@ -20,11 +20,11 @@
 
 #### Packaging
 
-| # | Task | Build (files) | Behavior + edge cases | Feature | Verify | Status |
-|---|------|---------------|----------------------|---------|--------|--------|
-| 1 | pyproject.toml | `pyproject.toml` | Package name `agent-self-edit`; version, description, author, license, Python version, dependencies, optional dependencies, entry points, build system | — | `python -m build` succeeds; `twine check` passes | [#69](https://github.com/deghosal-2026/agent-self-edit/issues/69) · ⬜ |
-| 2 | PyPI publish | — | `twine upload dist/*`; PyPI project page with README, links to GitHub, docs, changelog | — | `pip install agent-self-edit` works from PyPI | [#69](https://github.com/deghosal-2026/agent-self-edit/issues/69) · ⬜ |
-| 3 | Clean venv install test | `tests/test_release.py` | Clean virtualenv, `pip install agent-self-edit`, verify CLI commands work | — | install succeeds; CLI accessible | [#69](https://github.com/deghosal-2026/agent-self-edit/issues/69) · ⬜ |
+| # | Task | Build (files) | Behavior + edge cases | Feature | Design Ref | Verify | Status |
+|---|------|---------------|----------------------|---------|------------|--------|--------|
+| 1 | pyproject.toml | `pyproject.toml` | Package name `agent-self-edit`; version, description, author, license, Python version, dependencies, optional dependencies, entry points, build system | — | [D11](../../design/promotion-gate-design.md) | `python -m build` succeeds; `twine check` passes | [#69](https://github.com/deghosal-2026/agent-self-edit/issues/69) · ⬜ |
+| 2 | PyPI publish | — | `twine upload dist/*`; PyPI project page with README, links to GitHub, docs, changelog | — | [D11](../../design/release-plan.md) | `pip install agent-self-edit` works from PyPI | [#69](https://github.com/deghosal-2026/agent-self-edit/issues/69) · ⬜ |
+| 3 | Clean venv install test | `tests/test_release.py` | Clean virtualenv, `pip install agent-self-edit`, verify CLI commands work | — | [D11](../../design/release-plan.md) | install succeeds; CLI accessible | [#69](https://github.com/deghosal-2026/agent-self-edit/issues/69) · ⬜ |
 
 #### Docker
 
