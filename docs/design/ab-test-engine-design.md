@@ -2,6 +2,45 @@
 
 > How the A/B test engine works end-to-end: data flow, task runner, scoring, statistical analysis, and operational concerns.
 
+## 0. A/B Testing vs Field Testing — How to Conceptualize This
+
+**A/B testing is a subset of field testing, not the same thing.**
+
+| Concept | What it is | Analogy |
+|---------|------------|---------|
+| **A/B test engine** | A component that compares prompt A vs prompt B and tells you which is better, with statistical confidence. | A scale that tells you which object is heavier. |
+| **Field test** | The full end-to-end validation of the entire system. Does the loop work? Does the agent improve over 10 iterations? Do guardrails catch bad edits? Does Docker work? | A factory quality inspection that checks the scale is calibrated, the assembly line works, safety mechanisms engage, and the final product ships. |
+
+The A/B test engine is used **inside** the field test, but the field test covers much more than just A/B testing:
+
+```
+Field Test (M10)
+│
+├── Validate the A/B test engine itself (calibration + integration)
+│   ├── Bootstrap CI calibration: does the 95% CI actually cover the true mean 95% of the time?
+│   ├── Permutation test calibration: are p-values uniform under the null?
+│   ├── Known-better prompt: does the engine correctly identify the winner?
+│   └── Known-identical prompts: does the engine return "inconclusive"?
+│
+├── Validate the full self-improvement loop (uses A/B test engine internally)
+│   ├── Iteration 1: traces → analyze → A/B test → gate → promote or reject
+│   ├── Iteration 2: traces → analyze → A/B test → gate → promote or reject
+│   ├── ... 10 iterations total
+│   └── Measure: accuracy improvement, guardrail pass rate, cost per iteration
+│
+├── Validate guardrails (independent of A/B test engine)
+│   ├── Inject 5 intentionally bad edits → verify gate catches all 5
+│   └── Stress test with 100 random edits → verify no crashes
+│
+├── Validate rollback, Docker, concurrency, trace store, registry integrity
+│
+└── Report results
+```
+
+**Key insight:** The A/B test engine must be validated **before** it's trusted to evaluate real edits. That's why the field test includes calibration tests on synthetic data where the ground truth is known. Once calibrated, the engine is used to evaluate the analyzer's proposals during the 10-iteration improvement run.
+
+This document covers the A/B test engine design in detail. The field test plan is in `docs/design/field-test-plan.md`.
+
 ## 1. The Big Picture
 
 The A/B test engine sits between the feedback analyzer (proposes edits) and the promotion gate (decides whether to promote). It takes two prompt versions and a held-out task set, and produces a statistically valid answer to: **Is prompt B better than prompt A on these tasks?**
