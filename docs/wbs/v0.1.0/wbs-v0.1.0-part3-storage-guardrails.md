@@ -4,11 +4,11 @@
 > **PRD coverage:** [F-05](../../design/prd/05-features.md) (registry), [F-12](../../design/prd/05-features.md) (rollback), [F-06](../../design/prd/05-features.md) (frozen sections), [F-07](../../design/prd/05-features.md) (edit distance)
 > **CUJs covered:** CUJ 3 (trace lineage), CUJ 4 (rollback), CUJ 9 (custom guardrails)
 > **Dependency:** M5 (depends on M4) → M6 (depends on M5)
-> **Issue Range:** #31–#43
+> **Issue Range:** #32–#44
 
 ---
 
-## Milestone 5: Prompt Registry (#31–#37)
+## Milestone 5: Prompt Registry (#32–#38)
 
 **Objective:** Versioned store of every prompt with full lineage, diff, rollback, and integrity. File-based — no external database.
 
@@ -21,13 +21,13 @@
 
 | # | Task | Build (files) | Behavior + edge cases | Feature | Design Ref | Verify | Status |
 |---|------|---------------|----------------------|---------|------------|--------|--------|
-| 1 | Registry store | `src/agent_self_edit/registry.py`: `Registry.__init__(path)`, `current_version`, `current_prompt` | Version `v{N}.md` + `v{N}.meta.json`; directory created on init; empty registry → version 0, empty prompt; path doesn't exist → created | F-05 | [D5](../../design/prompt-registry-design.md) | init with/without existing path; empty registry | [#31](https://github.com/deghosal-2026/agent-self-edit/issues/31) · ⬜ |
-| 2 | Version metadata | `Meta` dataclass: version, timestamp, sha256_hash, diff_from_previous, hypothesis, ab_results, gate_result, trigger_trace_ids, model_version, token_cost | SHA-256 computed on write; hash verified on read; all fields optional except version, timestamp, hash; JSON serialization round-trips | F-05 | [D5](../../design/prompt-registry-design.md) | JSON round-trip; hash verification; all fields optional | [#32](https://github.com/deghosal-2026/agent-self-edit/issues/32) · ⬜ |
-| 3 | Create version | `Registry.create(prompt_text, **metadata) -> int` | Writes prompt file + meta file; increments version; returns version number; concurrent writes blocked by lock; empty prompt text accepted | F-05 | [D5](../../design/prompt-registry-design.md) | create increments version; concurrent writes blocked; empty prompt | [#33](https://github.com/deghosal-2026/agent-self-edit/issues/33) · ⬜ |
-| 4 | Diff computation | `Registry.diff(v1, v2) -> DiffResult` | Line-level diff; output: added[], removed[], modified[], unchanged_count, frozen_unchanged_count; v1=v2 → empty diff; invalid versions → `RegistryError` | F-05 | [D5](../../design/prompt-registry-design.md) | identical/different; invalid versions; frozen sections | [#34](https://github.com/deghosal-2026/agent-self-edit/issues/34) · ⬜ |
-| 5 | Rollback | `Registry.rollback(version, reason) -> int` | Creates new version as copy of target; rollback reason + target version stored in metadata; invalid version → `RegistryError`; rollback to current → creates identical copy | F-12 | [D5](../../design/prompt-registry-design.md) | rollback to valid/invalid/current version; metadata preserved | [#35](https://github.com/deghosal-2026/agent-self-edit/issues/35) · ⬜ |
-| 6 | Lineage query | `Registry.lineage(from_version=None) -> list[Meta]`, `Registry.get(version) -> (str, Meta)` | Lineage returns ordered list; `get()` returns prompt + metadata; invalid version → `RegistryError`; lineage from version N returns N..current | F-05 | [D5](../../design/prompt-registry-design.md) | full lineage; partial lineage; invalid version | [#36](https://github.com/deghosal-2026/agent-self-edit/issues/36) · ⬜ |
-| 7 | Integrity check | `Registry.verify_integrity() -> list[str]` | Recomputes SHA-256 for each version; returns list of corrupted versions; all intact → empty list; file tampered → detected | F-05 | [D5](../../design/prompt-registry-design.md) | all intact; one corrupted; all corrupted; empty registry | [#37](https://github.com/deghosal-2026/agent-self-edit/issues/37) · ⬜ |
+| 1 | Registry store | `src/agent_self_edit/registry.py`: `Registry.__init__(path)`, `current_version`, `current_prompt` | Version `v{N}.md` + `v{N}.meta.json`; directory created on init; empty registry → version 0, empty prompt; path doesn't exist → created | F-05 | [D5](../../design/prompt-registry-design.md) | init with/without existing path; empty registry | [#32](https://github.com/deghosal-2026/agent-self-edit/issues/32) · ⬜ |
+| 2 | Version metadata | `Meta` dataclass: version, timestamp, sha256_hash, diff_from_previous, hypothesis, ab_results, gate_result, trigger_trace_ids, model_version, token_cost | SHA-256 computed on write; hash verified on read; all fields optional except version, timestamp, hash; JSON serialization round-trips | F-05 | [D5](../../design/prompt-registry-design.md) | JSON round-trip; hash verification; all fields optional | [#33](https://github.com/deghosal-2026/agent-self-edit/issues/33) · ⬜ |
+| 3 | Create version | `Registry.create(prompt_text, **metadata) -> int` | Writes prompt file + meta file; increments version; returns version number; concurrent writes blocked by lock; empty prompt text accepted | F-05 | [D5](../../design/prompt-registry-design.md) | create increments version; concurrent writes blocked; empty prompt | [#34](https://github.com/deghosal-2026/agent-self-edit/issues/34) · ⬜ |
+| 4 | Diff computation | `Registry.diff(v1, v2) -> DiffResult` | Line-level diff; output: added[], removed[], modified[], unchanged_count, frozen_unchanged_count; v1=v2 → empty diff; invalid versions → `RegistryError` | F-05 | [D5](../../design/prompt-registry-design.md) | identical/different; invalid versions; frozen sections | [#35](https://github.com/deghosal-2026/agent-self-edit/issues/35) · ⬜ |
+| 5 | Rollback | `Registry.rollback(version, reason) -> int` | Creates new version as copy of target; rollback reason + target version stored in metadata; invalid version → `RegistryError`; rollback to current → creates identical copy | F-12 | [D5](../../design/prompt-registry-design.md) | rollback to valid/invalid/current version; metadata preserved | [#36](https://github.com/deghosal-2026/agent-self-edit/issues/36) · ⬜ |
+| 6 | Lineage query | `Registry.lineage(from_version=None) -> list[Meta]`, `Registry.get(version) -> (str, Meta)` | Lineage returns ordered list; `get()` returns prompt + metadata; invalid version → `RegistryError`; lineage from version N returns N..current | F-05 | [D5](../../design/prompt-registry-design.md) | full lineage; partial lineage; invalid version | [#37](https://github.com/deghosal-2026/agent-self-edit/issues/37) · ⬜ |
+| 7 | Integrity check | `Registry.verify_integrity() -> list[str]` | Recomputes SHA-256 for each version; returns list of corrupted versions; all intact → empty list; file tampered → detected | F-05 | [D5](../../design/prompt-registry-design.md) | all intact; one corrupted; all corrupted; empty registry | [#38](https://github.com/deghosal-2026/agent-self-edit/issues/38) · ⬜ |
 
 ### M5 Success Metrics
 
@@ -57,7 +57,7 @@
 
 ---
 
-## Milestone 6: Guardrail Module (#38–#43)
+## Milestone 6: Guardrail Module (#39–#44)
 
 **Objective:** Constraint enforcement. The guardrails are deterministic code, not LLM-judged. They prevent the analyzer from making unsafe edits.
 
@@ -70,12 +70,12 @@
 
 | # | Task | Build (files) | Behavior + edge cases | Feature | Design Ref | Verify | Status |
 |---|------|---------------|----------------------|---------|------------|--------|--------|
-| 1 | Frozen section parser | `parse_frozen_sections(prompt_text) -> list[FrozenSection]` | Parse `<!-- frozen -->` annotations; `FrozenSection`: start_line, end_line, section_name; no frozen sections → empty list; malformed annotation → `GuardrailError` | F-06 | [D6](../../design/guardrail-module-design.md) | single/multiple/no frozen sections; malformed | [#38](https://github.com/deghosal-2026/agent-self-edit/issues/38) · ⬜ |
-| 2 | Frozen section validator | `validate_frozen_sections(prompt_text, frozen_sections) -> bool` | Verify frozen sections exist in current prompt; section renumbered after edit → fail; all sections match → pass | F-06 | [D6](../../design/guardrail-module-design.md) | sections exist/don't exist; renumbered after edit | [#39](https://github.com/deghosal-2026/agent-self-edit/issues/39) · ⬜ |
-| 3 | Edit-distance calculator | `compute_edit_distance(old_prompt, new_prompt) -> EditDistance` | `EditDistance`: lines_added, lines_removed, lines_modified, total, frozen_lines_changed; identical prompts → 0 total; completely different → all lines changed; frozen section changes counted separately | F-07 | [D6](../../design/guardrail-module-design.md) | identical/different; frozen vs non-frozen changes | [#40](https://github.com/deghosal-2026/agent-self-edit/issues/40) · ⬜ |
-| 4 | TF-IDF drift calculator | `compute_drift_tfidf(prompt_a, prompt_b) -> float` | TF-IDF vectorization; cosine similarity; drift = 1 - similarity; range [0, 1]; identical prompts → drift = 0; completely different → drift ≈ 1; symmetric | F-04 | [D6](../../design/guardrail-module-design.md) | identical/different/similar; symmetry verified | [#41](https://github.com/deghosal-2026/agent-self-edit/issues/41) · ⬜ |
-| 5 | Drift calculator (embedding) | `compute_drift_embedding(prompt_a, prompt_b, llm_provider) -> float` | Sentence embedding via LLM provider; cosine similarity; falls back to TF-IDF if embedding unavailable | F-04 | [D6](../../design/guardrail-module-design.md) | embedding vs TF-IDF; fallback on failure | [#42](https://github.com/deghosal-2026/agent-self-edit/issues/42) · ⬜ |
-| 6 | Per-section drift + guardrail report | `compute_per_section_drift(prompt_a, prompt_b, sections) -> dict[str, float]`; `GuardrailReport` dataclass | Per-section drift computed; `GuardrailReport.__str__()` human-readable; `__repr__()` machine-readable | F-06, F-07 | [D6](../../design/guardrail-module-design.md) | per-section drift; report formatting | [#43](https://github.com/deghosal-2026/agent-self-edit/issues/43) · ⬜ |
+| 1 | Frozen section parser | `parse_frozen_sections(prompt_text) -> list[FrozenSection]` | Parse `<!-- frozen -->` annotations; `FrozenSection`: start_line, end_line, section_name; no frozen sections → empty list; malformed annotation → `GuardrailError` | F-06 | [D6](../../design/guardrail-module-design.md) | single/multiple/no frozen sections; malformed | [#39](https://github.com/deghosal-2026/agent-self-edit/issues/39) · ⬜ |
+| 2 | Frozen section validator | `validate_frozen_sections(prompt_text, frozen_sections) -> bool` | Verify frozen sections exist in current prompt; section renumbered after edit → fail; all sections match → pass | F-06 | [D6](../../design/guardrail-module-design.md) | sections exist/don't exist; renumbered after edit | [#40](https://github.com/deghosal-2026/agent-self-edit/issues/40) · ⬜ |
+| 3 | Edit-distance calculator | `compute_edit_distance(old_prompt, new_prompt) -> EditDistance` | `EditDistance`: lines_added, lines_removed, lines_modified, total, frozen_lines_changed; identical prompts → 0 total; completely different → all lines changed; frozen section changes counted separately | F-07 | [D6](../../design/guardrail-module-design.md) | identical/different; frozen vs non-frozen changes | [#41](https://github.com/deghosal-2026/agent-self-edit/issues/41) · ⬜ |
+| 4 | TF-IDF drift calculator | `compute_drift_tfidf(prompt_a, prompt_b) -> float` | TF-IDF vectorization; cosine similarity; drift = 1 - similarity; range [0, 1]; identical prompts → drift = 0; completely different → drift ≈ 1; symmetric | F-04 | [D6](../../design/guardrail-module-design.md) | identical/different/similar; symmetry verified | [#42](https://github.com/deghosal-2026/agent-self-edit/issues/42) · ⬜ |
+| 5 | Drift calculator (embedding) | `compute_drift_embedding(prompt_a, prompt_b, llm_provider) -> float` | Sentence embedding via LLM provider; cosine similarity; falls back to TF-IDF if embedding unavailable | F-04 | [D6](../../design/guardrail-module-design.md) | embedding vs TF-IDF; fallback on failure | [#43](https://github.com/deghosal-2026/agent-self-edit/issues/43) · ⬜ |
+| 6 | Per-section drift + guardrail report | `compute_per_section_drift(prompt_a, prompt_b, sections) -> dict[str, float]`; `GuardrailReport` dataclass | Per-section drift computed; `GuardrailReport.__str__()` human-readable; `__repr__()` machine-readable | F-06, F-07 | [D6](../../design/guardrail-module-design.md) | per-section drift; report formatting | [#44](https://github.com/deghosal-2026/agent-self-edit/issues/44) · ⬜ |
 
 ### M6 Success Metrics
 

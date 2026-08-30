@@ -4,11 +4,11 @@
 > **PRD coverage:** [06-security-baseline](../../design/prd/06-security-baseline.md) (OpenSSF, OWASP)
 > **CUJs covered:** all P0
 > **Dependency:** M11 depends on M10 (field test validation)
-> **Issue Range:** #69–#74
+> **Issue Range:** #70–#75
 
 ---
 
-## Milestone 11: Release (#69–#74)
+## Milestone 11: Release (#70–#75)
 
 **Objective:** Package, document, publish, and make the repo public. OpenSSF Best Practices Passing badge earned.
 
@@ -22,16 +22,16 @@
 
 | # | Task | Build (files) | Behavior + edge cases | Feature | Design Ref | Verify | Status |
 |---|------|---------------|----------------------|---------|------------|--------|--------|
-| 1 | pyproject.toml | `pyproject.toml` | Package name `agent-self-edit`; version, description, author, license, Python version, dependencies, optional dependencies, entry points, build system | — | [D11](../../design/promotion-gate-design.md) | `python -m build` succeeds; `twine check` passes | [#69](https://github.com/deghosal-2026/agent-self-edit/issues/69) · ⬜ |
-| 2 | PyPI publish | — | `twine upload dist/*`; PyPI project page with README, links to GitHub, docs, changelog | — | [D11](../../design/release-plan.md) | `pip install agent-self-edit` works from PyPI | [#69](https://github.com/deghosal-2026/agent-self-edit/issues/69) · ⬜ |
-| 3 | Clean venv install test | `tests/test_release.py` | Clean virtualenv, `pip install agent-self-edit`, verify CLI commands work | — | [D11](../../design/release-plan.md) | install succeeds; CLI accessible | [#69](https://github.com/deghosal-2026/agent-self-edit/issues/69) · ⬜ |
+| 1 | pyproject.toml | `pyproject.toml` | Package name `agent-self-edit`; version, description, author, license, Python version, dependencies, optional dependencies, entry points, build system | — | [D11](../../design/promotion-gate-design.md) | `python -m build` succeeds; `twine check` passes | [#70](https://github.com/deghosal-2026/agent-self-edit/issues/70) · ⬜ |
+| 2 | PyPI publish | — | `twine upload dist/*`; PyPI project page with README, links to GitHub, docs, changelog | — | [D11](../../design/release-plan.md) | `pip install agent-self-edit` works from PyPI | [#70](https://github.com/deghosal-2026/agent-self-edit/issues/70) · ⬜ |
+| 3 | Clean venv install test | `tests/test_release.py` | Clean virtualenv, `pip install agent-self-edit`, verify CLI commands work | — | [D11](../../design/release-plan.md) | install succeeds; CLI accessible | [#70](https://github.com/deghosal-2026/agent-self-edit/issues/70) · ⬜ |
 
 #### Docker
 
 | # | Task | Build (files) | Behavior + edge cases | Feature | Verify | Status |
 |---|------|---------------|----------------------|---------|--------|--------|
-| 4 | Docker image | `Dockerfile` (multi-stage), publish to GitHub Container Registry | Build stage: pip install; runtime stage: `python -m agent_self_edit` | F-14 | `docker build .` succeeds; `docker run` works | [#70](https://github.com/deghosal-2026/agent-self-edit/issues/70) · ⬜ |
-| 5 | Docker compose | `docker-compose.yml` | agent-self-edit service with volume mounts for config, registry, traces | F-14 | `docker compose up` works | [#70](https://github.com/deghosal-2026/agent-self-edit/issues/70) · ⬜ |
+| 4 | Docker image | `Dockerfile` (multi-stage), publish to GitHub Container Registry | Build stage: pip install; runtime stage: `python -m agent_self_edit` | F-14 | `docker build .` succeeds; `docker run` works | [#71](https://github.com/deghosal-2026/agent-self-edit/issues/71) · ⬜ |
+| 5 | Docker compose | `docker-compose.yml` | agent-self-edit service with volume mounts for config, registry, traces | F-14 | `docker compose up` works | [#71](https://github.com/deghosal-2026/agent-self-edit/issues/71) · ⬜ |
 
 #### Documentation
 
@@ -46,17 +46,17 @@
 
 | # | Task | Build (files) | Behavior + edge cases | Feature | Verify | Status |
 |---|------|---------------|----------------------|---------|--------|--------|
-| 10 | Security audit | — | `bandit -r src/` — fix all findings; `trufflehog` — fix any secrets; `pip audit` or `safety check` — no vulnerable dependencies | — | all security tools pass clean | [#71](https://github.com/deghosal-2026/agent-self-edit/issues/71) · ⬜ |
-| 11 | OpenSSF badge | Register at bestpractices.dev | Complete all passing criteria; embed badge in README | — | badge earned and embedded | [#71](https://github.com/deghosal-2026/agent-self-edit/issues/71) · ⬜ |
-| 12 | Update SECURITY.md | `SECURITY.md` | Vulnerability reporting process, PGP key, response SLA | — | meaningful content | [#71](https://github.com/deghosal-2026/agent-self-edit/issues/71) · ⬜ |
+| 10 | Security audit | — | `bandit -r src/` — fix all findings; `trufflehog` — fix any secrets; `pip audit` or `safety check` — no vulnerable dependencies | — | all security tools pass clean | [#72](https://github.com/deghosal-2026/agent-self-edit/issues/72) · ⬜ |
+| 11 | OpenSSF badge | Register at bestpractices.dev | Complete all passing criteria; embed badge in README | — | badge earned and embedded | [#72](https://github.com/deghosal-2026/agent-self-edit/issues/72) · ⬜ |
+| 12 | Update SECURITY.md | `SECURITY.md` | Vulnerability reporting process, PGP key, response SLA | — | meaningful content | [#72](https://github.com/deghosal-2026/agent-self-edit/issues/72) · ⬜ |
 
 #### GitHub
 
 | # | Task | Behavior + edge cases | Feature | Verify | Status |
 |---|-------|----------------------|---------|--------|--------|
-| 13 | GitHub Release v0.1.0 | Tag from main; release notes; artifacts | — | release created with correct tag | [#72](https://github.com/deghosal-2026/agent-self-edit/issues/72) · ⬜ |
-| 14 | Main branch protection | Require CI passing, require 1 review, require signed commits | — | protection rules active | [#72](https://github.com/deghosal-2026/agent-self-edit/issues/72) · ⬜ |
-| 15 | Repo public + about | Make repo public; add description, website, topics | — | repo discoverable | [#72](https://github.com/deghosal-2026/agent-self-edit/issues/72) · ⬜ |
+| 13 | GitHub Release v0.1.0 | Tag from main; release notes; artifacts | — | release created with correct tag | [#73](https://github.com/deghosal-2026/agent-self-edit/issues/73) · ⬜ |
+| 14 | Main branch protection | Require CI passing, require 1 review, require signed commits | — | protection rules active | [#73](https://github.com/deghosal-2026/agent-self-edit/issues/73) · ⬜ |
+| 15 | Repo public + about | Make repo public; add description, website, topics | — | repo discoverable | [#73](https://github.com/deghosal-2026/agent-self-edit/issues/73) · ⬜ |
 
 ### M11 Success Metrics
 

@@ -4,11 +4,11 @@
 > **PRD coverage:** [F-13](../../design/prd/05-features.md) (config), [F-10](../../design/prd/05-features.md) (task set), [F-01](../../design/prd/05-features.md) (trace ingestion)
 > **CUJs covered:** CUJ 5 (first-time setup — init), CUJ 1 (deploy, observe, improve — trace ingestion)
 > **Dependency:** M1 (none) → M2 (depends on M1)
-> **Issue Range:** #1–#13
+> **Issue Range:** #1–#14
 
 ---
 
-## Milestone 1: Scaffold + Config (#1–#7)
+## Milestone 1: Scaffold + Config (#1–#8)
 
 **Objective:** Repo structure, package, CI, config system, held-out task set management. Everything downstream imports from here.
 
@@ -22,12 +22,12 @@
 | # | Task | Build (files) | Behavior + edge cases | Feature | Design Ref | Verify | Status |
 |---|------|---------------|----------------------|---------|------------|--------|--------|
 | 1 | Package scaffold | `pyproject.toml`, `src/agent_self_edit/__init__.py`, `tests/__init__.py`, `tests/conftest.py` | `pip install -e .` succeeds; `python -c "import agent_self_edit"` succeeds; pytest discovers tests | F-13 (partial) | D1 | clean venv install + import | [#1](https://github.com/deghosal-2026/agent-self-edit/issues/1) · ⬜ |
-| 2 | Config file format | `src/agent_self_edit/config.py`: `Config` dataclass, `load_config(path)`, `validate_config(config)`, `ConfigError` | Valid config loads without errors; invalid config returns list of errors; config round-trips through YAML; missing file raises `FileNotFoundError` | F-13 | D1 | valid/invalid fixture YAMLs; round-trip test | [#2](https://github.com/deghosal-2026/agent-self-edit/issues/2) · ⬜ |
-| 3 | Config validation | Validation rules in `config.py`: `max_edit_distance > 0`, `drift_threshold in [0,1]`, `confidence_level in [0.5, 0.999]`, `sample_floor >= 10`, `trigger in {batch, time, manual}` | Each rule produces a clear error message; multiple violations all reported; boundary values tested | F-13 | D1 | each rule independently tested with pass/fail fixtures | [#3](https://github.com/deghosal-2026/agent-self-edit/issues/3) · ⬜ |
-| 4 | Held-out task set loader | `src/agent_self_edit/tasks.py`: `TaskSet` class, `load_task_set(path)`, `validate_task_set(task_set)` | YAML and JSON formats supported; missing required fields return validation errors; duplicate task IDs rejected; empty task set accepted | F-10 | D1 | YAML + JSON fixtures; duplicate IDs; empty set | [#4](https://github.com/deghosal-2026/agent-self-edit/issues/4) · ⬜ |
-| 5 | Task set management API | `TaskSet.add_task()`, `remove_task()`, `list_tasks()`, `validate_set()` | Thread-safe with read-write lock; add persists; remove removes; list returns all; validate returns pass/fail per task; concurrent modifications don't corrupt | F-10 | D1 | concurrent add/remove; validate after mutation | [#5](https://github.com/deghosal-2026/agent-self-edit/issues/5) · ⬜ |
-| 6 | CI pipeline | `.github/workflows/ci.yml`, `.github/dependabot.yml`, `.github/PULL_REQUEST_TEMPLATE.md` | CI runs on push and PR; ruff passes; mypy strict passes; coverage reports generated; dependabot creates PRs | F-13 (partial) | — | push triggers CI; lint + coverage + test pass | [#6](https://github.com/deghosal-2026/agent-self-edit/issues/6) · ⬜ |
-| 7 | OSS community files | `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `SUPPORT.md`, `.github/ISSUE_TEMPLATE/bug_report.md`, `.github/ISSUE_TEMPLATE/feature_request.md` | CONTRIBUTING covers: how to report bugs, coding standards, PR process; SECURITY covers vulnerability reporting; templates have correct YAML frontmatter | — | — | all files exist, contain meaningful content | [#7](https://github.com/deghosal-2026/agent-self-edit/issues/7) · ⬜ |
+| 2 | Config file format | `src/agent_self_edit/config.py`: `Config` dataclass, `load_config(path)`, `validate_config(config)`, `ConfigError` | Valid config loads without errors; invalid config returns list of errors; config round-trips through YAML; missing file raises `FileNotFoundError` | F-13 | D1 | valid/invalid fixture YAMLs; round-trip test | [#3](https://github.com/deghosal-3036/agent-self-edit/issues/3) · ⬜ |
+| 3 | Config validation | Validation rules in `config.py`: `max_edit_distance > 0`, `drift_threshold in [0,1]`, `confidence_level in [0.5, 0.999]`, `sample_floor >= 10`, `trigger in {batch, time, manual}` | Each rule produces a clear error message; multiple violations all reported; boundary values tested | F-13 | D1 | each rule independently tested with pass/fail fixtures | [#4](https://github.com/deghosal-2026/agent-self-edit/issues/4) · ⬜ |
+| 4 | Held-out task set loader | `src/agent_self_edit/tasks.py`: `TaskSet` class, `load_task_set(path)`, `validate_task_set(task_set)` | YAML and JSON formats supported; missing required fields return validation errors; duplicate task IDs rejected; empty task set accepted | F-10 | D1 | YAML + JSON fixtures; duplicate IDs; empty set | [#5](https://github.com/deghosal-2026/agent-self-edit/issues/5) · ⬜ |
+| 5 | Task set management API | `TaskSet.add_task()`, `remove_task()`, `list_tasks()`, `validate_set()` | Thread-safe with read-write lock; add persists; remove removes; list returns all; validate returns pass/fail per task; concurrent modifications don't corrupt | F-10 | D1 | concurrent add/remove; validate after mutation | [#6](https://github.com/deghosal-2026/agent-self-edit/issues/6) · ⬜ |
+| 6 | CI pipeline | `.github/workflows/ci.yml`, `.github/dependabot.yml`, `.github/PULL_REQUEST_TEMPLATE.md` | CI runs on push and PR; ruff passes; mypy strict passes; coverage reports generated; dependabot creates PRs | F-13 (partial) | — | push triggers CI; lint + coverage + test pass | [#7](https://github.com/deghosal-2027/agent-self-edit/issues/7) · ⬜ |
+| 7 | OSS community files | `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `SUPPORT.md`, `.github/ISSUE_TEMPLATE/bug_report.md`, `.github/ISSUE_TEMPLATE/feature_request.md` | CONTRIBUTING covers: how to report bugs, coding standards, PR process; SECURITY covers vulnerability reporting; templates have correct YAML frontmatter | — | — | all files exist, contain meaningful content | [#8](https://github.com/deghosal-2026/agent-self-edit/issues/8) · ⬜ |
 
 ### M1 Success Metrics
 
@@ -58,7 +58,7 @@
 
 ---
 
-## Milestone 2: Execution Trace Ingestion (#8–#13)
+## Milestone 2: Execution Trace Ingestion (#9–#14)
 
 **Objective:** Accept execution traces from the agent, store them, batch them for analysis. Fully testable with synthetic traces — no LLM needed.
 
@@ -71,12 +71,12 @@
 
 | # | Task | Build (files) | Behavior + edge cases | Feature | Design Ref | Verify | Status |
 |---|------|---------------|----------------------|---------|------------|--------|--------|
-| 1 | Trace schema | `src/agent_self_edit/types.py`: `Trace` dataclass, `validate_trace(trace: dict) -> Trace` | Valid trace deserializes; missing required fields raise error; extra fields ignored; timestamps parsed as ISO 8601; `failure_reason` optional; `steps` optional | F-01 | [D2](../../design/trace-schema-design.md) | valid/invalid JSON fixtures; field-by-field edge cases | [#8](https://github.com/deghosal-2026/agent-self-edit/issues/8) · ⬜ |
-| 2 | Trace store | `src/agent_self_edit/trace.py`: `TraceStore.__init__(path)`, `store(trace)`, `get(task_id)`, `list(success=None, prompt_version=None, limit=100)`, `count(success=None)`, `delete_before(timestamp)` | SQLite DB created on init; indexes on task_id, prompt_version, success; schema migration on version change; `list` returns correct filtered results; 0 traces → empty list | F-01 | [D2](../../design/trace-schema-design.md) | CRUD on temp DB; filtered queries; schema migration | [#9](https://github.com/deghosal-2026/agent-self-edit/issues/9) · ⬜ |
-| 3 | Trace ingestion API | `TraceStore.ingest(trace) -> str` | Validates via `validate_trace()`; stores via `store()`; returns `task_id`; batch counter increments; invalid traces raise `ValueError` without incrementing | F-01 | [D2](../../design/trace-schema-design.md) | valid + invalid traces; batch counter accuracy | [#10](https://github.com/deghosal-2026/agent-self-edit/issues/10) · ⬜ |
-| 4 | Trace batching | `TraceStore.batch_ready()`, `get_batch(size)`, `acknowledge(task_ids)` | `batch_ready()` returns True when pending >= batch_size; `get_batch()` returns oldest N unprocessed; `acknowledge()` marks processed; partial acknowledgement works | F-01 | [D2](../../design/trace-schema-design.md) | batch size boundary; partial ack; no pending traces | [#11](https://github.com/deghosal-2026/agent-self-edit/issues/11) · ⬜ |
-| 5 | Trace adapter interface | `src/agent_self_edit/adapters/`: `base.py` (ABC), `stdin.py` (StdinAdapter), `file.py` (FileAdapter) | `StdinAdapter` reads JSON lines from stdin; `FileAdapter` watches directory for new `.json` files; both call `ingest()` for each trace | F-01 | [D2](../../design/trace-schema-design.md) | stdin pipe test; file watch + add; malformed input | [#12](https://github.com/deghosal-2026/agent-self-edit/issues/12) · ⬜ |
-| 6 | Trace cleanup | `TraceStore.cleanup(retention_days=90)` | Deletes traces older than retention; preserves traces within window; called on startup and every 24h; cleanup logged; retention_days=0 deletes everything | F-01 | [D2](../../design/trace-schema-design.md) | old traces deleted; recent preserved; 0 retention edge case | [#13](https://github.com/deghosal-2026/agent-self-edit/issues/13) · ⬜ |
+| 1 | Trace schema | `src/agent_self_edit/types.py`: `Trace` dataclass, `validate_trace(trace: dict) -> Trace` | Valid trace deserializes; missing required fields raise error; extra fields ignored; timestamps parsed as ISO 8601; `failure_reason` optional; `steps` optional | F-01 | [D2](../../design/trace-schema-design.md) | valid/invalid JSON fixtures; field-by-field edge cases | [#9](https://github.com/deghosal-2026/agent-self-edit/issues/9) · ⬜ |
+| 2 | Trace store | `src/agent_self_edit/trace.py`: `TraceStore.__init__(path)`, `store(trace)`, `get(task_id)`, `list(success=None, prompt_version=None, limit=100)`, `count(success=None)`, `delete_before(timestamp)` | SQLite DB created on init; indexes on task_id, prompt_version, success; schema migration on version change; `list` returns correct filtered results; 0 traces → empty list | F-01 | [D2](../../design/trace-schema-design.md) | CRUD on temp DB; filtered queries; schema migration | [#10](https://github.com/deghosal-2026/agent-self-edit/issues/10) · ⬜ |
+| 3 | Trace ingestion API | `TraceStore.ingest(trace) -> str` | Validates via `validate_trace()`; stores via `store()`; returns `task_id`; batch counter increments; invalid traces raise `ValueError` without incrementing | F-01 | [D2](../../design/trace-schema-design.md) | valid + invalid traces; batch counter accuracy | [#11](https://github.com/deghosal-2026/agent-self-edit/issues/11) · ⬜ |
+| 4 | Trace batching | `TraceStore.batch_ready()`, `get_batch(size)`, `acknowledge(task_ids)` | `batch_ready()` returns True when pending >= batch_size; `get_batch()` returns oldest N unprocessed; `acknowledge()` marks processed; partial acknowledgement works | F-01 | [D2](../../design/trace-schema-design.md) | batch size boundary; partial ack; no pending traces | [#12](https://github.com/deghosal-2026/agent-self-edit/issues/12) · ⬜ |
+| 5 | Trace adapter interface | `src/agent_self_edit/adapters/`: `base.py` (ABC), `stdin.py` (StdinAdapter), `file.py` (FileAdapter) | `StdinAdapter` reads JSON lines from stdin; `FileAdapter` watches directory for new `.json` files; both call `ingest()` for each trace | F-01 | [D2](../../design/trace-schema-design.md) | stdin pipe test; file watch + add; malformed input | [#13](https://github.com/deghosal-2026/agent-self-edit/issues/13) · ⬜ |
+| 6 | Trace cleanup | `TraceStore.cleanup(retention_days=90)` | Deletes traces older than retention; preserves traces within window; called on startup and every 24h; cleanup logged; retention_days=0 deletes everything | F-01 | [D2](../../design/trace-schema-design.md) | old traces deleted; recent preserved; 0 retention edge case | [#14](https://github.com/deghosal-2026/agent-self-edit/issues/14) · ⬜ |
 
 ### M2 Success Metrics
 

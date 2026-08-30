@@ -4,11 +4,11 @@
 > **PRD coverage:** [F-02](../../design/prd/05-features.md) (analyzer), [F-08](../../design/prd/05-features.md) (diff visualization)
 > **CUJs covered:** CUJ 1 (deploy, observe, improve — analyzer proposes), CUJ 2 (catch bad edit — analyzer proposes), CUJ 3 (trace lineage — diff)
 > **Dependency:** M7 (depends on M2 + M6) → M8 (depends on M5)
-> **Issue Range:** #44–#54
+> **Issue Range:** #45–#55
 
 ---
 
-## Milestone 7: Feedback Analyzer (#44–#50)
+## Milestone 7: Feedback Analyzer (#45–#51)
 
 **Objective:** The LLM that reviews traces and proposes edits. The creative engine — but it has no authority. All proposals go through A/B test and promotion gate.
 
@@ -21,13 +21,13 @@
 
 | # | Task | Build (files) | Behavior + edge cases | Feature | Design Ref | Verify | Status |
 |---|------|---------------|----------------------|---------|------------|--------|--------|
-| 1 | Edit proposal dataclass | `src/agent_self_edit/types.py`: `EditProposal` | Fields: section, old_text, new_text, hypothesis, evidence_traces: list[str], expected_improvement: str; all fields required except evidence_traces | F-02 | [D7](../../design/feedback-analyzer-design.md) | valid/invalid proposals; missing fields | [#44](https://github.com/deghosal-2026/agent-self-edit/issues/44) · ⬜ |
-| 2 | Analyzer system prompt | Prompt template in `src/agent_self_edit/analyzer.py` | Includes: current prompt with frozen annotations, batch of failed traces, output format instructions; frozen sections clearly marked; max 3 proposals per batch | F-02 | [D7](../../design/feedback-analyzer-design.md) | prompt includes all sections; correct format instructions | [#45](https://github.com/deghosal-2026/agent-self-edit/issues/45) · ⬜ |
-| 3 | Analyzer runner | `analyze(traces, current_prompt, frozen_sections, llm_provider) -> list[EditProposal]` | Calls LLM; parses structured response; validates format; returns proposals; empty traces → empty list; LLM failure → `AnalyzerError` | F-02 | [D7](../../design/feedback-analyzer-design.md) | valid traces; empty traces; LLM failure | [#46](https://github.com/deghosal-2026/agent-self-edit/issues/46) · ⬜ |
-| 4 | Proposal validation | `validate_proposal(proposal, current_prompt, frozen_sections) -> list[str]` | Checks: section exists, old_text matches prompt, new_text non-empty, hypothesis non-empty, section not frozen; returns list of error messages | F-02 | [D7](../../design/feedback-analyzer-design.md) | all valid; each invalid case; frozen section targeted | [#47](https://github.com/deghosal-2026/agent-self-edit/issues/47) · ⬜ |
-| 5 | Proposal deduplication | `deduplicate_proposals(proposals, near_misses, threshold=0.85) -> list[EditProposal]` | Embedding similarity; skip if similarity > threshold; identical proposals deduplicated; similar near-misses skipped; no near-misses → all proposals kept | F-02 | [D7](../../design/feedback-analyzer-design.md) | identical/similar/different; near-miss list empty | [#48](https://github.com/deghosal-2026/agent-self-edit/issues/48) · ⬜ |
-| 6 | Batch analysis | `analyze_batch(traces, current_prompt, frozen_sections, llm_provider, max_proposals=3) -> list[EditProposal]` | Group failures by pattern; generate proposals for most common pattern first; max_proposals limit enforced; single failure pattern → 1-3 proposals | F-02 | [D7](../../design/feedback-analyzer-design.md) | single/multiple patterns; max limit; no failures | [#49](https://github.com/deghosal-2026/agent-self-edit/issues/49) · ⬜ |
-| 7 | Mock analyzer + cost tracking | `MockAnalyzer` class; token cost tracking in `analyze()` | `MockAnalyzer` returns predetermined proposals, no LLM calls; cost ceiling: abort if exceeded | F-02 | [D7](../../design/feedback-analyzer-design.md) | mock used in CI; cost ceiling enforced | [#50](https://github.com/deghosal-2026/agent-self-edit/issues/50) · ⬜ |
+| 1 | Edit proposal dataclass | `src/agent_self_edit/types.py`: `EditProposal` | Fields: section, old_text, new_text, hypothesis, evidence_traces: list[str], expected_improvement: str; all fields required except evidence_traces | F-02 | [D7](../../design/feedback-analyzer-design.md) | valid/invalid proposals; missing fields | [#45](https://github.com/deghosal-2026/agent-self-edit/issues/45) · ⬜ |
+| 2 | Analyzer system prompt | Prompt template in `src/agent_self_edit/analyzer.py` | Includes: current prompt with frozen annotations, batch of failed traces, output format instructions; frozen sections clearly marked; max 3 proposals per batch | F-02 | [D7](../../design/feedback-analyzer-design.md) | prompt includes all sections; correct format instructions | [#46](https://github.com/deghosal-2026/agent-self-edit/issues/46) · ⬜ |
+| 3 | Analyzer runner | `analyze(traces, current_prompt, frozen_sections, llm_provider) -> list[EditProposal]` | Calls LLM; parses structured response; validates format; returns proposals; empty traces → empty list; LLM failure → `AnalyzerError` | F-02 | [D7](../../design/feedback-analyzer-design.md) | valid traces; empty traces; LLM failure | [#47](https://github.com/deghosal-2026/agent-self-edit/issues/47) · ⬜ |
+| 4 | Proposal validation | `validate_proposal(proposal, current_prompt, frozen_sections) -> list[str]` | Checks: section exists, old_text matches prompt, new_text non-empty, hypothesis non-empty, section not frozen; returns list of error messages | F-02 | [D7](../../design/feedback-analyzer-design.md) | all valid; each invalid case; frozen section targeted | [#48](https://github.com/deghosal-2026/agent-self-edit/issues/48) · ⬜ |
+| 5 | Proposal deduplication | `deduplicate_proposals(proposals, near_misses, threshold=0.85) -> list[EditProposal]` | Embedding similarity; skip if similarity > threshold; identical proposals deduplicated; similar near-misses skipped; no near-misses → all proposals kept | F-02 | [D7](../../design/feedback-analyzer-design.md) | identical/similar/different; near-miss list empty | [#49](https://github.com/deghosal-2026/agent-self-edit/issues/49) · ⬜ |
+| 6 | Batch analysis | `analyze_batch(traces, current_prompt, frozen_sections, llm_provider, max_proposals=3) -> list[EditProposal]` | Group failures by pattern; generate proposals for most common pattern first; max_proposals limit enforced; single failure pattern → 1-3 proposals | F-02 | [D7](../../design/feedback-analyzer-design.md) | single/multiple patterns; max limit; no failures | [#50](https://github.com/deghosal-2026/agent-self-edit/issues/50) · ⬜ |
+| 7 | Mock analyzer + cost tracking | `MockAnalyzer` class; token cost tracking in `analyze()` | `MockAnalyzer` returns predetermined proposals, no LLM calls; cost ceiling: abort if exceeded | F-02 | [D7](../../design/feedback-analyzer-design.md) | mock used in CI; cost ceiling enforced | [#51](https://github.com/deghosal-2026/agent-self-edit/issues/51) · ⬜ |
 
 ### M7 Success Metrics
 
@@ -58,7 +58,7 @@
 
 ---
 
-## Milestone 8: Diff Visualization (#51–#54)
+## Milestone 8: Diff Visualization (#52–#55)
 
 **Objective:** Show the user exactly what changed, what stayed the same, and why. The transparency layer that makes the system trustworthy.
 
@@ -70,10 +70,10 @@
 
 | # | Task | Build (files) | Behavior + edge cases | Feature | Design Ref | Verify | Status |
 |---|------|---------------|----------------------|---------|------------|--------|--------|
-| 1 | Inline diff output | `format_diff_inline(diff_result) -> str` | Removed lines `- `, added lines `+ `; frozen sections `(frozen)`; color-coded if terminal supports; identical prompts → single line "no changes" | F-08 | [D8](../../design/prompt-diff-design.md) | identical/different/frozen; color auto/always/never | [#51](https://github.com/deghosal-2026/agent-self-edit/issues/51) · ⬜ |
-| 2 | Side-by-side diff + guardrail report | `format_diff_side_by_side(diff_result) -> str`; `format_guardrail_report(gate_result) -> str` | Two-column alignment; frozen sections grayed out; guardrail report: table with check name, passed/failed, value, threshold; summary line | F-08 | [D8 §2.1](../../design/prompt-diff-design.md#21-prompt-diff--before-vs-after) | side-by-side alignment; guardrail all/some/none passed | [#52](https://github.com/deghosal-2026/agent-self-edit/issues/52) · ⬜ |
-| 3 | Edit summary + density | `format_edit_summary(edit_id, gate_result, ab_result) -> str`; `format_edit_density(registry, window=20) -> str` | Summary: "Edit #N — Promoted — +12.4% accuracy (p<0.01, n=78) — 3 lines"; density: text-based bar chart per-section; empty history → empty chart | F-08 | [D8 §2.2-2.3](../../design/prompt-diff-design.md#22-edit-density-over-time) | promoted/rejected/near-miss; empty/full history | [#53](https://github.com/deghosal-2026/agent-self-edit/issues/53) · ⬜ |
-| 4 | Markdown output + color support | `--format markdown` flag; `--color auto|always|never` | Markdown: code blocks for diffs, tables for reports; color: auto detects terminal, always forces color, never suppresses | F-08 | [D8 §3.1](../../design/prompt-diff-design.md#31-cli) | markdown valid; all 3 color modes | [#54](https://github.com/deghosal-2026/agent-self-edit/issues/54) · ⬜ |
+| 1 | Inline diff output | `format_diff_inline(diff_result) -> str` | Removed lines `- `, added lines `+ `; frozen sections `(frozen)`; color-coded if terminal supports; identical prompts → single line "no changes" | F-08 | [D8](../../design/prompt-diff-design.md) | identical/different/frozen; color auto/always/never | [#52](https://github.com/deghosal-2026/agent-self-edit/issues/52) · ⬜ |
+| 2 | Side-by-side diff + guardrail report | `format_diff_side_by_side(diff_result) -> str`; `format_guardrail_report(gate_result) -> str` | Two-column alignment; frozen sections grayed out; guardrail report: table with check name, passed/failed, value, threshold; summary line | F-08 | [D8 §2.1](../../design/prompt-diff-design.md#22–prompt-diff--before-vs-after) | side-by-side alignment; guardrail all/some/none passed | [#53](https://github.com/deghosal-2026/agent-self-edit/issues/53) · ⬜ |
+| 3 | Edit summary + density | `format_edit_summary(edit_id, gate_result, ab_result) -> str`; `format_edit_density(registry, window=20) -> str` | Summary: "Edit #N — Promoted — +12.4% accuracy (p<0.01, n=78) — 3 lines"; density: text-based bar chart per-section; empty history → empty chart | F-08 | [D8 §2.2-2.3](../../design/prompt-diff-design.md#23–edit-density-over-time) | promoted/rejected/near-miss; empty/full history | [#54](https://github.com/deghosal-2026/agent-self-edit/issues/54) · ⬜ |
+| 4 | Markdown output + color support | `--format markdown` flag; `--color auto|always|never` | Markdown: code blocks for diffs, tables for reports; color: auto detects terminal, always forces color, never suppresses | F-08 | [D8 §3.1](../../design/prompt-diff-design.md#32–cli) | markdown valid; all 3 color modes | [#55](https://github.com/deghosal-2026/agent-self-edit/issues/55) · ⬜ |
 
 ### M8 Success Metrics
 
