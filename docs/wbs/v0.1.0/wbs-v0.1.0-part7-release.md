@@ -1,86 +1,82 @@
 # WBS — AgentSelfEdit v0.1.0 Part 7: Release
 
-> Part of the v0.1.0 release. See [index](wbs-v0.1.0-index.md) for milestone overview.
->
-> **Milestone:** M11 (Release)
+> **Milestone covered:** M11 (Release)
+> **PRD coverage:** [06-security-baseline](../../design/prd/06-security-baseline.md) (OpenSSF, OWASP)
+> **CUJs covered:** all P0
 > **Dependency:** M11 depends on M10 (field test validation)
 > **Issue Range:** #69–#74
 
-## M11 — Release (#69–#74)
+---
 
-**Goal:** Package, document, publish, and make the repo public.
+## Milestone 11: Release (#69–#74)
 
-### Design
+**Objective:** Package, document, publish, and make the repo public. OpenSSF Best Practices Passing badge earned.
 
-| Task | Description | Deliverable |
-|---|---|---|
-| D11.1 | Release plan | `docs/release/v0.1.0/release-plan.md` — packaging checklist, documentation checklist, security checklist, PyPI release checklist, GitHub release checklist, announcement plan |
+### M11 Design Documents
 
-### Build — Packaging
+- **D11 — Release plan** (`docs/release/v0.1.0/release-plan.md`): packaging checklist, documentation checklist, security checklist, PyPI release checklist, GitHub release checklist, announcement plan.
 
-| Task | Description | Deliverable |
-|---|---|---|
-| M11.1 | pyproject.toml | Complete pyproject.toml with: package name `agent-self-edit`, version, description, author, license, Python version, dependencies, optional dependencies, entry points, build system. |
-| M11.2 | Build verification | `python -m build` succeeds. `twine check dist/*` passes. |
-| M11.3 | Clean venv install test | Create clean virtualenv, `pip install agent-self-edit`, verify CLI commands work. |
-| M11.4 | PyPI publish | `twine upload dist/*` — publish to PyPI. Package: `agent-self-edit`. |
-| M11.5 | PyPI metadata | PyPI project page: README rendered as description, links to GitHub, docs, changelog. |
+### M11 Task Checklist
 
-### Build — Docker
+#### Packaging
 
-| Task | Description | Deliverable |
-|---|---|---|
-| M11.6 | Docker image | Multi-stage Dockerfile: build stage (pip install), runtime stage (python -m). Docker image published to GitHub Container Registry. |
-| M11.7 | Docker smoke test | `docker build . && docker run agent-self-edit --help` — verify image works. |
-| M11.8 | Docker compose | `docker-compose.yml` — agent-self-edit service with volume mounts. |
+| # | Task | Build (files) | Behavior + edge cases | Feature | Verify | Status |
+|---|------|---------------|----------------------|---------|--------|--------|
+| 1 | pyproject.toml | `pyproject.toml` | Package name `agent-self-edit`; version, description, author, license, Python version, dependencies, optional dependencies, entry points, build system | — | `python -m build` succeeds; `twine check` passes | [#69](https://github.com/deghosal-2026/agent-self-edit/issues/69) · ⬜ |
+| 2 | PyPI publish | — | `twine upload dist/*`; PyPI project page with README, links to GitHub, docs, changelog | — | `pip install agent-self-edit` works from PyPI | [#69](https://github.com/deghosal-2026/agent-self-edit/issues/69) · ⬜ |
+| 3 | Clean venv install test | `tests/test_release.py` | Clean virtualenv, `pip install agent-self-edit`, verify CLI commands work | — | install succeeds; CLI accessible | [#69](https://github.com/deghosal-2026/agent-self-edit/issues/69) · ⬜ |
 
-### Build — Documentation
+#### Docker
 
-| Task | Description | Deliverable |
-|---|---|---|
-| M11.9 | README.md | Complete README: what, why, how it works, quickstart, CLI reference, architecture, configuration, field test results, status, license, links. |
-| M11.10 | Documentation index | `docs/README.md` — update with all documentation links. |
-| M11.11 | CHANGELOG.md | Keep a Changelog format. v0.1.0 entry: all features, fixes, known issues. |
-| M11.12 | Release notes | `docs/release/v0.1.0/release-notes.md` — what's new, field test results, known issues, upgrade guide, credits. |
+| # | Task | Build (files) | Behavior + edge cases | Feature | Verify | Status |
+|---|------|---------------|----------------------|---------|--------|--------|
+| 4 | Docker image | `Dockerfile` (multi-stage), publish to GitHub Container Registry | Build stage: pip install; runtime stage: `python -m agent_self_edit` | F-14 | `docker build .` succeeds; `docker run` works | [#70](https://github.com/deghosal-2026/agent-self-edit/issues/70) · ⬜ |
+| 5 | Docker compose | `docker-compose.yml` | agent-self-edit service with volume mounts for config, registry, traces | F-14 | `docker compose up` works | [#70](https://github.com/deghosal-2026/agent-self-edit/issues/70) · ⬜ |
 
-### Build — Security
+#### Documentation
 
-| Task | Description | Deliverable |
-|---|---|---|
-| M11.13 | Security audit | Run `bandit -r src/`. Fix all findings. Run `trufflehog` on repo. Fix any secrets. |
-| M11.14 | Dependency audit | `pip audit` or `safety check` — verify no vulnerable dependencies. |
-| M11.15 | OpenSSF badge | Register at bestpractices.dev. Complete all passing criteria. Embed badge in README. |
-| M11.16 | Security policy | Update SECURITY.md with vulnerability reporting process. |
+| # | Task | Deliverable | Acceptance |
+|---|-------|-------------|------------|
+| 6 | README.md | `README.md` | Complete: what, why, how it works, quickstart, CLI reference, architecture, configuration, field test results, status, license, links |
+| 7 | CHANGELOG.md | `CHANGELOG.md` | Keep a Changelog format; v0.1.0 entry: all features, fixes, known issues |
+| 8 | Release notes | `docs/release/v0.1.0/release-notes.md` | What's new, field test results, known issues, upgrade guide, credits |
+| 9 | All reference docs | `docs/reference/*.md` | Config, trace schema, registry, guardrails, analyzer, diff, CLI — all complete |
 
-### Build — GitHub
+#### Security
 
-| Task | Description | Deliverable |
-|---|---|---|
-| M11.17 | GitHub release | Create GitHub Release v0.1.0. Tag from main. Include release notes, artifacts. |
-| M11.18 | Main branch protection | Require CI passing, require 1 review, require signed commits. |
-| M11.19 | Update about | Repo description, website (docs/README.md), topics. |
+| # | Task | Build (files) | Behavior + edge cases | Feature | Verify | Status |
+|---|------|---------------|----------------------|---------|--------|--------|
+| 10 | Security audit | — | `bandit -r src/` — fix all findings; `trufflehog` — fix any secrets; `pip audit` or `safety check` — no vulnerable dependencies | — | all security tools pass clean | [#71](https://github.com/deghosal-2026/agent-self-edit/issues/71) · ⬜ |
+| 11 | OpenSSF badge | Register at bestpractices.dev | Complete all passing criteria; embed badge in README | — | badge earned and embedded | [#71](https://github.com/deghosal-2026/agent-self-edit/issues/71) · ⬜ |
+| 12 | Update SECURITY.md | `SECURITY.md` | Vulnerability reporting process, PGP key, response SLA | — | meaningful content | [#71](https://github.com/deghosal-2026/agent-self-edit/issues/71) · ⬜ |
 
-### Tests
+#### GitHub
 
-| Task | Description | Files |
-|---|---|---|
-| T11.1 | Test package install | `tests/test_release.py` — `pip install agent-self-edit` works, `pip install -e .` works, all CLI commands accessible |
-| T11.2 | Test Docker build | `tests/test_docker.py` — image builds, container runs, CLI commands work in container |
-| T11.3 | Test security audit | `manual` — bandit passes, trufflehog passes, safety check passes |
-| T11.4 | Test full test suite | `pytest --cov=agent_self_edit --cov-fail-under=92` — all tests pass, coverage meets target |
+| # | Task | Behavior + edge cases | Feature | Verify | Status |
+|---|-------|----------------------|---------|--------|--------|
+| 13 | GitHub Release v0.1.0 | Tag from main; release notes; artifacts | — | release created with correct tag | [#72](https://github.com/deghosal-2026/agent-self-edit/issues/72) · ⬜ |
+| 14 | Main branch protection | Require CI passing, require 1 review, require signed commits | — | protection rules active | [#72](https://github.com/deghosal-2026/agent-self-edit/issues/72) · ⬜ |
+| 15 | Repo public + about | Make repo public; add description, website, topics | — | repo discoverable | [#72](https://github.com/deghosal-2026/agent-self-edit/issues/72) · ⬜ |
 
-### Documentation
+### M11 Success Metrics
 
-| Task | Description | Deliverable |
-|---|---|---|
-| M11.DOC1 | Release summary | Update `docs/release/v0.1.0/release-notes.md` with final release notes |
-| M11.DOC2 | Update WBS index | Update `docs/wbs/v0.1.0/wbs-v0.1.0-index.md` with M11 status, issue links, exit gate results |
+| Metric | Target | Verification |
+|--------|--------|-------------|
+| PyPI publish | `pip install agent-self-edit` works | clean venv install |
+| Docker publish | `docker run agent-self-edit --help` works | docker build + run |
+| OpenSSF badge | Passing | badge.openssf.org |
+| Security audit | 0 bandit findings, 0 vulnerable deps | bandit + safety check |
+| GitHub release | tag v0.1.0, release notes, artifacts | github.com/releases |
+| Coverage | > 92% | `--cov-fail-under=92` |
+
+### M11 Out of Scope
+
+- OpenSSF Silver badge (v0.5.0), SSO/RBAC (v0.7.0), OTel export (v0.8.0)
 
 ### M11 Exit Gate
 
-- [ ] Release plan reviewed and committed
 - [ ] PyPI package published: `pip install agent-self-edit` works
-- [ ] Docker image published: `docker run agent-self-edit` works
+- [ ] Docker image published: `docker run agent-self-edit --help` works
 - [ ] README complete with quickstart, CLI reference, architecture
 - [ ] CHANGELOG.md complete
 - [ ] Release notes written
@@ -89,6 +85,7 @@
 - [ ] GitHub Release v0.1.0 created
 - [ ] Main branch protected (CI required, 1 review, signed commits)
 - [ ] Repo public and discoverable
-- [ ] Ruff clean, mypy strict clean
-- [ ] All tests pass: `pytest` → 0 failures
-- [ ] Coverage > 92%: `pytest --cov=agent_self_edit --cov-fail-under=92`
+- [ ] Ruff clean, mypy strict clean, all tests pass, coverage > 92%
+- [ ] **Design docs authored:** D11 (release-plan)
+
+**Dependency:** M10 (field test). **Produces:** v0.1.0 release on PyPI, Docker Hub, GitHub.

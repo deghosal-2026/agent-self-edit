@@ -1,115 +1,112 @@
 # WBS — AgentSelfEdit v0.1.0 Part 2: Core Engine
 
-> Part of the v0.1.0 release. See [index](wbs-v0.1.0-index.md) for milestone overview.
->
-> **Milestones:** M3 (A/B Test Engine) · M4 (Promotion Gate)
-> **Dependency:** M3 → M4
+> **Milestones covered:** M3 (A/B Test Engine) · M4 (Promotion Gate)
+> **PRD coverage:** [F-03](../../design/prd/05-features.md) (A/B test), [F-04](../../design/prd/05-features.md) (promotion gate), [F-11](../../design/prd/05-features.md) (near-miss logging)
+> **CUJs covered:** CUJ 1 (deploy, observe, improve — A/B test), CUJ 2 (catch a bad edit — gate)
+> **Dependency:** M3 (depends on M1) → M4 (depends on M3)
 > **Issue Range:** #14–#30
 
-## M3 — A/B Test Engine (#14–#20)
+---
 
-**Goal:** Compare two prompt versions on the held-out task set and produce statistically valid results.
+## Milestone 3: A/B Test Engine (#14–#20)
 
-### Design
+**Objective:** Compare two prompt versions on the held-out task set and produce statistically valid results. The core measurement capability — everything downstream depends on this.
 
-| Task | Description | Deliverable |
-|---|---|---|
-| D3 | Design A/B test engine | `docs/design/ab-test-engine-design.md` — statistical methodology (paired design, bootstrap 10K resamples, effect size, permutation test), scorer interface (ExactMatch, Contains, LLMJudge), task runner design, cost tracking |
+### M3 Design Documents
 
-### Build
+- **D3 — A/B test engine design** (`docs/design/ab-test-engine-design.md`): statistical methodology (paired design, bootstrap 10K resamples, effect size, permutation test), scorer interface (ExactMatch, Contains, LLMJudge), task runner design, cost tracking.
+- **D13 — Design decisions:** DD-06 (paired design), DD-07 (bootstrap 10K resamples), DD-08 (scorer interface).
 
-| Task | Description | Deliverable |
-|---|---|---|
-| M3.1 | LLM provider interface | `src/agent_self_edit/llm/base.py` — `LLMProvider` ABC. `src/agent_self_edit/llm/openai.py` — `OpenAIProvider` (OpenAI-compatible transport). `complete(prompt, system_prompt, temperature) -> str` |
-| M3.2 | Task runner | `run_task(task, prompt, llm_provider) -> TaskResult` — runs a task against a prompt version. Returns: output, success, latency_ms, token_count |
-| M3.3 | Scorer interface | `src/agent_self_edit/scorers.py` — `Scorer` ABC. `ExactMatchScorer`, `ContainsScorer`, `LLMJudgeScorer`. Each: `score(expected, actual) -> (bool, float)` |
-| M3.4 | A/B test runner | `run_ab_test(prompt_a, prompt_b, task_set, llm_provider, scorer) -> ABResult` — run N trials, each trial runs same task against both prompts (paired design). Collect win/loss/tie. |
-| M3.5 | Bootstrap CI | `bootstrap_ci(scores_a, scores_b, n_resamples=10000) -> BootstrapResult` — compute 95% CI via bootstrap. |
-| M3.6 | Permutation test | `permutation_test(scores_a, scores_b, n_permutations=1000) -> float` — p-value via label shuffling. |
-| M3.7 | Effect size | `effect_size(scores_a, scores_b) -> float` — relative improvement = (mean_b - mean_a) / mean_a. |
-| M3.8 | A/B results object | `ABResult` dataclass: winner, win_rate, ci_low, ci_high, effect_size, p_value, n_trials, per_task: list[TaskResult]. |
-| M3.9 | Cost tracking | Track token_count and estimated_cost per A/B test run. Configurable cost ceiling. Abort if ceiling exceeded. |
+### M3 Task Checklist
 
-### Tests
+| # | Task | Build (files) | Behavior + edge cases | Feature | Verify | Status |
+|---|------|---------------|----------------------|---------|--------|--------|
+| 1 | LLM provider interface | `src/agent_self_edit/llm/base.py`: `LLMProvider` ABC; `src/agent_self_edit/llm/openai.py`: `OpenAIProvider`; `src/agent_self_edit/llm/mock.py`: `MockProvider` | `complete(prompt, system_prompt, temperature) -> str`; `MockProvider` returns predetermined responses; `OpenAIProvider` formats messages correctly; timeout raises `ProviderError` | F-03 | mock provider in CI; real provider manually | [#14](https://github.com/deghosal-2026/agent-self-edit/issues/14) · ⬜ |
+| 2 | Task runner | `src/agent_self_edit/ab_test.py`: `run_task(task, prompt, llm_provider) -> TaskResult` | `TaskResult`: output, success, latency_ms, token_count; provider error → `TaskResult(success=False)`; empty prompt returns empty output | F-03 | task runs with mock provider; latency + tokens tracked | [#15](https://github.com/deghosal-2026/agent-self-edit/issues/15) · ⬜ |
+| 3 | Scorer interface | `src/agent_self_edit/scorers.py`: `Scorer` ABC, `ExactMatchScorer`, `ContainsScorer`, `LLMJudgeScorer` | `score(expected, actual) -> (bool, float)`; ExactMatch: exact string compare; Contains: substring match; LLMJudge: LLM call with scoring rubric; scorer not found → `ScorerError` | F-03 | each scorer with exact/partial/no-match fixtures | [#16](https://github.com/deghosal-2026/agent-self-edit/issues/16) · ⬜ |
+| 4 | A/B test runner | `run_ab_test(prompt_a, prompt_b, task_set, llm_provider, scorer) -> ABResult` | Paired design: same task run against both prompts; collects win/loss/tie per task; per-task breakdown in results; empty task set → empty result | F-03 | paired design verified; win/loss/tie correct; per-task breakdown | [#17](https://github.com/deghosal-2026/agent-self-edit/issues/17) · ⬜ |
+| 5 | Bootstrap CI | `bootstrap_ci(scores_a, scores_b, n_resamples=10000) -> BootstrapResult` | 95% CI from 2.5th/97.5th percentiles; 10K resamples; identical scores → CI = [0, 0]; single trial → wide CI; all scores identical → zero variance | F-03 | known data produces expected CI; identical scores; single trial | [#18](https://github.com/deghosal-2026/agent-self-edit/issues/18) · ⬜ |
+| 6 | Permutation test | `permutation_test(scores_a, scores_b, n_permutations=1000) -> float` | p-value via label shuffling; identical distributions → p ≈ 1.0; very different → p ≈ 0.0; n_permutations configurable | F-03 | known distributions; identical; very different; small n | [#19](https://github.com/deghosal-2026/agent-self-edit/issues/19) · ⬜ |
+| 7 | Effect size + cost tracking | `effect_size(scores_a, scores_b) -> float`; `ABResult.cost_usd` | Relative improvement = (new - old) / old; baseline=0 → inf handled; cost ceiling enforced; abort if ceiling exceeded | F-03 | division by zero; ceiling abort; cost accuracy | [#20](https://github.com/deghosal-2026/agent-self-edit/issues/20) · ⬜ |
 
-| Task | Description | Files |
-|---|---|---|
-| T3.1 | Test LLM provider | `tests/test_llm.py` — mock provider returns expected responses, OpenAI provider formats messages correctly, error handling on API failures |
-| T3.2 | Test task runner | `tests/test_ab_test.py` — task returns correct output, latency and tokens tracked, provider errors are caught |
-| T3.3 | Test scorers | `tests/test_scorers.py` — ExactMatch, Contains, LLMJudge each tested with exact matches, partial matches, no matches, edge cases |
-| T3.4 | Test A/B test runner | `tests/test_ab_test.py` — runs with mock provider, paired design verified, win/loss/tie correctly computed, per-task breakdown accurate |
-| T3.5 | Test bootstrap CI | `tests/test_ab_test.py` — bootstrap on known data (should produce expected CI), edge cases (all same scores, extreme values, small n) |
-| T3.6 | Test permutation test | `tests/test_ab_test.py` — permutation on known data (should produce expected p-value), edge cases (identical distributions, small n) |
-| T3.7 | Test effect size | `tests/test_ab_test.py` — zero improvement, positive improvement, negative improvement, division by zero (baseline = 0) |
-| T3.8 | Test cost tracking | `tests/test_ab_test.py` — cost ceiling enforced, abort when exceeded, token count accuracy |
+### M3 Success Metrics
+
+| Metric | Target | Verification |
+|--------|--------|-------------|
+| A/B test runner | 100% correct paired design on mock data | A/B test suite |
+| Bootstrap CI | 95% CI covers true mean 95% of time on synthetic data | bootstrap calibration test |
+| Permutation test | p-value calibrated on synthetic null/alternative | permutation calibration test |
+| Scorer accuracy | each scorer returns correct result on known fixtures | scorer test suite |
+| Cost tracking | ceiling enforced, abort works | cost ceiling test |
+| Coverage | > 92% | `--cov-fail-under=92` |
+
+### M3 Out of Scope
+
+- Promotion gate (M4), prompt registry (M5), guardrails (M6), feedback analyzer (M7)
 
 ### M3 Exit Gate
 
-- [ ] Design docs reviewed and committed
 - [ ] LLM provider works with mock and real providers
 - [ ] Task runner produces correct results
 - [ ] All 3 scorers work correctly
 - [ ] A/B test runner produces valid paired results
 - [ ] Bootstrap CI is statistically valid
 - [ ] Permutation test is statistically valid
-- [ ] Effect size is correct
-- [ ] Cost tracking works
-- [ ] Ruff clean, mypy strict clean
-- [ ] All tests pass: `pytest` → 0 failures
-- [ ] Coverage > 92%: `pytest --cov=agent_self_edit --cov-fail-under=92`
+- [ ] Effect size is correct; cost tracking enforced
+- [ ] Ruff clean, mypy strict clean, all tests pass, coverage > 92%
+- [ ] **Design docs authored:** D3 (ab-test-engine), D13 (DD-06/07/08)
+
+**Dependency:** M1. **Produces for M4+:** `ABResult`, `TaskResult`, `Scorer` interface, `bootstrap_ci()`, `permutation_test()`, `effect_size()`, `LLMProvider` interface.
 
 ---
 
-## M4 — Promotion Gate (#21–#30)
+## Milestone 4: Promotion Gate (#21–#30)
 
-**Goal:** The safety-critical component. Deterministic checks that must all pass before an edit is promoted.
+**Objective:** The safety-critical component. Deterministic checks that must all pass before an edit is promoted. This is the hardest part of the product — prove one prompt is better than another, safely.
 
-### Design
+### M4 Design Documents
 
-| Task | Description | Deliverable |
-|---|---|---|
-| D4 | Design promotion gate | `docs/design/promotion-gate-design.md` — gate architecture, 6-check fail-fast order, near-miss classification, audit log format, rollback semantics |
+- **D4 — Promotion gate design** (`docs/design/promotion-gate-design.md`): gate architecture, 6-check fail-fast order, near-miss classification, audit log format, rollback semantics.
+- **D13 — Design decisions:** DD-09 (fail-fast order), DD-10 (near-miss threshold 50%).
 
-### Build
+### M4 Task Checklist
 
-| Task | Description | Deliverable |
-|---|---|---|
-| M4.1 | Gate interface | `PromotionGate.check(edit, ab_result, current_prompt, original_prompt) -> GateResult` |
-| M4.2 | Gate result | `GateResult` dataclass: decision (promote|reject|near_miss), checks: list[CheckResult], reasoning: str |
-| M4.3 | Check result | `CheckResult` dataclass: name, passed (bool), value (float), threshold (float), details (str) |
-| M4.4 | Sample floor check | Verify n_trials >= configured minimum. Fail if below. |
-| M4.5 | Effect size check | Verify relative improvement >= configured minimum. Fail if below. |
-| M4.6 | Confidence check | Verify p-value < configured threshold. Fail if above. |
-| M4.7 | Frozen section check | Diff the prompt. Verify no lines changed in frozen sections. Fail if any frozen line modified. |
-| M4.8 | Edit-distance check | Count changed lines. Verify <= configured max. Fail if exceeded. |
-| M4.9 | Drift check | Compute semantic similarity (TF-IDF cosine) between new prompt and original. Verify drift <= threshold. Fail if exceeded. |
-| M4.10 | Near-miss classifier | If rejected but >= 50% of checks passed, classify as near-miss. |
-| M4.11 | Gate audit log | Append-only JSONL log. Each entry: timestamp, edit_id, decision, all check results, edit_summary. |
-| M4.12 | Gate orchestrator | `check_all(edit, ab_result, current_prompt, original_prompt, config)` — runs all 6 checks in fail-fast order, returns GateResult. |
+| # | Task | Build (files) | Behavior + edge cases | Feature | Verify | Status |
+|---|------|---------------|----------------------|---------|--------|--------|
+| 1 | Gate result types | `src/agent_self_edit/types.py`: `GateResult`, `CheckResult` dataclasses | `GateResult.decision in {promote, reject, near_miss}`; `CheckResult`: name, passed, value, threshold, details; list is immutable | F-04 | all decisions valid; check results frozen | [#21](https://github.com/deghosal-2026/agent-self-edit/issues/21) · ⬜ |
+| 2 | Gate interface | `PromotionGate.check(edit, ab_result, current_prompt, original_prompt, config) -> GateResult` | Accepts `EditProposal`, `ABResult`, two prompt strings, `Config`; returns `GateResult`; missing fields raise `GateError` | F-04 | valid/invalid inputs; partial config | [#22](https://github.com/deghosal-2026/agent-self-edit/issues/22) · ⬜ |
+| 3 | Sample floor check | `check_sample_floor(ab_result, config) -> CheckResult` | Pass if n_trials >= min; fail if below; n=0 always fails; n=min passes | F-04 | below/at/above threshold; zero trials | [#23](https://github.com/deghosal-2026/agent-self-edit/issues/23) · ⬜ |
+| 4 | Effect size check | `check_effect_size(ab_result, config) -> CheckResult` | Pass if relative improvement >= min; fail if below; improvement = 0 fails; very large improvement passes | F-04 | zero/positive/negative/edge | [#24](https://github.com/deghosal-2026/agent-self-edit/issues/24) · ⬜ |
+| 5 | Confidence check | `check_confidence(ab_result, config) -> CheckResult` | Pass if p-value < threshold; fail if above; p=0 always passes; p=1 always fails | F-04 | p < threshold, p = threshold, p > threshold | [#25](https://github.com/deghosal-2026/agent-self-edit/issues/25) · ⬜ |
+| 6 | Frozen section check | `check_frozen_sections(edit, current_prompt, frozen_sections) -> CheckResult` | Diff prompt; fail if any frozen line modified; pass if no frozen changes; frozen section missing → fail | F-06 | frozen line modified; other sections changed; empty frozen list | [#26](https://github.com/deghosal-2026/agent-self-edit/issues/26) · ⬜ |
+| 7 | Edit-distance check | `check_edit_distance(edit, current_prompt, config) -> CheckResult` | Count changed lines; pass if <= max; fail if exceeded; 0 changes always passes; max=0 means no changes allowed | F-07 | 0/at/above max; max=0 | [#27](https://github.com/deghosal-2026/agent-self-edit/issues/27) · ⬜ |
+| 8 | Drift check | `check_drift(edit, current_prompt, original_prompt, config) -> CheckResult` | TF-IDF cosine similarity; drift = 1 - similarity; pass if drift <= threshold; fail if above; identical prompts → drift=0; completely different → drift≈1 | F-04 | identical/different/similar; TF-IDF vs embedding | [#28](https://github.com/deghosal-2026/agent-self-edit/issues/28) · ⬜ |
+| 9 | Gate orchestrator + near-miss | `check_all(edit, ab_result, current_prompt, original_prompt, config) -> GateResult` | Run 6 checks fail-fast; if >= 50% passed → near-miss; else → reject; all pass → promote; audit log appended | F-04, F-11 | all decision paths; fail-fast verified; near-miss at 50% | [#29](https://github.com/deghosal-2026/agent-self-edit/issues/29) · ⬜ |
+| 10 | Gate audit log | `GateAuditLog(path)`: append-only JSONL; `log(entry)`, `query(edit_id)`, `list(limit=100)` | Append-only enforced; file rotation; concurrent writes safe; query returns correct entry; list returns ordered | F-11 | append-only test; concurrent writes; query/list | [#30](https://github.com/deghosal-2026/agent-self-edit/issues/30) · ⬜ |
 
-### Tests
+### M4 Success Metrics
 
-| Task | Description | Files |
-|---|---|---|
-| T4.1 | Test gate result | `tests/test_gate.py` — GateResult created correctly, check results list is immutable, decision is validated |
-| T4.2 | Test sample floor check | `tests/test_gate.py` — pass (n >= min), fail (n < min), edge case (n = min) |
-| T4.3 | Test effect size check | `tests/test_gate.py` — pass (improvement >= min), fail (improvement < min), edge case (improvement = min) |
-| T4.4 | Test confidence check | `tests/test_gate.py` — pass (p < threshold), fail (p >= threshold), edge case (p = threshold) |
-| T4.5 | Test frozen section check | `tests/test_gate.py` — pass (no frozen changes), fail (frozen line modified), pass (frozen section unchanged, other sections changed) |
-| T4.6 | Test edit-distance check | `tests/test_gate.py` — pass (changes <= max), fail (changes > max), edge case (changes = max) |
-| T4.7 | Test drift check | `tests/test_gate.py` — pass (drift <= threshold), fail (drift > threshold), identical prompts (drift = 0), completely different prompts (drift ≈ 1) |
-| T4.8 | Test near-miss classifier | `tests/test_gate.py` — near-miss when 3-4 checks pass, reject when 0-2 checks pass, promote when all pass |
-| T4.9 | Test gate audit log | `tests/test_gate.py` — log entry format, append-only, queryable by edit_id, timestamp ordering |
-| T4.10 | Test gate orchestrator | `tests/test_gate.py` — all 6 checks run in order, fail-fast (first failure stops), all possible decision paths tested |
-| T4.11 | Test gate edge cases | `tests/test_gate.py` — empty config, missing ab_result, missing prompts, extreme values, concurrent checks |
+| Metric | Target | Verification |
+|--------|--------|-------------|
+| Check correctness | 100% of 6 checks pass/fail correctly on known fixtures | check test suite |
+| Gate orchestrator | all 3 decisions (promote/reject/near-miss) reachable | orchestrator test suite |
+| Fail-fast ordering | first failure stops execution; no further checks run | fail-fast order test |
+| Near-miss classification | 50% threshold correctly classifies | near-miss boundary test |
+| Audit log integrity | append-only verified; query returns correct entries | audit log test suite |
+| Coverage | > 92% | `--cov-fail-under=92` |
+
+### M4 Out of Scope
+
+- Prompt registry (M5), guardrail module (M6), feedback analyzer (M7), CLI (M9)
 
 ### M4 Exit Gate
 
-- [ ] Design docs reviewed and committed
 - [ ] All 6 checks implemented and independently tested
 - [ ] Gate orchestrator runs checks in fail-fast order
+- [ ] All 3 decision paths (promote/reject/near-miss) reachable
 - [ ] Near-miss classification works correctly
 - [ ] Audit log is append-only and queryable
-- [ ] Ruff clean, mypy strict clean
-- [ ] All tests pass: `pytest` → 0 failures
-- [ ] Coverage > 92%: `pytest --cov=agent_self_edit --cov-fail-under=92`
+- [ ] Ruff clean, mypy strict clean, all tests pass, coverage > 92%
+- [ ] **Design docs authored:** D4 (promotion-gate), D13 (DD-09/10)
+
+**Dependency:** M3. **Produces for M5+:** `GateResult`, `CheckResult`, `PromotionGate.check()`, `check_all()`, `GateAuditLog`, `frozen_section_check()`, `edit_distance_check()`, `drift_check()`.

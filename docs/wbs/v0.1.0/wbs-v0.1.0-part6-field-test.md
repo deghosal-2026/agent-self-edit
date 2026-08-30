@@ -1,101 +1,91 @@
 # WBS — AgentSelfEdit v0.1.0 Part 6: Field Test
 
-> Part of the v0.1.0 release. See [index](wbs-v0.1.0-index.md) for milestone overview.
->
-> **Milestone:** M10 (Field Test)
+> **Milestone covered:** M10 (Field Test)
+> **PRD coverage:** [F-14](../../design/prd/05-features.md) (Docker), [07-success-metrics](../../design/prd/07-success-metrics.md) (reliability targets)
+> **CUJs covered:** CUJ 1 (deploy, observe, improve), CUJ 2 (catch bad edit), CUJ 4 (rollback)
 > **Dependency:** M10 depends on M9 (CLI) — needs the CLI to run the loop
 > **Issue Range:** #63–#68
 
-## M10 — Field Test (#63–#68)
+---
 
-**Goal:** Validate the loop end-to-end on a synthetic task suite. Prove improvement is measurable and guardrails work. Test with and without LLM calls.
+## Milestone 10: Field Test (#63–#68)
 
-### Design
+**Objective:** Validate the loop end-to-end on a synthetic task suite. Prove improvement is measurable and guardrails work. Test with and without LLM calls.
 
-| Task | Description | Deliverable |
-|---|---|---|
-| D10.1 | Field test plan | `docs/field-test/v0.1.0/field-test-plan.md` — test objectives, synthetic task suite design, baseline measurement methodology, improvement measurement methodology, guardrail validation methodology, rollback validation, cost analysis, non-LLM vs LLM testing strategy |
-| D10.2 | Field test corpus | `docs/field-test/v0.1.0/corpus/` — task sets, expected outputs, scorer configurations |
-| D10.3 | Test results template | `docs/field-test/v0.1.0/FIELD_TEST_REPORT.md` — template for the final report |
+### M10 Design Documents
 
-### Build — Field Test Corpus
+- **D10 — Field test plan** (`docs/design/field-test-plan.md`): test objectives, synthetic task suite design, baseline measurement methodology, improvement measurement methodology, guardrail validation methodology, rollback validation, cost analysis, non-LLM vs LLM testing strategy, test matrix.
 
-| Task | Description | Deliverable |
-|---|---|---|
-| M10.1 | Domain 1 task set: classification | 20 tasks. Input: text string. Expected output: category label. Scorer: ExactMatch. Failures: ambiguous boundary cases, missing categories, multi-label inputs. |
-| M10.2 | Domain 2 task set: extraction | 15 tasks. Input: text string. Expected output: structured fields. Scorer: Contains (key fields present). Failures: missing fields, wrong format, extra fields. |
-| M10.3 | Domain 3 task set: generation | 15 tasks. Input: topic + constraints. Expected output: generated text. Scorer: LLMJudge (quality, relevance, tone). Failures: off-topic, wrong tone, missing constraints. |
-| M10.4 | Held-out task set | 30 tasks (10 from each domain). Used for A/B testing. Seeded with specific failure modes. |
-| M10.5 | Training task set | 20 tasks (remaining from each domain). Used for generating traces. |
-| M10.6 | Seeded failure prompts | 10 prompts with known failure modes. Each prompt fails on 3-5 specific tasks. Used to verify the loop detects and fixes failures. |
-| M10.7 | Adversarial test cases | 5 intentionally bad edits. Each edit: improves one task type but degrades another. Used to verify guardrails catch tradeoff failures. |
+### M10 Task Checklist
 
-### Build — Non-LLM Tests (Hermetic, CI-safe)
+#### Corpus & Infrastructure
 
-| Task | Description | Deliverable |
-|---|---|---|
-| M10.8 | Trace generation script | `scripts/generate_traces.py` — generates synthetic traces from a task set and prompt. Runs offline (no LLM). Produces: success traces, failure traces, mixed batches. |
-| M10.9 | Baseline measurement | Run baseline prompt against held-out set. Measure: accuracy, per-task scores, cost. Target: > 70% baseline accuracy. |
-| M10.10 | Dry-run loop test | Run `agent-self-edit run --dry-run --once` with mock analyzer. Verify: loop doesn't crash, proposals are generated, A/B test runs, gate decisions are produced. |
-| M10.11 | Gate validation test | Feed 5 intentionally bad edits through the gate. Verify all 5 are rejected. Verify each rejection includes the correct guardrail failure reason. |
-| M10.12 | Rollback test | Promote an edit, verify it's promoted. Roll back. Verify prompt reverts. Verify lineage shows both events. |
-| M10.13 | Zero-LLM test | Run the full loop with mock analyzer, mock LLM provider, mock scorer. Verify: no real LLM calls, all decisions are correct, loop completes. |
-| M10.14 | Concurrency test | Send 100 traces in rapid succession. Verify: trace store handles load, batching triggers correctly, loop processes correctly. |
-| M10.15 | Registry integrity test | Create 20 prompt versions. Verify: all versions are stored, all hashes are correct, no corruption. |
-| M10.16 | Guardrail stress test | Generate 100 random edits. Run through gate. Verify: no crashes, all decisions are valid, near-miss rate is rational. |
+| # | Task | Build (files) | Behavior + edge cases | Feature | Verify | Status |
+|---|------|---------------|----------------------|---------|--------|--------|
+| 1 | Classification task set | `docs/field-test/v0.1.0/corpus/classification.yaml` | 20 tasks; input: text string; expected output: category label; scorer: ExactMatch; includes ambiguous boundary cases, missing categories, multi-label inputs | — | tasks load, scorer works, edge cases present | [#63](https://github.com/deghosal-2026/agent-self-edit/issues/63) · ⬜ |
+| 2 | Extraction task set | `docs/field-test/v0.1.0/corpus/extraction.yaml` | 15 tasks; input: text; expected output: structured fields; scorer: Contains; includes missing fields, wrong format, extra fields | — | tasks load, scorer works, all edge cases | [#63](https://github.com/deghosal-2026/agent-self-edit/issues/63) · ⬜ |
+| 3 | Generation task set | `docs/field-test/v0.1.0/corpus/generation.yaml` | 15 tasks; input: topic + constraints; expected output: generated text; scorer: LLMJudge; includes off-topic, wrong tone, missing constraints | — | tasks load, scorer works, all edge cases | [#63](https://github.com/deghosal-2026/agent-self-edit/issues/63) · ⬜ |
+| 4 | Seeded failure prompts | `docs/field-test/v0.1.0/corpus/seeded-prompts/` | 10 prompts with known failure modes; each fails on 3-5 specific tasks; covers all 3 domains | — | prompts produce expected failures on task sets | [#64](https://github.com/deghosal-2026/agent-self-edit/issues/64) · ⬜ |
+| 5 | Adversarial test cases | `docs/field-test/v0.1.0/corpus/adversarial-edits/` | 5 intentionally bad edits; each improves one task type but degrades another; used to verify guardrails catch tradeoff failures | — | edits have expected improvement/degradation profile | [#64](https://github.com/deghosal-2026/agent-self-edit/issues/64) · ⬜ |
+| 6 | Trace generation script | `scripts/generate_traces.py` | Generates synthetic traces from a task set and prompt; runs offline (no LLM); produces: success traces, failure traces, mixed batches | — | traces are valid; failures included; mixed batches | [#65](https://github.com/deghosal-2026/agent-self-edit/issues/65) · ⬜ |
 
-### Build — LLM Tests (Requires API Key, CI-skipped)
+#### Non-LLM Tests (Hermetic, CI-safe)
 
-| Task | Description | Deliverable |
-|---|---|---|
-| M10.17 | Full loop integration test | Run `agent-self-edit run --once` with real LLM provider. Verify: analyzer produces valid proposals, A/B test produces results, gate makes a decision. |
-| M10.18 | 10-iteration improvement test | Run 10 self-improvement iterations. Measure: accuracy improvement per iteration, guardrail pass rate, rejection rate, near-miss rate, cost per iteration. |
-| M10.19 | Multi-domain improvement test | Run the loop on each domain independently. Measure: per-domain improvement, per-domain guardrail behavior, per-domain cost. |
-| M10.20 | Adversarial edit test | Inject 5 intentionally bad edits via the prompt file. Verify: all 5 are caught by guardrails, none are promoted. |
-| M10.21 | Analyzer quality test | Run analyzer on 10 batches of traces. Measure: proposal validity rate, proposal uniqueness, hypothesis quality (LLM-judged). |
-| M10.22 | Cost analysis | Track: cost per iteration, cost per improvement, cost per A/B test, cost per analysis. Target: < $0.50 per full iteration. |
+| # | Task | Behavior + edge cases | Feature | Verify | Status |
+|---|-------|----------------------|---------|--------|--------|
+| 7 | Baseline measurement | Run baseline prompt against held-out set; measure: accuracy, per-task scores, cost; target: > 70% baseline accuracy | — | baseline recorded; all metrics captured | [#65](https://github.com/deghosal-2026/agent-self-edit/issues/65) · ⬜ |
+| 8 | Dry-run loop test | `agent-self-edit run --dry-run --once` with mock analyzer; verify: loop doesn't crash, proposals generated, A/B test runs, gate decisions produced | — | loop completes; all stages produce output | [#65](https://github.com/deghosal-2026/agent-self-edit/issues/65) · ⬜ |
+| 9 | Gate validation test | Feed 5 intentionally bad edits through gate; verify all 5 rejected; each rejection includes correct guardrail failure reason | — | 5/5 bad edits rejected; correct reasons | [#65](https://github.com/deghosal-2026/agent-self-edit/issues/65) · ⬜ |
+| 10 | Rollback test | Promote an edit, verify promoted; roll back; verify prompt reverts; verify lineage shows both events | — | promote succeeds; rollback reverts; lineage accurate | [#65](https://github.com/deghosal-2026/agent-self-edit/issues/65) · ⬜ |
+| 11 | Zero-LLM test | Full loop with mock analyzer, mock LLM provider, mock scorer; verify: no real LLM calls, all decisions correct, loop completes | — | zero real LLM calls; all decisions valid | [#65](https://github.com/deghosal-2026/agent-self-edit/issues/65) · ⬜ |
+| 12 | Concurrency test | 100 traces in rapid succession; verify: trace store handles load, batching triggers correctly, loop processes correctly | — | no data loss; correct ordering | [#66](https://github.com/deghosal-2026/agent-self-edit/issues/66) · ⬜ |
+| 13 | Registry integrity test | Create 20 prompt versions; verify: all stored, all hashes correct, no corruption | — | 20/20 versions intact; 0 corruption | [#66](https://github.com/deghosal-2026/agent-self-edit/issues/66) · ⬜ |
+| 14 | Guardrail stress test | Generate 100 random edits; run through gate; verify: no crashes, all decisions valid, near-miss rate is rational | — | 0 crashes; 100 valid decisions | [#66](https://github.com/deghosal-2026/agent-self-edit/issues/66) · ⬜ |
 
-### Build — Docker Tests
+#### LLM Tests (Requires API Key, CI-skipped)
 
-| Task | Description | Deliverable |
-|---|---|---|
-| M10.23 | Dockerfile | Multi-stage Dockerfile. Build stage: pip install. Runtime stage: python -m agent_self_edit. |
-| M10.24 | Docker compose | `docker-compose.yml` — agent-self-edit service, volume mounts for config, registry, traces. |
-| M10.25 | Docker smoke test | `docker build . && docker run` — verify image builds and runs. CLI commands work inside container. |
-| M10.26 | Docker integration test | Run full loop in Docker container. Verify: trace ingestion, analysis, A/B test, promotion gate all work. |
-| M10.27 | Docker CI test | `tests/test_docker.py` — build image, run container, run CLI commands, verify output. Runs in CI. |
+| # | Task | Behavior + edge cases | Feature | Verify | Status |
+|---|-------|----------------------|---------|--------|--------|
+| 15 | Full loop integration test | `agent-self-edit run --once` with real LLM provider; verify: analyzer produces valid proposals, A/B test produces results, gate makes a decision | — | all stages produce valid output | [#67](https://github.com/deghosal-2026/agent-self-edit/issues/67) · ⬜ |
+| 16 | 10-iteration improvement test | 10 self-improvement iterations; measure: accuracy improvement per iteration, guardrail pass rate, rejection rate, near-miss rate, cost per iteration; target: 10%+ improvement | — | 10+% improvement; cost tracked; no regressions | [#67](https://github.com/deghosal-2026/agent-self-edit/issues/67) · ⬜ |
+| 17 | Multi-domain improvement test | Loop on each domain independently; measure: per-domain improvement, guardrail behavior, cost | — | improvement in all 3 domains | [#67](https://github.com/deghosal-2026/agent-self-edit/issues/67) · ⬜ |
+| 18 | Adversarial edit test | Inject 5 intentionally bad edits via prompt file; verify: all 5 caught by guardrails, none promoted | — | 5/5 bad edits caught; 0 promoted | [#67](https://github.com/deghosal-2026/agent-self-edit/issues/67) · ⬜ |
+| 19 | Analyzer quality test | Run analyzer on 10 batches of traces; measure: proposal validity rate, proposal uniqueness, hypothesis quality | — | > 80% validity rate; proposals are unique | [#67](https://github.com/deghosal-2026/agent-self-edit/issues/67) · ⬜ |
+| 20 | Cost analysis | Track: cost per iteration, cost per improvement, cost per A/B test, cost per analysis; target: < $0.50 per full iteration | — | cost documented; < $0.50 per iteration | [#67](https://github.com/deghosal-2026/agent-self-edit/issues/67) · ⬜ |
 
-### Analysis
+#### Docker Tests
 
-| Task | Description | Deliverable |
-|---|---|---|
-| M10.28 | Field test report | `docs/field-test/v0.1.0/FIELD_TEST_REPORT.md` — baseline, per-iteration results, guardrail validation, rollback validation, Docker test results, cost analysis, non-LLM vs LLM comparison, recommendations |
-| M10.29 | Improvement trend analysis | Chart: accuracy per iteration. Table: per-iteration improvement, guardrail outcomes, cost. |
-| M10.30 | Guardrail effectiveness analysis | Table: all guardrail check results across all tests. False positive rate (good edits rejected). False negative rate (bad edits promoted). |
-| M10.31 | Cost analysis | Table: cost per iteration, cost per improvement, total cost. Chart: cumulative cost vs cumulative improvement. |
-| M10.32 | Test matrix summary | Table: all tests run, pass/fail, date, environment (non-LLM/LLM/Docker). |
+| # | Task | Build (files) | Behavior + edge cases | Feature | Verify | Status |
+|---|------|---------------|----------------------|---------|--------|--------|
+| 21 | Dockerfile + compose | `Dockerfile` (multi-stage), `docker-compose.yml` | Build stage: pip install; runtime stage: python -m; volume mounts for config, registry, traces | F-14 | image builds; container runs | [#68](https://github.com/deghosal-2026/agent-self-edit/issues/68) · ⬜ |
+| 22 | Docker smoke test | `tests/test_docker.py` | `docker build . && docker run agent-self-edit --help`; verify image builds and runs; CLI commands work inside container | F-14 | image builds; help works | [#68](https://github.com/deghosal-2026/agent-self-edit/issues/68) · ⬜ |
+| 23 | Docker integration test | `tests/test_docker.py` | Run full loop (with mock providers) in Docker container; verify: trace ingestion, analysis, A/B test, promotion gate all work | F-14 | loop completes in container | [#68](https://github.com/deghosal-2026/agent-self-edit/issues/68) · ⬜ |
 
-### Tests
+#### Analysis & Report
 
-| Task | Description | Files |
-|---|---|---|
-| T10.1 | Test trace generation script | `tests/test_field_test.py` — generates traces, traces are valid, traces include failures, traces include successes |
-| T10.2 | Test baseline measurement | `tests/test_field_test.py` — baseline runs without errors, scores are recorded, per-task scores are accurate |
-| T10.3 | Test dry-run loop | `tests/test_field_test.py` — loop completes, proposals generated, A/B test runs, gate produces decisions |
-| T10.4 | Test Docker integration | `tests/test_docker.py` — image builds, container runs, CLI commands work, full loop runs in container |
-| T10.5 | Test zero-LLM mode | `tests/test_field_test.py` — no real LLM calls made, all decisions correct, loop completes |
-| T10.6 | Test concurrency | `tests/test_field_test.py` — 100 traces in rapid succession, no data loss, batching works |
-| T10.7 | Test registry stress | `tests/test_field_test.py` — 20 versions, all correct hashes, no corruption |
-| T10.8 | Test guardrail stress | `tests/test_field_test.py` — 100 random edits, no crashes, valid decisions, rational near-miss rate |
+| # | Task | Deliverable | Acceptance |
+|---|-------|-------------|------------|
+| 24 | Field test report | `docs/field-test/v0.1.0/FIELD_TEST_REPORT.md` | All results documented: baseline, per-iteration, guardrail validation, rollback, Docker, cost, non-LLM vs LLM comparison, recommendations |
+| 25 | Improvement trend analysis | Charts + tables: accuracy per iteration, guardrail outcomes, cost | Improvement visible; target: 10%+ over 10 iterations |
+| 26 | Guardrail effectiveness analysis | False positive rate (good edits rejected), false negative rate (bad edits promoted) | FP < 1%, FN < 0.1% |
+| 27 | Test matrix summary | Table: all tests run, pass/fail, date, environment (non-LLM/LLM/Docker) | All tests documented |
 
-### Documentation
+### M10 Success Metrics
 
-| Task | Description | Deliverable |
-|---|---|---|
-| M10.DOC1 | Field test report | Write `docs/field-test/v0.1.0/FIELD_TEST_REPORT.md` with all results |
-| M10.DOC2 | Performance benchmark | Create `docs/explanation/performance.md` — latency, throughput, cost benchmarks from field test |
-| M10.DOC3 | Troubleshooting guide | Create `docs/explanation/troubleshooting.md` — common issues, solutions, debugging tips learned from field test |
-| M10.DOC4 | Update WBS index | Update `docs/wbs/v0.1.0/wbs-v0.1.0-index.md` with M10 status, issue links, exit gate results |
+| Metric | Target | Verification |
+|--------|--------|-------------|
+| Non-LLM tests | 100% pass in CI | CI run |
+| LLM tests | all pass manually | manual run |
+| Improvement | 10%+ over 10 iterations | improvement trend |
+| Guardrail FP rate | < 1% (good edits rejected) | guardrail analysis |
+| Guardrail FN rate | < 0.1% (bad edits promoted) | adversarial test |
+| Docker tests | 100% pass | Docker CI test |
+| Cost per iteration | < $0.50 | cost analysis |
+| Coverage | > 92% | `--cov-fail-under=92` |
+
+### M10 Out of Scope
+
+- Fleet-wide testing (v0.4.0), production deployment guide (v1.0.0), real-agent integration testing (v0.3.0)
 
 ### M10 Exit Gate
 
@@ -110,6 +100,7 @@
 - [ ] Guardrails catch 100% of injected bad edits
 - [ ] Zero bad edits promoted in any test
 - [ ] Cost documented (target: < $0.50 per iteration)
-- [ ] Ruff clean, mypy strict clean
-- [ ] All tests pass: `pytest` → 0 failures
-- [ ] Coverage > 92%: `pytest --cov=agent_self_edit --cov-fail-under=92`
+- [ ] Ruff clean, mypy strict clean, all tests pass, coverage > 92%
+- [ ] **Design docs authored:** D10 (field-test-plan)
+
+**Dependency:** M9 (CLI). **Produces for M11+:** field test results, synthetic corpus, validation scripts, Docker setup.

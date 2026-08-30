@@ -6,19 +6,19 @@
 
 ## 1. Milestone Overview
 
-| M | File | Focus | Issue Range | Status |
-|---|------|-------|-------------|--------|
-| M1 | [part1-foundation.md](wbs-v0.1.0-part1-foundation.md) | Scaffold, config, CI, OSS files | #1–#7 | ⬜ Pending |
-| M2 | [part1-foundation.md](wbs-v0.1.0-part1-foundation.md) | Execution trace ingestion | #8–#13 | ⬜ Pending |
-| M3 | [part2-core-engine.md](wbs-v0.1.0-part2-core-engine.md) | A/B test engine | #14–#20 | ⬜ Pending |
-| M4 | [part2-core-engine.md](wbs-v0.1.0-part2-core-engine.md) | Promotion gate | #21–#30 | ⬜ Pending |
-| M5 | [part3-storage-guardrails.md](wbs-v0.1.0-part3-storage-guardrails.md) | Prompt registry | #31–#37 | ⬜ Pending |
-| M6 | [part3-storage-guardrails.md](wbs-v0.1.0-part3-storage-guardrails.md) | Guardrail module | #38–#43 | ⬜ Pending |
-| M7 | [part4-intelligence.md](wbs-v0.1.0-part4-intelligence.md) | Feedback analyzer | #44–#50 | ⬜ Pending |
-| M8 | [part4-intelligence.md](wbs-v0.1.0-part4-intelligence.md) | Diff visualization | #51–#54 | ⬜ Pending |
-| M9 | [part5-cli.md](wbs-v0.1.0-part5-cli.md) | CLI | #55–#62 | ⬜ Pending |
-| M10 | [part6-field-test.md](wbs-v0.1.0-part6-field-test.md) | Field test | #63–#68 | ⬜ Pending |
-| M11 | [part7-release.md](wbs-v0.1.0-part7-release.md) | Release | #69–#74 | ⬜ Pending |
+| M | Name | Core features | CUJs | Issues | Part file | Status |
+|---|------|---------------|------|--------|-----------|--------|
+| M1 | Scaffold + Config | F-13, F-10, F-01 (partial) | CUJ 5 | [#1–#7](https://github.com/deghosal-2026/agent-self-edit/issues/1) | [part1](wbs-v0.1.0-part1-foundation.md) | ⬜ Pending |
+| M2 | Trace Ingestion | F-01, F-13 | CUJ 1 | [#8–#13](https://github.com/deghosal-2026/agent-self-edit/issues/8) | [part1](wbs-v0.1.0-part1-foundation.md) | ⬜ Pending |
+| M3 | A/B Test Engine | F-03 | CUJ 1 | [#14–#20](https://github.com/deghosal-2026/agent-self-edit/issues/14) | [part2](wbs-v0.1.0-part2-core-engine.md) | ⬜ Pending |
+| M4 | Promotion Gate | F-04, F-11 | CUJ 2 | [#21–#30](https://github.com/deghosal-2026/agent-self-edit/issues/21) | [part2](wbs-v0.1.0-part2-core-engine.md) | ⬜ Pending |
+| M5 | Prompt Registry | F-05, F-12 | CUJ 3, CUJ 4 | [#31–#37](https://github.com/deghosal-2026/agent-self-edit/issues/31) | [part3](wbs-v0.1.0-part3-storage-guardrails.md) | ⬜ Pending |
+| M6 | Guardrail Module | F-06, F-07 | CUJ 9 | [#38–#43](https://github.com/deghosal-2026/agent-self-edit/issues/38) | [part3](wbs-v0.1.0-part3-storage-guardrails.md) | ⬜ Pending |
+| M7 | Feedback Analyzer | F-02 | CUJ 1, CUJ 2 | [#44–#50](https://github.com/deghosal-2026/agent-self-edit/issues/44) | [part4](wbs-v0.1.0-part4-intelligence.md) | ⬜ Pending |
+| M8 | Diff Visualization | F-08 | CUJ 1, CUJ 3 | [#51–#54](https://github.com/deghosal-2026/agent-self-edit/issues/51) | [part4](wbs-v0.1.0-part4-intelligence.md) | ⬜ Pending |
+| M9 | CLI | F-09 | CUJ 5, CUJ 4 | [#55–#62](https://github.com/deghosal-2026/agent-self-edit/issues/55) | [part5](wbs-v0.1.0-part5-cli.md) | ⬜ Pending |
+| M10 | Field Test | F-14 | CUJ 1, CUJ 2, CUJ 4 | [#63–#68](https://github.com/deghosal-2026/agent-self-edit/issues/63) | [part6](wbs-v0.1.0-part6-field-test.md) | ⬜ Pending |
+| M11 | Release | — | all P0 | [#69–#74](https://github.com/deghosal-2026/agent-self-edit/issues/69) | [part7](wbs-v0.1.0-part7-release.md) | ⬜ Pending |
 
 ## 2. Dependency Graph
 
@@ -41,29 +41,46 @@ M1 ──► M3 ──► M4 ──► M5 ──► M6 ──► M7 ──► M8
 - M10 (Field Test) depends on M9 — needs the CLI to run
 - M11 (Release) depends on M10 — needs validation results
 
-## 3. Build Order (Recommended)
+## 3. Traceability — PRD → WBS
 
-1. **M1** — Scaffold + config (everything depends on this)
-2. **M3** — A/B test engine (the core measurement capability)
-3. **M2** — Execution trace ingestion (independent of M3, can parallelize)
-4. **M4** — Promotion gate (depends on M3)
-5. **M5** — Prompt registry (depends on M4)
-6. **M6** — Guardrail module (depends on M5)
-7. **M7** — Feedback analyzer (depends on M2 + M6)
-8. **M8** — Diff visualization (depends on M5)
-9. **M9** — CLI (depends on M7 + M8)
-10. **M10** — Field test (depends on M9)
-11. **M11** — Release (depends on M10)
+| PRD source | Implemented by |
+|-----------|----------------|
+| [05-features F-01](../../design/prd/05-features.md) | M2 (trace ingestion) |
+| [05-features F-02](../../design/prd/05-features.md) | M7 (feedback analyzer) |
+| [05-features F-03](../../design/prd/05-features.md) | M3 (A/B test engine) |
+| [05-features F-04](../../design/prd/05-features.md) | M4 (promotion gate) |
+| [05-features F-05](../../design/prd/05-features.md) | M5 (prompt registry) |
+| [05-features F-06](../../design/prd/05-features.md) | M6 (frozen core sections) |
+| [05-features F-07](../../design/prd/05-features.md) | M6 (edit-distance limit) |
+| [05-features F-08](../../design/prd/05-features.md) | M8 (diff visualization) |
+| [05-features F-09](../../design/prd/05-features.md) | M9 (CLI) |
+| [05-features F-10](../../design/prd/05-features.md) | M1 (task set management) |
+| [05-features F-11](../../design/prd/05-features.md) | M4 (near-miss logging) |
+| [05-features F-12](../../design/prd/05-features.md) | M5 (rollback) |
+| [05-features F-13](../../design/prd/05-features.md) | M1 (config file) |
+| [05-features F-14](../../design/prd/05-features.md) | M10/M11 (Docker) |
+| [02-architecture §2.2](../../design/prd/02-architecture.md) | M3 (A/B test), M4 (gate checks), M5 (registry), M6 (guardrails), M7 (analyzer) |
+| [04-users-and-cujs §4.3](../../design/prd/04-users-and-cujs.md) | CUJ-1 deploys loop (M9), CUJ-2 bad edit (M4), CUJ-3 lineage (M5), CUJ-4 rollback (M5), CUJ-5 first-time setup (M9), CUJ-9 guardrails (M6) |
 
-## 4. Issue Naming Convention
+## 4. Cross-Cutting Contracts
+
+- **Package:** import `agent_self_edit` — PyPI `agent-self-edit` — CLI `agent-self-edit`.
+- **Hermetic by default:** CI never calls a paid LLM. Mock providers used in all tests. Real LLM tests are manual/CI-skipped.
+- **Mock-first:** Every milestone that depends on an LLM provider must also implement a mock provider usable in CI.
+- **Fail-closed on analyzer:** The analyzer proposes edits but has no authority. All proposals go through A/B test + promotion gate. No edit is promoted on the analyzer's authority alone.
+- **Deterministic gate:** The promotion gate is deterministic code, not LLM-judged. Every guardrail check is verifiable, testable, and non-negotiable.
+- **Cheap by default:** Default config uses cheap models (gpt-4o-mini). Cost ceiling enforced per cycle. Analyzer runs in batch mode, not per-task.
+- **File-based persistence:** Prompt registry is file-based (`.md` + `.json`), not dependent on an external database. SQLite for traces only.
+- **Provenance-first:** Every prompt version carries full lineage — what changed, why, what evidence justified it, and how to roll back. Tamper-evident via hash chain.
+
+## 5. Issue Naming Convention
 
 - Title: `[v0.1.0-M1] Task description`
 - Labels: `milestone-M1` through `milestone-M11`, `area-*`, `kind-*`
 - Milestone: `v0.1.0-M1` through `v0.1.0-M11`
 
-## 5. Exit Gate (Every Milestone)
+## 6. Exit Gate (Every Milestone)
 
-- [ ] Design docs reviewed and committed (if applicable)
 - [ ] Ruff clean: `ruff check .` → 0 errors
 - [ ] Mypy strict clean: `mypy --strict` → 0 errors
 - [ ] All tests pass: `pytest` → 0 failures
@@ -72,7 +89,7 @@ M1 ──► M3 ──► M4 ──► M5 ──► M6 ──► M7 ──► M8
 - [ ] Documentation updated for the milestone's scope
 - [ ] WBS index updated with milestone status
 
-## 6. Package Layout
+## 7. Package Layout
 
 ```
 src/agent_self_edit/
@@ -102,6 +119,7 @@ src/agent_self_edit/
 
 tests/
 ├── __init__.py
+├── conftest.py               # Shared fixtures, mock LLM provider, temp directories
 ├── test_config.py
 ├── test_tasks.py
 ├── test_types.py
@@ -117,27 +135,24 @@ tests/
 ├── test_field_test.py
 ├── test_docker.py
 ├── test_release.py
-└── conftest.py               # Shared fixtures, mock LLM provider, temp directories
 ```
 
-## 7. Design Documents to Author
+## 8. Design Documents to Author
 
-Authored inline with their milestone:
+| D# | Doc | Milestone | Path | Contents |
+|----|-----|-----------|------|----------|
+| D1 | Config schema design | M1 | `docs/design/config-schema-design.md` | Config file format, all fields, validation rules, schema versioning |
+| D2 | Trace schema design | M2 | `docs/design/trace-schema-design.md` | Trace JSON schema, SQLite store schema, adapter interface design |
+| D3 | A/B test engine design | M3 | `docs/design/ab-test-engine-design.md` | Statistical methodology, scorer interface, bootstrap, permutation test |
+| D4 | Promotion gate design | M4 | `docs/design/promotion-gate-design.md` | Gate architecture, 6-check fail-fast order, near-miss classification |
+| D5 | Prompt registry design | M5 | `docs/design/prompt-registry-design.md` | Registry format, versioning, rollback, integrity checks |
+| D6 | Guardrail module design | M6 | `docs/design/guardrail-module-design.md` | Guardrail architecture, drift calculation, frozen sections |
+| D7 | Feedback analyzer design | M7 | `docs/design/feedback-analyzer-design.md` | Analyzer prompt, proposal format, deduplication, cost tracking |
+| D8 | Diff visualization design | M8 | `docs/design/prompt-diff-design.md` | Diff output formats, edit density, guardrail report formatting |
+| D9 | CLI surface design | M9 | `docs/design/cli-surface-design.md` | CLI commands, flags, output formats, exit codes |
+| D10 | Field test plan | M10 | `docs/design/field-test-plan.md` | Synthetic task suite, validation methodology, test matrix |
 
-| D | Doc | Milestone | Description |
-|---|-----|-----------|-------------|
-| D1 | `docs/design/config-schema-design.md` | M1 | Config file format, validation, schema |
-| D2 | `docs/design/trace-schema-design.md` | M2 | Trace format, store schema, adapter design |
-| D3 | `docs/design/ab-test-engine-design.md` | M3 | Statistical methodology, scorer interface, bootstrap |
-| D4 | `docs/design/promotion-gate-design.md` | M4 | Gate architecture, check order, near-miss classification |
-| D5 | `docs/design/prompt-registry-design.md` | M5 | Registry format, versioning, rollback, integrity |
-| D6 | `docs/design/guardrail-module-design.md` | M6 | Guardrail architecture, drift calculation, frozen sections |
-| D7 | `docs/design/feedback-analyzer-design.md` | M7 | Analyzer prompt, proposal format, deduplication |
-| D8 | `docs/design/prompt-diff-design.md` | M8 | Diff visualization, edit density, guardrail report |
-| D9 | `docs/design/cli-surface-design.md` | M9 | CLI commands, flags, output formats |
-| D10 | `docs/design/field-test-plan.md` | M10 | Synthetic task suite, validation methodology |
-
-## 8. Documentation Map
+## 9. Documentation Map
 
 | Doc | Milestone | Location |
 |-----|-----------|----------|
@@ -156,9 +171,10 @@ Authored inline with their milestone:
 | Troubleshooting guide | M10 | `docs/explanation/troubleshooting.md` |
 | Release notes | M11 | `docs/release/v0.1.0/release-notes.md` |
 
-## 9. Connected
+## 10. Connected
 
 - [PRD](../design/README.md) — Product requirements
 - [Architecture](../design/prd/02-architecture.md) — System architecture
 - [Features](../design/prd/05-features.md) — Feature set F-01 through F-14
+- [CUJs](../design/prd/04-users-and-cujs.md) — Customer user journeys
 - [Roadmap](../design/prd/09-roadmap.md) — Full roadmap v0.1.0 through v1.0.0

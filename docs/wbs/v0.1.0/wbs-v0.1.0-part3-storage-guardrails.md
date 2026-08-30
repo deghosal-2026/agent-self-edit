@@ -1,121 +1,106 @@
 # WBS — AgentSelfEdit v0.1.0 Part 3: Storage & Guardrails
 
-> Part of the v0.1.0 release. See [index](wbs-v0.1.0-index.md) for milestone overview.
->
-> **Milestones:** M5 (Prompt Registry) · M6 (Guardrail Module)
-> **Dependency:** M5 → M6 (guardrails diff against registry)
+> **Milestones covered:** M5 (Prompt Registry) · M6 (Guardrail Module)
+> **PRD coverage:** [F-05](../../design/prd/05-features.md) (registry), [F-12](../../design/prd/05-features.md) (rollback), [F-06](../../design/prd/05-features.md) (frozen sections), [F-07](../../design/prd/05-features.md) (edit distance)
+> **CUJs covered:** CUJ 3 (trace lineage), CUJ 4 (rollback), CUJ 9 (custom guardrails)
+> **Dependency:** M5 (depends on M4) → M6 (depends on M5)
 > **Issue Range:** #31–#43
 
-## M5 — Prompt Registry (#31–#37)
+---
 
-**Goal:** Versioned store of every prompt with full lineage, diff, rollback, and integrity.
+## Milestone 5: Prompt Registry (#31–#37)
 
-### Design
+**Objective:** Versioned store of every prompt with full lineage, diff, rollback, and integrity. File-based — no external database.
 
-| Task | Description | Deliverable |
-|---|---|---|
-| D5 | Design prompt registry | `docs/design/prompt-registry-design.md` — file-based registry format, version metadata schema, diff computation, rollback semantics, integrity checks, registry locking |
+### M5 Design Documents
 
-### Build
+- **D5 — Prompt registry design** (`docs/design/prompt-registry-design.md`): file-based registry format, version metadata schema, diff computation, rollback semantics, integrity checks, registry locking.
+- **D13 — Design decisions:** DD-11 (file-based registry), DD-12 (SHA-256 integrity).
 
-| Task | Description | Deliverable |
-|---|---|---|
-| M5.1 | Registry store | File-based registry at `registry_path/`. Each version: `v{N}.md` (prompt text), `v{N}.meta.json` (metadata). `Registry.__init__(path)`, `Registry.current_version -> int`, `Registry.current_prompt -> str` |
-| M5.2 | Version metadata | `Meta` dataclass: version, timestamp, diff_from_previous, hypothesis, ab_results, gate_result, trigger_trace_ids, model_version, token_cost, sha256_hash |
-| M5.3 | Create version | `Registry.create(prompt_text, hypothesis, ab_results, gate_result, trigger_trace_ids, model_version, token_cost) -> int` — writes prompt file, computes metadata, writes meta file, returns version number |
-| M5.4 | Diff computation | `Registry.diff(v1, v2) -> DiffResult` — line-level diff. Output: added[], removed[], modified[], unchanged_count, frozen_unchanged_count |
-| M5.5 | Rollback | `Registry.rollback(version, reason) -> int` — promotes a previous version to current. Creates a new version that is a copy of the target. Logs rollback reason and version. |
-| M5.6 | Lineage query | `Registry.lineage(from_version=None) -> list[Meta]` — returns full history. `Registry.get(version) -> (str, Meta)` — returns prompt text and metadata. |
-| M5.7 | Integrity check | `Registry.verify_integrity() -> list[str]` — verifies SHA-256 hash of each version. Returns list of corrupted versions. |
-| M5.8 | Registry locking | File lock (`fcntl` or `portalocker`) during write operations. Prevents concurrent writes. Read operations are not locked. |
+### M5 Task Checklist
 
-### Tests
+| # | Task | Build (files) | Behavior + edge cases | Feature | Verify | Status |
+|---|------|---------------|----------------------|---------|--------|--------|
+| 1 | Registry store | `src/agent_self_edit/registry.py`: `Registry.__init__(path)`, `current_version`, `current_prompt` | Version `v{N}.md` + `v{N}.meta.json`; directory created on init; empty registry → version 0, empty prompt; path doesn't exist → created | F-05 | init with/without existing path; empty registry | [#31](https://github.com/deghosal-2026/agent-self-edit/issues/31) · ⬜ |
+| 2 | Version metadata | `Meta` dataclass: version, timestamp, sha256_hash, diff_from_previous, hypothesis, ab_results, gate_result, trigger_trace_ids, model_version, token_cost | SHA-256 computed on write; hash verified on read; all fields optional except version, timestamp, hash; JSON serialization round-trips | F-05 | JSON round-trip; hash verification; all fields optional | [#32](https://github.com/deghosal-2026/agent-self-edit/issues/32) · ⬜ |
+| 3 | Create version | `Registry.create(prompt_text, **metadata) -> int` | Writes prompt file + meta file; increments version; returns version number; concurrent writes blocked by lock; empty prompt text accepted | F-05 | create increments version; concurrent writes blocked; empty prompt | [#33](https://github.com/deghosal-2026/agent-self-edit/issues/33) · ⬜ |
+| 4 | Diff computation | `Registry.diff(v1, v2) -> DiffResult` | Line-level diff; output: added[], removed[], modified[], unchanged_count, frozen_unchanged_count; v1=v2 → empty diff; invalid versions → `RegistryError` | F-05 | identical/different; invalid versions; frozen sections | [#34](https://github.com/deghosal-2026/agent-self-edit/issues/34) · ⬜ |
+| 5 | Rollback | `Registry.rollback(version, reason) -> int` | Creates new version as copy of target; rollback reason + target version stored in metadata; invalid version → `RegistryError`; rollback to current version → creates identical copy | F-12 | rollback to valid/invalid/current version; metadata preserved | [#35](https://github.com/deghosal-2026/agent-self-edit/issues/35) · ⬜ |
+| 6 | Lineage query | `Registry.lineage(from_version=None) -> list[Meta]`, `Registry.get(version) -> (str, Meta)` | Lineage returns ordered list; `get()` returns prompt + metadata; invalid version → `RegistryError`; lineage from version N returns N..current | F-05 | full lineage; partial lineage; invalid version | [#36](https://github.com/deghosal-2026/agent-self-edit/issues/36) · ⬜ |
+| 7 | Integrity check | `Registry.verify_integrity() -> list[str]` | Recomputes SHA-256 for each version; returns list of corrupted versions; all intact → empty list; file tampered → detected | F-05 | all intact; one corrupted; all corrupted; empty registry | [#37](https://github.com/deghosal-2026/agent-self-edit/issues/37) · ⬜ |
 
-| Task | Description | Files |
-|---|---|---|
-| T5.1 | Test registry CRUD | `tests/test_registry.py` — create version, read version, list versions, current_version returns correct value |
-| T5.2 | Test version metadata | `tests/test_registry.py` — metadata fields are populated correctly, sha256 hash is computed correctly, hash changes when prompt changes |
-| T5.3 | Test diff computation | `tests/test_registry.py` — diff identical prompts, diff completely different prompts, diff with one-line change, diff with frozen sections, diff with added/removed/modified lines |
-| T5.4 | Test rollback | `tests/test_registry.py` — rollback creates new version, rollback returns correct prompt, lineage shows rollback, rollback with invalid version raises error |
-| T5.5 | Test lineage query | `tests/test_registry.py` — full lineage, lineage from version, lineage with rollback, empty registry |
-| T5.6 | Test integrity check | `tests/test_registry.py` — all versions valid, one version corrupted, corrupted version detected, multiple corrupted versions |
-| T5.7 | Test registry locking | `tests/test_registry.py` — concurrent writes are serialized, concurrent reads are allowed, lock timeout raises error |
+### M5 Success Metrics
 
-### Documentation
+| Metric | Target | Verification |
+|--------|--------|-------------|
+| Registry CRUD | 100% create/read/update operations correct | registry test suite |
+| Diff accuracy | line-level diff correct on all known fixtures | diff test suite |
+| Rollback integrity | rollback creates correct version; metadata preserved | rollback test suite |
+| Integrity detection | 100% of tampered versions detected | integrity test suite |
+| Coverage | > 92% | `--cov-fail-under=92` |
 
-| Task | Description | Deliverable |
-|---|---|---|
-| M5.DOC1 | Registry reference | Create `docs/reference/registry.md` — registry format, version metadata, CLI commands for registry operations |
-| M5.DOC2 | Update WBS index | Update `docs/wbs/v0.1.0/wbs-v0.1.0-index.md` with M5 status, issue links, exit gate results |
+### M5 Out of Scope
+
+- Guardrail module (M6), feedback analyzer (M7), diff visualization (M8), CLI (M9)
 
 ### M5 Exit Gate
 
-- [ ] Design docs reviewed and committed
 - [ ] Registry stores versions with metadata
 - [ ] Diff works between any two versions
 - [ ] Rollback creates a new version with rollback reason in lineage
 - [ ] Lineage is fully queryable
 - [ ] Integrity check detects corrupted versions
-- [ ] Registry locking prevents concurrent write corruption
-- [ ] Ruff clean, mypy strict clean
-- [ ] All tests pass: `pytest` → 0 failures
-- [ ] Coverage > 92%: `pytest --cov=agent_self_edit --cov-fail-under=92`
+- [ ] Ruff clean, mypy strict clean, all tests pass, coverage > 92%
+- [ ] **Design docs authored:** D5 (prompt-registry), D13 (DD-11/12)
+
+**Dependency:** M4. **Produces for M6+:** `Registry`, `Meta`, `DiffResult`, `create()`, `diff()`, `rollback()`, `lineage()`, `verify_integrity()`.
 
 ---
 
-## M6 — Guardrail Module (#38–#43)
+## Milestone 6: Guardrail Module (#38–#43)
 
-**Goal:** Constraint enforcement. The guardrails are deterministic code, not LLM-judged.
+**Objective:** Constraint enforcement. The guardrails are deterministic code, not LLM-judged. They prevent the analyzer from making unsafe edits.
 
-### Design
+### M6 Design Documents
 
-| Task | Description | Deliverable |
-|---|---|---|
-| D6 | Design guardrail module | `docs/design/guardrail-module-design.md` — frozen section annotation format, edit-distance calculation, TF-IDF drift calculation, per-section drift, guardrail report format, near-miss log format |
+- **D6 — Guardrail module design** (`docs/design/guardrail-module-design.md`): frozen section annotation format, edit-distance calculation, TF-IDF drift calculation, per-section drift, guardrail report format, near-miss log format.
+- **D13 — Design decisions:** DD-13 (TF-IDF drift for v0.1.0, embedding in v0.2.0).
 
-### Build
+### M6 Task Checklist
 
-| Task | Description | Deliverable |
-|---|---|---|
-| M6.1 | Frozen section parser | `parse_frozen_sections(prompt_text) -> list[FrozenSection]` — parse `<!-- frozen -->` annotations. `FrozenSection`: start_line, end_line, section_name. |
-| M6.2 | Frozen section validator | `validate_frozen_sections(prompt_text, frozen_sections) -> bool` — verify frozen sections exist in current prompt. |
-| M6.3 | Edit-distance calculator | `compute_edit_distance(old_prompt, new_prompt) -> EditDistance` — diff, count: lines_added, lines_removed, lines_modified, total, frozen_lines_changed. |
-| M6.4 | Drift calculator (TF-IDF) | `compute_drift_tfidf(prompt_a, prompt_b) -> float` — TF-IDF vectorization, cosine similarity. Drift = 1 - similarity. Range [0, 1]. |
-| M6.5 | Drift calculator (embedding) | `compute_drift_embedding(prompt_a, prompt_b, llm_provider) -> float` — sentence embedding, cosine similarity. Falls back to TF-IDF if embedding unavailable. |
-| M6.6 | Per-section drift | `compute_per_section_drift(prompt_a, prompt_b, sections: list[str]) -> dict[str, float]` — drift per named section. |
-| M6.7 | Guardrail report | `GuardrailReport` dataclass: checks: list[CheckResult], summary: str, decision: str. Human-readable `__str__` and `__repr__`. |
-| M6.8 | Near-miss logger | `NearMissLogger(path)` — append-only JSONL. `log(edit_id, edit_summary, failed_checks, passed_checks, rejection_reason)`. `query(edit_id)`, `list(limit=100)`. |
+| # | Task | Build (files) | Behavior + edge cases | Feature | Verify | Status |
+|---|------|---------------|----------------------|---------|--------|--------|
+| 1 | Frozen section parser | `parse_frozen_sections(prompt_text) -> list[FrozenSection]` | Parse `<!-- frozen -->` annotations; `FrozenSection`: start_line, end_line, section_name; no frozen sections → empty list; malformed annotation → `GuardrailError` | F-06 | single/multiple/no frozen sections; malformed | [#38](https://github.com/deghosal-2026/agent-self-edit/issues/38) · ⬜ |
+| 2 | Frozen section validator | `validate_frozen_sections(prompt_text, frozen_sections) -> bool` | Verify frozen sections exist in current prompt; section renumbered after edit → fail; all sections match → pass | F-06 | sections exist/don't exist; renumbered after edit | [#39](https://github.com/deghosal-2026/agent-self-edit/issues/39) · ⬜ |
+| 3 | Edit-distance calculator | `compute_edit_distance(old_prompt, new_prompt) -> EditDistance` | `EditDistance`: lines_added, lines_removed, lines_modified, total, frozen_lines_changed; identical prompts → 0 total; completely different → all lines changed; frozen section changes counted separately | F-07 | identical/different; frozen vs non-frozen changes | [#40](https://github.com/deghosal-2026/agent-self-edit/issues/40) · ⬜ |
+| 4 | TF-IDF drift calculator | `compute_drift_tfidf(prompt_a, prompt_b) -> float` | TF-IDF vectorization; cosine similarity; drift = 1 - similarity; range [0, 1]; identical prompts → drift = 0; completely different → drift ≈ 1; symmetric | F-04 | identical/different/similar; symmetry verified | [#41](https://github.com/deghosal-2026/agent-self-edit/issues/41) · ⬜ |
+| 5 | Drift calculator (embedding) | `compute_drift_embedding(prompt_a, prompt_b, llm_provider) -> float` | Sentence embedding via LLM provider; cosine similarity; falls back to TF-IDF if embedding unavailable | F-04 | embedding vs TF-IDF; fallback on failure | [#42](https://github.com/deghosal-2026/agent-self-edit/issues/42) · ⬜ |
+| 6 | Per-section drift + guardrail report | `compute_per_section_drift(prompt_a, prompt_b, sections) -> dict[str, float]`; `GuardrailReport` dataclass | Per-section drift computed; `GuardrailReport.__str__()` human-readable; `__repr__()` machine-readable | F-06, F-07 | per-section drift; report formatting | [#43](https://github.com/deghosal-2026/agent-self-edit/issues/43) · ⬜ |
 
-### Tests
+### M6 Success Metrics
 
-| Task | Description | Files |
-|---|---|---|
-| T6.1 | Test frozen section parser | `tests/test_guardrails.py` — single frozen section, multiple sections, no frozen sections, malformed annotations, nested annotations |
-| T6.2 | Test frozen section validator | `tests/test_guardrails.py` — sections exist in prompt, section missing from prompt, empty sections list |
-| T6.3 | Test edit-distance calculator | `tests/test_guardrails.py` — identical prompts (0 distance), completely different prompts, one-line change, multi-line change, frozen section changes |
-| T6.4 | Test TF-IDF drift | `tests/test_guardrails.py` — identical prompts (drift = 0), completely different prompts (drift ≈ 1), similar prompts, drift is symmetric |
-| T6.5 | Test embedding drift | `tests/test_guardrails.py` — uses mock embedding provider, identical prompts (drift = 0), different prompts, fallback to TF-IDF |
-| T6.6 | Test per-section drift | `tests/test_guardrails.py` — drift per section, sections with no changes, sections with changes, missing sections |
-| T6.7 | Test guardrail report | `tests/test_guardrails.py` — all checks pass, some checks fail, all checks fail, report string formatting |
-| T6.8 | Test near-miss logger | `tests/test_guardrails.py` — log entry, query by edit_id, list recent, append-only enforced, file rotation, concurrent writes |
+| Metric | Target | Verification |
+|--------|--------|-------------|
+| Frozen section parsing | 100% of valid annotations parsed correctly | parser test suite |
+| Edit distance | 100% accurate on known diffs | distance test suite |
+| TF-IDF drift | symmetric, range [0,1], identical = 0 | drift test suite |
+| Embedding drift | fallback to TF-IDF works | embedding test suite |
+| Report formatting | human-readable and machine-readable output | report test suite |
+| Coverage | > 92% | `--cov-fail-under=92` |
 
-### Documentation
+### M6 Out of Scope
 
-| Task | Description | Deliverable |
-|---|---|---|
-| M6.DOC1 | Guardrails reference | Create `docs/reference/guardrails.md` — frozen section annotation format, guardrail configuration, drift calculation, near-miss log format |
-| M6.DOC2 | Update WBS index | Update `docs/wbs/v0.1.0/wbs-v0.1.0-index.md` with M6 status, issue links, exit gate results |
+- Feedback analyzer (M7), diff visualization (M8), CLI (M9), near-miss logger (part of M4)
 
 ### M6 Exit Gate
 
-- [ ] Design docs reviewed and committed
 - [ ] Frozen sections are parsed and validated correctly
 - [ ] Edit distance is accurate for all cases
-- [ ] TF-IDF drift is computed correctly
-- [ ] Embedding drift works with fallback
+- [ ] TF-IDF drift is computed correctly (symmetric, range [0,1])
+- [ ] Embedding drift works with TF-IDF fallback
 - [ ] Per-section drift is accurate
 - [ ] Guardrail report is human-readable
-- [ ] Near-miss logger is append-only and queryable
-- [ ] Ruff clean, mypy strict clean
-- [ ] All tests pass: `pytest` → 0 failures
-- [ ] Coverage > 92%: `pytest --cov=agent_self_edit --cov-fail-under=92`
+- [ ] Ruff clean, mypy strict clean, all tests pass, coverage > 92%
+- [ ] **Design docs authored:** D6 (guardrail-module), D13 (DD-13)
+
+**Dependency:** M5. **Produces for M7+:** `parse_frozen_sections()`, `compute_edit_distance()`, `compute_drift_tfidf()`, `compute_drift_embedding()`, `GuardrailReport`.
