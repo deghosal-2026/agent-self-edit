@@ -516,6 +516,53 @@ def permutation_test(
     return count / n_permutations
 ```
 
+### 6.3 What the P-Value Actually Means
+
+The p-value answers one specific question: **"If the two prompts were actually identical, how likely would we see a difference this large (or larger) purely by chance?"**
+
+**Concrete example:**
+- You run the A/B test and get p = 0.02
+- This means: if the prompts were identical, there's only a 2% chance you'd observe a difference this big or bigger just from random noise
+- Therefore, it's unlikely that noise explains the result — the prompt change probably made a real difference
+
+**What the p-value is NOT:**
+- NOT the probability that prompt B is better (that's a Bayesian concept, not what this test measures)
+- NOT the probability that the result is a false positive
+- NOT a measure of effect size (a tiny improvement can have a very small p-value if you have enough data)
+
+### 6.4 How the Promotion Gate Uses the P-Value
+
+The gate checks: `p_value < confidence_level` (default: p < 0.05).
+
+| p-value | Gate Decision | Meaning |
+|---------|---------------|---------|
+| 0.001 | ✅ Pass | Very strong evidence B is better. Only 0.1% chance this is noise. |
+| 0.02 | ✅ Pass | Strong evidence. Only 2% chance this is noise. |
+| 0.049 | ✅ Pass (barely) | Passes the threshold. 4.9% chance this is noise. |
+| 0.051 | ❌ Fail (barely) | Fails the threshold. 5.1% chance this is noise. |
+| 0.30 | ❌ Fail | Weak evidence. 30% chance this is noise — not convincing. |
+| 0.50 | ❌ Fail | No evidence. 50/50 — the difference is as likely as not to be noise. |
+| 1.00 | ❌ Fail | Identical distributions. Zero evidence of any difference. |
+
+**Why 0.05?** It's the conventional threshold in statistical testing. It means we're willing to accept a 5% chance of a false positive (promoting an edit that isn't actually better). This is a reasonable default — the guardrails (frozen sections, edit distance, drift) provide additional safety layers.
+
+### 6.5 Common Misinterpretations
+
+| Misinterpretation | Truth |
+|-------------------|-------|
+| "p = 0.01 means there's a 99% chance B is better" | **Wrong.** p = 0.01 means "if the prompts were identical, there's a 1% chance of seeing this difference." It doesn't directly give the probability that B is better. |
+| "p = 0.06 means B is probably better, we just need more data" | **Dangerous.** This is p-hacking. Running more trials until p < 0.05 inflates your false positive rate. The system does NOT automatically run more trials. |
+| "p < 0.05 means the effect is large" | **Wrong.** A tiny effect can achieve p < 0.05 with enough data. The gate also checks effect size (default: 5% minimum improvement) to catch this. |
+| "p < 0.05 means the result is practically significant" | **Wrong.** Statistical significance ≠ practical significance. An improvement from 72% to 72.5% might be statistically significant with enough data, but it's not worth deploying. The effect size check prevents this. |
+
+### 6.6 Why Not a T-Test?
+
+A standard t-test assumes the data follows a normal distribution. Our deltas (score differences) often don't — they're bounded between -1 and +1, and many tasks may tie (delta = 0). The permutation test makes no normality assumption. It works by shuffling the actual observed data, which preserves the true distribution. This is more robust for our use case.
+
+### 6.7 Why Not a Bayesian Approach?
+
+A Bayesian approach would give us a probability distribution over the effect size, which is arguably more useful. But it requires specifying a prior, which adds complexity and subjectivity. The frequentist approach (CI + p-value) is simpler, more standard, and easier for users to understand. Bayesian analysis can be added as an option in a future version.
+
 ### 6.3 Interpreting the Results
 
 | CI entirely above 0 | p-value < 0.05 | Effect > 5% | Winner | Action |
