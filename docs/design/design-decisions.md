@@ -7,10 +7,10 @@
 **Decision:** Package name `agent_self_edit`, PyPI name `agent-self-edit`, CLI entry `agent-self-edit`.
 **Rationale:** Consistent, discoverable naming across import, distribution, and command-line surfaces.
 
-## DD-02 — Config format YAML
-**Date:** 2026-08-30 · **Milestone:** M1
-**Decision:** Configuration is stored as YAML (not JSON or TOML).
-**Rationale:** YAML supports comments, is human-readable for prompt engineers, and round-trips cleanly.
+## DD-02 — Config format YAML (primary) + TOML (supported)
+**Date:** 2026-08-30 · **Milestone:** M1 (updated M5)
+**Decision:** Configuration is stored as YAML by default, with TOML also supported (PRD F-13 "YAML/TOML"). Enabled by file extension (`.yaml`/`.yml` → YAML, `.toml` → TOML).
+**Rationale:** YAML supports comments and round-trips cleanly; TOML satisfies PRD F-13 for teams that standardize on it. Auto-detection keeps a single `load_config()` entry point.
 
 ## DD-03 — Task set format
 **Date:** 2026-08-30 · **Milestone:** M1
@@ -52,10 +52,10 @@
 **Decision:** A gate is classified near-miss when ≥ 50% of checks pass.
 **Rationale:** Threshold is conservative: a mostly-passing gate is not silently rejected and logs for review.
 
-## DD-11 — File-based registry
-**Date:** M5
-**Decision:** Prompt registry is file-based (`v{N}.md` + `v{N}.meta.json`), no external database.
-**Rationale:** Prompts are human-readable text; file-per-version makes diffs and integrity checks trivial.
+## DD-11 — Git-backed file registry (PRD §2.5)
+**Date:** M5 (updated to git-backed per discrepancy audit)
+**Decision:** The prompt registry is a file-based store (`v{N}.md` + `v{N}.meta.json`) that also commits every created version to git when the registry path is inside a git work tree (PRD §2.5). Falls back to file-only when git is unavailable or the path is outside a repo.
+**Rationale:** Files keep prompts human-readable and make integrity trivial (DD-12); git commits give tree-wide diff, rollback, branching, and merge through standard tooling, and each version records its `commit_sha` in metadata.
 
 ## DD-12 — SHA-256 integrity
 **Date:** M5
@@ -86,3 +86,8 @@
 **Date:** M9
 **Decision:** CLI exit codes: 0 success, 1 error, 2 validation failure.
 **Rationale:** Simple, scriptable, distinguishes operational failures from invalid input.
+
+## DD-18 — Standalone guardrail module (PRD §2.2.5)
+**Date:** M5 (discrepancy audit fix)
+**Decision:** Frozen-section parsing, edit-distance calculation, and TF-IDF drift primitives live in `src/agent_self_edit/guardrails.py` as a standalone module, independent of the promotion gate.
+**Rationale:** PRD 02-architecture §2.2.5 specifies a separate Guardrail Module (F-06/F-07). The promotion gate (M4) re-imports the primitives; the analyzer (M7) and diff visualization (M8) can reuse them without depending on the gate.

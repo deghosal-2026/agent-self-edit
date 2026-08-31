@@ -53,6 +53,18 @@
 - [x] Ruff clean, mypy strict clean, all tests pass, coverage > 92%
 - [x] **Design docs authored:** D5 (prompt-registry), D13 (DD-11/12)
 
+### M5 Discrepancies Found (PRD-vs-Implementation Audit, 2026-08-30)
+
+> During a PRD conformance audit, three discrepancies were found where the implemented M1-M5 code diverged from the PRD's original v0.1.0 intent. These are tracked as M5 milestone tickets and **must be fixed and closed before M6 begins**.
+
+| # | Discrepancy | PRD Intent | Implemented | Ticket | Fix |
+|---|-------------|------------|-------------|--------|-----|
+| D-1 | Registry is file-based, not git-versioned | PRD §2.5: "Prompt registry is versioned in git. Git provides free diff, rollback, branching, merge. Registry is a thin layer on top" | File-based `v{N}.md` + `v{N}.meta.json` (DD-11), no git backing | [#81](https://github.com/deghosal-2026/agent-self-edit/issues/81) · ✅ | Git-backed: each `create()`/`rollback()` auto-commits when registry is in a git work tree; `commit_sha` stored in metadata; file-only fallback preserved |
+| D-2 | Config is YAML-only | PRD F-13: "YAML/TOML configuration for guardrail thresholds, sample floors, trigger modes, held-out task set path" | `load_config` handles YAML only (DD-02) | [#82](https://github.com/deghosal-2026/agent-self-edit/issues/82) · ✅ | TOML support added (`tomllib`), auto-detected by `.toml` extension; YAML stays default |
+| D-3 | Guardrail logic lives inside gate.py | PRD 02-architecture §2.2.5: standalone Guardrail Module (M6) enforcing F-06/F-07 | Frozen-section parse, edit-distance, drift embedded in `gate.py` from M4 | [#83](https://github.com/deghosal-2026/agent-self-edit/issues/83) · ✅ | Extracted to `src/agent_self_edit/guardrails.py`; gate re-imports primitives; reusable by M7/M8 |
+
+**Gate:** all three tickets (#81, #82, #83) closed + audit re-run confirms alignment before M6 starts. ✅ Verified 2026-08-30: ruff clean, mypy strict clean, 273 tests, 94.1% coverage.
+
 **Dependency:** M4. **Produces for M6+:** `Registry`, `Meta`, `DiffResult`, `create()`, `diff()`, `rollback()`, `lineage()`, `verify_integrity()`.
 
 ---

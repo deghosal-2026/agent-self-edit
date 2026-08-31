@@ -263,3 +263,123 @@ def test_env_interpolation_missing():
         assert False, "expected ConfigError"
     except ConfigError as e:
         assert "DOES_NOT_EXIST_12345" in str(e)
+
+
+# ---- D-2: TOML config support (PRD F-13 "YAML/TOML") ----
+
+
+def _write_toml(data: dict) -> Path:
+
+    tmp = Path(tempfile.mktemp(suffix=".toml"))
+    with open(tmp, "wb") as f:
+        f.write(_dict_to_toml(data))
+    return tmp
+
+
+def _dict_to_toml(data: dict) -> bytes:
+    lines = []
+    scalars = {}
+    tables = {}
+    for key, val in data.items():
+        if isinstance(val, dict):
+            tables[key] = val
+        else:
+            scalars[key] = val
+    for k, v in scalars.items():
+        lines.append(toml_value(k, v))
+    for section, fields in tables.items():
+        lines.append(f"[{section}]")
+        for k, v in fields.items():
+            lines.append(toml_value(k, v))
+    return ("\n".join(lines) + "\n").encode()
+
+
+def toml_value(key: str, value) -> str:
+    if isinstance(value, str):
+        return f'{key} = "{value}"'
+    if isinstance(value, bool):
+        return f"{key} = {'true' if value else 'false'}"
+    if isinstance(value, (int, float)):
+        return f"{key} = {value}"
+    if isinstance(value, list):
+        items = ", ".join(repr(v) for v in value)
+        return f"{key} = [{items}]"
+    raise TypeError(f"unsupported toml type {type(value)}")
+
+
+def test_load_toml_config(tmp_path):
+    toml_config = {
+        "schema_version": 1,
+        "project": {"name": "test-agent"},
+        "tasks": {"task_set_path": "./tasks.yaml", "batch_size": 50, "sample_floor": 10},
+        "llm": {"provider": "mock", "model": "gpt-4o-mini", "api_key": "sk-1",
+                "temperature": 0.0, "max_tokens": 4096, "timeout": 30},
+        "ab_test": {"n_resamples": 10000, "n_permutations": 1000,
+                    "confidence_level": 0.95, "min_effect_size": 0.05,
+                    "cost_ceiling_usd": 0.10},
+        "gate": {"max_edit_distance": 20, "drift_threshold": 0.3, "near_miss_threshold": 0.5},
+        "analyzer": {"max_proposals_per_batch": 3, "cost_ceiling_usd": 0.50},
+        "trigger": "batch",
+        "trace_retention_days": 90,
+    }
+    path = _write_toml(toml_config)
+    config = load_config(path)
+    assert config.project.name == "test-agent"
+    assert config.tasks.sample_floor == 10
+    assert config.ab_test.confidence_level == 0.95
+    assert config.gate.max_edit_distance == 20
+    assert config.trigger == "batch"
+
+
+def test_load_toml_from_yaml_named_dict_matches():
+    # ensure the TOML dict matches the YAML so both formats produce equal configs
+
+    path = _write_toml({
+        "schema_version": 1,
+        "project": {"name": "toml-agent"},
+        "tasks": {"task_set_path": "./t.yaml", "batch_size": 50, "sample_floor": 10},
+        "llm": {"provider": "mock", "model": "m", "api_key": "", "temperature": 0.0,
+                "max_tokens": 4096, "timeout": 30},
+        "ab_test": {"n_resamples": 10000, "n_permutations": 1000,
+                    "confidence_level": 0.95, "min_effect_size": 0.05,
+                    "cost_ceiling_usd": 0.10},
+        "gate": {"max_edit_distance": 20, "drift_threshold": 0.3, "near_miss_threshold": 0.5},
+        "analyzer": {"max_proposals_per_batch": 3, "cost_ceiling_usd": 0.50},
+        "trigger": "manual",
+        "trace_retention_days": 7,
+    })
+    config = load_config(path)
+    assert config.project.name == "toml-agent"
+    assert config.trigger == "manual"
+    assert config.trace_retention_days == 7
+
+
+def test_invalid_toml_raises(tmp_path):
+    p = tmp_path / "bad.toml"
+    p.write_text("not valid toml = [")
+    try:
+        load_config(p)
+        assert False, "expected ConfigError"
+    except ConfigError:
+        pass
+
+
+def test_toml_env_interpolation(monkeypatch):
+    monkeypatch.setenv("TEST_TOML_KEY", "tk-123")
+
+    path = _write_toml({
+        "schema_version": 1,
+        "project": {"name": "env-agent"},
+        "tasks": {"batch_size": 50, "sample_floor": 10},
+        "llm": {"provider": "openai", "model": "m", "api_key": "${TEST_TOML_KEY}",
+                "temperature": 0.0, "max_tokens": 4096, "timeout": 30},
+        "ab_test": {"n_resamples": 10000, "n_permutations": 1000,
+                    "confidence_level": 0.95, "min_effect_size": 0.05,
+                    "cost_ceiling_usd": 0.10},
+        "gate": {"max_edit_distance": 20, "drift_threshold": 0.3, "near_miss_threshold": 0.5},
+        "analyzer": {"max_proposals_per_batch": 3, "cost_ceiling_usd": 0.50},
+        "trigger": "batch",
+        "trace_retention_days": 90,
+    })
+    config = load_config(path)
+    assert config.llm.api_key == "tk-123"

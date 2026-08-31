@@ -1,4 +1,11 @@
-"""File-based prompt registry with versioning, diff, rollback, and integrity."""
+"""Git-backed file prompt registry with versioning, diff, rollback, integrity.
+
+Per PRD §2.5, the prompt registry is versioned in git: each created version is
+auto-committed when the registry lives inside a git work tree, giving tree-wide
+diff, rollback, branching, and merge through standard git tooling. When git is
+not available (or the path is not inside a repo), the registry degrades
+gracefully to plain file-based storage.
+"""
 
 from __future__ import annotations
 
@@ -6,6 +13,8 @@ import difflib
 import hashlib
 import json
 import logging
+import shutil
+import subprocess
 import threading
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -18,6 +27,25 @@ logger = logging.getLogger("agent_self_edit.registry")
 
 class RegistryError(Exception):
     """Raised on invalid registry operations (missing version, corruption)."""
+
+
+def _git_available() -> bool:
+    return shutil.which("git") is not None
+
+
+def _inside_git_repo(path: Path) -> bool:
+    if not _git_available():
+        return False
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(path), "rev-parse", "--is-inside-work-tree"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        return result.returncode == 0 and result.stdout.strip() == "true"
+    except (subprocess.SubprocessError, OSError):
+        return False
 
 
 @dataclass(frozen=True)
@@ -38,6 +66,7 @@ class Meta:
     version: int
     timestamp: str
     sha256_hash: str
+    commit_sha: str | None = None
     diff_from_previous: dict[str, Any] | None = None
     hypothesis: str | None = None
     ab_results: dict[str, Any] | None = None
@@ -56,6 +85,7 @@ def _sha256(text: str) -> str:
 def _build_meta(
     version: int,
     prompt_text: str,
+    commit_sha: str | None = None,
     diff_from_previous: dict[str, Any] | None = None,
     hypothesis: str | None = None,
     ab_results: dict[str, Any] | None = None,
@@ -70,6 +100,7 @@ def _build_meta(
         version=version,
         timestamp=utc_now_iso(),
         sha256_hash=_sha256(prompt_text),
+        commit_sha=commit_sha,
         diff_from_previous=diff_from_previous,
         hypothesis=hypothesis,
         ab_results=ab_results,
@@ -83,13 +114,85 @@ def _build_meta(
 
 
 class Registry:
-    """File-based versioned prompt store."""
+    """Git-backed versioned prompt store.
 
-    def __init__(self, path: str | Path) -> None:
+    When ``git_backed=True`` (default) and the registry path is inside a git
+    work tree, every ``create()``/``rollback()`` also creates a git commit
+    (PRD §2.5). If git is unavailable or the path is outside a repo, it falls
+    back to plain file-based storage.
+    """
+
+    def __init__(self, path: str | Path, git_backed: bool = True) -> None:
         self._path = Path(path)
         self._path.mkdir(parents=True, exist_ok=True)
+        self._git_enabled = git_backed and _inside_git_repo(self._path)
         self._lock = threading.Lock()
         self._current = self._resolve_current()
+        if self._git_enabled:
+            logger.info(
+                "Registry: git-backed at %s (current version %d)",
+                self._path,
+                self._current,
+            )
+        else:
+            logger.info(
+                "Registry: file-only at %s (git unavailable or path not in a repo)",
+                self._path,
+            )
+
+    @property
+    def git_backed(self) -> bool:
+        return self._git_enabled
+
+    def _ensure_git_repo(self) -> None:
+        if self._git_enabled:
+            return
+        # Attempt to (re)detect git at call time so a repo created after
+        # construction is picked up lazily.
+        if _inside_git_repo(self._path):
+            self._git_enabled = True
+            logger.info("Registry: git backing enabled at %s", self._path)
+
+    def _git_commit(self, version: int) -> str | None:
+        md_path, meta_path = self._version_path(version)
+        try:
+            subprocess.run(
+                ["git", "-C", str(self._path), "add", "--", md_path.name, meta_path.name],
+                check=True,
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+            subprocess.run(
+                [
+                    "git",
+                    "-C",
+                    str(self._path),
+                    "commit",
+                    "-m",
+                    f"prompt v{version}",
+                    "--no-verify",
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+            commit_result = subprocess.run(
+                ["git", "-C", str(self._path), "rev-parse", "HEAD"],
+                check=True,
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+            return commit_result.stdout.strip()
+        except (subprocess.SubprocessError, OSError) as e:
+            logger.warning(
+                "Registry: git commit failed for v%d, continuing file-only: %s",
+                version,
+                e,
+            )
+            return None
 
     @property
     def current_version(self) -> int:
@@ -141,6 +244,7 @@ class Registry:
             "version": meta.version,
             "timestamp": meta.timestamp,
             "sha256_hash": meta.sha256_hash,
+            "commit_sha": meta.commit_sha,
         }
         for key in (
             "diff_from_previous",
@@ -163,13 +267,26 @@ class Registry:
     def create(
         self, prompt_text: str, **metadata: Any
     ) -> int:
-        """Create a new prompt version. Returns the version number."""
+        """Create a new prompt version (optionally git-committed). Returns the version number."""
         with self._lock:
+            self._ensure_git_repo()
             version = self._current + 1
             diff = self._compute_diff(self._current, prompt_text)
             meta = _build_meta(
                 version,
                 prompt_text,
+                diff_from_previous=(
+                    {
+                        "lines_added": len(diff.added),
+                        "lines_removed": len(diff.removed),
+                        "lines_modified": len(diff.modified),
+                        "total": len(diff.added)
+                        + len(diff.removed)
+                        + len(diff.modified),
+                    }
+                    if diff is not None
+                    else None
+                ),
                 hypothesis=metadata.get("hypothesis"),
                 ab_results=metadata.get("ab_results"),
                 gate_result=metadata.get("gate_result"),
@@ -179,31 +296,28 @@ class Registry:
                 rollback_reason=metadata.get("rollback_reason"),
                 rollback_target=metadata.get("rollback_target"),
             )
-            if diff is not None:
-                meta = Meta(
-                    version=meta.version,
-                    timestamp=meta.timestamp,
-                    sha256_hash=meta.sha256_hash,
-                    diff_from_previous={
-                        "lines_added": len(diff.added),
-                        "lines_removed": len(diff.removed),
-                        "lines_modified": len(diff.modified),
-                        "total": len(diff.added)
-                        + len(diff.removed)
-                        + len(diff.modified),
-                    },
-                    hypothesis=meta.hypothesis,
-                    ab_results=meta.ab_results,
-                    gate_result=meta.gate_result,
-                    trigger_trace_ids=meta.trigger_trace_ids,
-                    model_version=meta.model_version,
-                    token_cost=meta.token_cost,
-                    rollback_reason=meta.rollback_reason,
-                    rollback_target=meta.rollback_target,
-                )
             self._write(version, prompt_text, meta)
+            if self._git_enabled:
+                commit_sha = self._git_commit(version)
+                if commit_sha:
+                    meta = Meta(
+                        version=meta.version,
+                        timestamp=meta.timestamp,
+                        sha256_hash=meta.sha256_hash,
+                        commit_sha=commit_sha,
+                        diff_from_previous=meta.diff_from_previous,
+                        hypothesis=meta.hypothesis,
+                        ab_results=meta.ab_results,
+                        gate_result=meta.gate_result,
+                        trigger_trace_ids=meta.trigger_trace_ids,
+                        model_version=meta.model_version,
+                        token_cost=meta.token_cost,
+                        rollback_reason=meta.rollback_reason,
+                        rollback_target=meta.rollback_target,
+                    )
+                    self._write(version, prompt_text, meta)
             self._current = version
-            logger.info("Registry: created version %d", version)
+            logger.info("Registry: created version %d (git=%s)", version, self._git_enabled)
             return version
 
     def get(self, version: int) -> tuple[str, Meta]:

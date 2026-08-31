@@ -23,6 +23,8 @@ from agent_self_edit.gate import (
     check_effect_size,
     check_frozen_sections,
     check_sample_floor,
+)
+from agent_self_edit.guardrails import (
     compute_drift_tfidf,
     compute_edit_distance,
     frozen_line_indexes,

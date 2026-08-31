@@ -1,6 +1,7 @@
 """Tests for the prompt registry."""
 
 import json
+import subprocess
 
 import pytest
 
@@ -10,6 +11,18 @@ from agent_self_edit.registry import DiffResult, Meta, Registry, RegistryError
 @pytest.fixture
 def reg(tmp_path):
     return Registry(tmp_path / "registry")
+
+
+def _git_init(tmp_path):
+    """Initialize a git repo in tmp_path and mark it a git-backed registry dir."""
+    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    subprocess.run(
+        ["git", "-C", str(tmp_path), "config", "user.email", "test@example.com"], check=True
+    )
+    subprocess.run(
+        ["git", "-C", str(tmp_path), "config", "user.name", "Test"], check=True
+    )
+    return tmp_path
 
 
 def test_init_empty(reg):
@@ -275,7 +288,6 @@ def test_integrity_missing_prompt_file(reg):
 
 def test_resolve_current_ignores_non_numeric(tmp_path):
     # create a junk file with v-prefix that is not numeric
-    import agent_self_edit.registry as reg_mod
 
     r = Registry(tmp_path / "registry")
     r.create("text")
@@ -288,3 +300,109 @@ def test_exists_in_list():
     from agent_self_edit.registry import Registry
 
     assert hasattr(Registry, "verify_integrity")
+
+
+# ---- D-1: git-backed registry (PRD §2.5) ----
+
+
+@pytest.fixture
+def git_reg(tmp_path):
+    _git_init(tmp_path)
+    return Registry(tmp_path / "registry")
+
+
+def test_git_backed_detected(tmp_path):
+    _git_init(tmp_path)
+    r = Registry(tmp_path / "registry")
+    assert r.git_backed is True
+
+
+def test_file_only_when_not_in_repo(reg):
+    assert reg.git_backed is False
+
+
+def test_git_disabled_flag(reg):
+    r = Registry(reg._path, git_backed=False)
+    assert r.git_backed is False
+
+
+def test_git_commit_on_create(tmp_path):
+    _git_init(tmp_path)
+    r = Registry(tmp_path / "registry")
+    r.create("prompt v1 content")
+    # the registry directory must contain committed prompt file
+    result = subprocess.run(
+        ["git", "-C", str(tmp_path), "log", "--oneline"],
+        capture_output=True, text=True,
+    )
+    assert "prompt v1" in result.stdout
+    _, meta = r.get(1)
+    assert meta.commit_sha is not None
+
+
+def test_git_commit_each_version(tmp_path):
+    _git_init(tmp_path)
+    r = Registry(tmp_path / "registry")
+    r.create("one")
+    r.create("two")
+    r.create("three")
+    result = subprocess.run(
+        ["git", "-C", str(tmp_path), "rev-list", "--count", "HEAD"],
+        capture_output=True, text=True,
+    )
+    assert int(result.stdout.strip()) >= 3
+    _, meta3 = r.get(3)
+    assert meta3.commit_sha is not None
+
+
+def test_git_meta_commit_sha_stored(tmp_path):
+    _git_init(tmp_path)
+    r = Registry(tmp_path / "registry")
+    r.create("content", hypothesis="h1")
+    _, meta = r.get(1)
+    assert meta.commit_sha
+    assert meta.hypothesis == "h1"
+
+
+def test_git_integrity_still_works(tmp_path):
+    _git_init(tmp_path)
+    r = Registry(tmp_path / "registry")
+    r.create("a")
+    r.create("b")
+    assert r.verify_integrity() == []
+
+
+def test_git_rollback_commit(tmp_path):
+    _git_init(tmp_path)
+    r = Registry(tmp_path / "registry")
+    r.create("alpha")
+    r.create("beta")
+    v3 = r.rollback(1, "revert to alpha")
+    assert v3 == 3
+    _, meta = r.get(3)
+    assert meta.rollback_reason == "revert to alpha"
+    assert meta.commit_sha is not None
+    result = subprocess.run(
+        ["git", "-C", str(tmp_path), "log", "--oneline"],
+        capture_output=True, text=True,
+    )
+    assert "prompt v3" in result.stdout or "prompt v" in result.stdout
+
+
+def test_git_missing_commit_meta_still_reads(tmp_path):
+    # meta files without commit_sha (pre-git versions) still load
+    r = Registry(tmp_path / "registry")
+    r.create("legacy")
+    _, meta = r.get(1)
+    assert meta.commit_sha is None
+
+
+def test_git_failure_degrades_gracefully(tmp_path, monkeypatch):
+    # Simulate git unavailability: monkeypatch _git_available to False
+    import agent_self_edit.registry as reg_mod
+
+    monkeypatch.setattr(reg_mod, "_git_available", lambda: False)
+    r = Registry(tmp_path / "registry", git_backed=True)
+    assert r.git_backed is False
+    v = r.create("still works")
+    assert v == 1

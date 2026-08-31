@@ -4,7 +4,7 @@
 
 ## 1. Format
 
-**YAML** (`.yaml` / `.yml`), single file at project root or specified via `--config`.
+**YAML** (`.yaml` / `.yml`) is the default.** TOML** (`.toml`) is also supported (PRD F-13, DD-02). The loader auto-detects by file extension. Single file at project root or specified via `--config`.
 
 ## 2. Schema
 

@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+import tomllib
 import yaml
 
 
@@ -114,19 +115,34 @@ def load_config(path: str | Path) -> Config:
     path = Path(path)
     if not path.exists():
         raise FileNotFoundError(f"Config file not found: {path}")
-    with open(path) as f:
-        try:
-            raw = yaml.safe_load(f)
-        except yaml.YAMLError as e:
-            raise ConfigError(f"Invalid YAML in config file: {e}") from e
+    if path.suffix in (".toml",):
+        raw = _load_toml(path)
+    else:
+        raw = _load_yaml(path)
     if not isinstance(raw, dict):
-        raise ConfigError("Config file must contain a YAML mapping")
+        raise ConfigError("Config file must contain a mapping")
     raw = _deep_interpolate(raw)
     config = _build_config(raw)
     errors = validate_config(config)
     if errors:
         raise ConfigError("; ".join(errors))
     return config
+
+
+def _load_yaml(path: Path) -> Any:
+    with open(path) as f:
+        try:
+            return yaml.safe_load(f)
+        except yaml.YAMLError as e:
+            raise ConfigError(f"Invalid YAML in config file: {e}") from e
+
+
+def _load_toml(path: Path) -> Any:
+    with open(path, "rb") as f:
+        try:
+            return tomllib.load(f)
+        except tomllib.TOMLDecodeError as e:
+            raise ConfigError(f"Invalid TOML in config file: {e}") from e
 
 
 def validate_config(config: Config) -> list[str]:
