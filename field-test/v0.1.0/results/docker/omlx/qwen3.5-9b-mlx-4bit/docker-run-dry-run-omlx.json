@@ -1,6 +1,6 @@
 {
   "test": "docker-run-dry-run-omlx",
-  "date": "2026-08-31T07:00:38Z",
+  "date": "2026-08-31T07:35:47Z",
   "image": "agent-self-edit:test",
   "omlx_model": "Qwen3.5-9B-MLX-4bit",
   "exit_code": 0,
@@ -16,15 +16,15 @@
         }
       ],
       "temperature": 0.0,
-      "response": "```json\n[\n  {\n    \"section\": \"System Role Definition\",\n    \"old_text\": \"You are a helpful classification assistant.\",\n    \"new_text\": \"You are a technical support ticket classifier. Prioritize the root cause of the issue over the location where it appears.\",\n    \"hypothesis\": \"The current generic role ('helpful') likely causes the model to associate 'billing page' and 'amount' with the 'billing' category. Explicitly defining the role as 'technical support' and instructing it to prioritize the 'root cause' (software bug) over the 'location' (billing page) should shift the classification to 'technical'.\",\n    \"evidence_traces\": [\"t0\", \"t1\", \"t2\", \"t3\", \"t4\", \"t5\", \"t6\", \"t7\", \"t8\", \"t9\"],\n    \"expected_improvement\": \"The model will stop defaulting to the keyword 'billing' and instead analyze the semantic meaning of 'wrong amount' as a system error, correctly classifying the ticket as 'technical'.\"\n  }\n]\n```",
+      "response": "```json\n[\n  {\n    \"section\": \"system_instruction\",\n    \"old_text\": \"You are a helpful classification assistant.\",\n    \"new_text\": \"You are a helpful classification assistant. When classifying tickets, prioritize the root cause of the issue over the location where it appears. If a user reports a problem with a specific page (e.g., billing page) but the underlying issue is a system error or bug, classify it as 'technical' rather than 'billing'.\",\n    \"hypothesis\": \"The current prompt instructs the model to be 'helpful' without defining the classification logic, causing it to associate the keyword 'billing' in the input with the 'billing' label. The new instruction explicitly defines the priority rule (root cause > location) and provides a concrete example of overriding the surface-level keyword, which should align the model's logic with the expected 'technical' label.\",\n    \"evidence_traces\": [\"t0\", \"t1\", \"t2\", \"t3\", \"t4\", \"t5\", \"t6\", \"t7\", \"t8\", \"t9\"],\n    \"expected_improvement\": \"The model will stop associating the word 'billing' with the 'billing' category when the context indicates a technical malfunction, correctly classifying the input as 'technical'.\"\n  }\n]\n```",
       "usage": {
         "prompt_tokens": 680,
-        "completion_tokens": 243,
-        "total_tokens": 923
+        "completion_tokens": 289,
+        "total_tokens": 969
       },
-      "latency_ms": 12785
+      "latency_ms": 18501
     }
   ],
-  "stdout": "Processing 10 traces (10 failed)\nAnalysis complete: 1 proposals, cost=$0.0031\nLoop stopped.\n",
+  "stdout": "Processing 10 traces (10 failed)\nAnalysis complete: 1 proposals, cost=$0.0033\nLoop stopped.\n",
   "stderr": ""
 }

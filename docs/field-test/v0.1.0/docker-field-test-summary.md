@@ -1,6 +1,6 @@
 # Docker Field Test Summary — AgentSelfEdit v0.1.0
 
-**Date:** 2026-08-31T07:00:49Z
+**Date:** 2026-08-31T07:36:04Z
 **Image:** `agent-self-edit:test`
 **OMLX Model:** `Qwen3.5-9B-MLX-4bit`
 **OMLX Endpoint:** `http://localhost:8000/v1`
@@ -16,10 +16,10 @@
 
 ## Observations
 
-- **docker-propose-dry-run-omlx**: LLM latency 10506ms (>10s)
-- **docker-propose-dry-run-omlx**: 923 tokens (680 in / 243 out)
-- **docker-run-dry-run-omlx**: LLM latency 12785ms (>10s)
-- **docker-run-dry-run-omlx**: 923 tokens (680 in / 243 out)
+- **docker-propose-dry-run-omlx**: LLM latency 16052ms (>10s)
+- **docker-propose-dry-run-omlx**: 969 tokens (680 in / 289 out)
+- **docker-run-dry-run-omlx**: LLM latency 18501ms (>10s)
+- **docker-run-dry-run-omlx**: 969 tokens (680 in / 289 out)
 
 ## Issues
 

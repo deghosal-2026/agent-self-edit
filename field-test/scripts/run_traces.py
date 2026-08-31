@@ -244,6 +244,37 @@ def main():
     client, model = build_llm(args.provider, args.model, args.endpoint, api_key)
 
     results = []
+    def _write_results(partial: bool = False):
+        passed = sum(1 for r in results if r["scoring"]["passed"])
+        total_tokens = sum(
+            r["llm_call"].get("usage", {}).get("total_tokens", 0) or 0
+            for r in results if r["llm_call"].get("usage")
+        )
+        total_latency = sum(r["llm_call"].get("latency_ms", 0) or 0 for r in results)
+        n_done = len(results)
+        report = {
+            "meta": {
+                "provider": args.provider,
+                "model": args.model,
+                "endpoint": args.endpoint,
+                "trace_file": str(trace_path),
+                "system_prompt": system_prompt,
+                "domain": domain,
+                "date": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                "n_traces": len(traces),
+                "n_done": n_done,
+                "partial": partial,
+                "n_passed": passed,
+                "n_failed": n_done - passed,
+                "accuracy": round(passed / n_done * 100, 1) if n_done else 0,
+                "total_tokens": total_tokens,
+                "total_latency_ms": total_latency,
+                "avg_latency_ms": round(total_latency / n_done, 1) if n_done else 0,
+            },
+            "results": results,
+        }
+        output_path.write_text(json.dumps(report, indent=2, default=str) + "\n")
+
     for i, trace in enumerate(traces):
         task_input = trace.get("task_input", "")
 
@@ -251,50 +282,19 @@ def main():
             print(f"  [{i+1}/{len(traces)}] {trace.get('task_id', '')[:40]}...")
 
         llm_result = call_llm(client, model, task_input, system_prompt)
-
         scoring = score_response(trace, llm_result.get("response", ""), llm_result.get("error"))
-
         results.append({
             "task_id": trace.get("task_id", f"trace-{i}"),
             "task_input": task_input,
             "llm_call": llm_result,
             "scoring": scoring,
         })
+        if (i + 1) % 10 == 0 or (i + 1) == len(traces):
+            _write_results(partial=(i + 1 < len(traces)))
 
     passed = sum(1 for r in results if r["scoring"]["passed"])
-    failed = len(results) - passed
-
-    total_tokens = sum(
-        r["llm_call"].get("usage", {}).get("total_tokens", 0) or 0
-        for r in results if r["llm_call"].get("usage")
-    )
-    total_latency = sum(
-        r["llm_call"].get("latency_ms", 0) or 0
-        for r in results
-    )
-
-    report = {
-        "meta": {
-            "provider": args.provider,
-            "model": args.model,
-            "endpoint": args.endpoint,
-            "trace_file": str(trace_path),
-            "system_prompt": args.system_prompt,
-            "date": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-            "n_traces": len(traces),
-            "n_passed": passed,
-            "n_failed": failed,
-            "accuracy": round(passed / len(traces) * 100, 1) if traces else 0,
-            "total_tokens": total_tokens,
-            "total_latency_ms": total_latency,
-            "avg_latency_ms": round(total_latency / len(traces), 1) if traces else 0,
-        },
-        "results": results,
-    }
-
-    output_path.write_text(json.dumps(report, indent=2, default=str) + "\n")
-    print(f"\n  Done: {passed}/{len(traces)} passed ({report['meta']['accuracy']}%)")
-    print(f"  Tokens: {total_tokens} | Avg latency: {report['meta']['avg_latency_ms']}ms")
+    print(f"\n  Done: {passed}/{len(traces)} passed ({round(passed / len(traces) * 100, 1) if traces else 0}%)")
+    print(f"  Tokens: {sum(r['llm_call'].get('usage', {}).get('total_tokens', 0) or 0 for r in results)} | Avg latency: {round(sum(r['llm_call'].get('latency_ms', 0) or 0 for r in results) / len(traces), 1)}ms")
     print(f"  Results: {output_path}")
     print(f"  Traffic: {traffic_log}")
 
