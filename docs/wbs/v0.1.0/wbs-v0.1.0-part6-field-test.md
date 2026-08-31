@@ -59,7 +59,7 @@
 |---|------|---------------|----------------------|---------|------------|--------|--------|
 | 21 | Dockerfile + compose | `Dockerfile` (multi-stage), `docker-compose.yml` | Build stage: pip install; runtime stage: python -m; volume mounts for config, registry, traces | F-14 | [D10 §14.2](../../design/ab-test-engine-design.md#143–integration-tests-hermetic-ci-safe) | image builds; container runs | [#69](https://github.com/deghosal-2026/agent-self-edit/issues/69) · ✅ |
 | 22 | Docker smoke test | `tests/test_docker.py` | `docker build . && docker run agent-self-edit --help`; verify image builds and runs; CLI commands work inside container | F-14 | [D10 §14.2](../../design/ab-test-engine-design.md#143–integration-tests-hermetic-ci-safe) | image builds; help works | [#69](https://github.com/deghosal-2026/agent-self-edit/issues/69) · ✅ |
-| 23 | Docker integration test | `tests/test_docker.py` | Run full loop (with OMLX real LLM) in Docker container; verify: trace ingestion, analysis, A/B test, promotion gate, LLM I/O capture all work | F-14 | [D10 §14.2](../../design/ab-test-engine-design.md#143–integration-tests-hermetic-ci-safe) | loop completes in container; LLM I/O captured to `field-test/v0.1.0/results/` | [#69](https://github.com/deghosal-2026/agent-self-edit/issues/69) · ✅ |
+| 23 | Docker integration test | `tests/test_docker.py` | Run full loop (with OMLX real LLM) in Docker container; verify: trace ingestion, analysis, A/B test, promotion gate, LLM I/O capture all work | F-14 | [D10 §14.2](../../design/ab-test-engine-design.md#143–integration-tests-hermetic-ci-safe) | loop completes in container; LLM I/O captured to `field-test/v0.1.0/results/` | [#69](https://github.com/deghosal-2026/agent-self-edit/issues/69) · [#98](https://github.com/deghosal-2026/agent-self-edit/issues/98) · ⬜ |
 
 #### Analysis & Report
 
@@ -94,7 +94,7 @@
 - [ ] Baseline measurement completed
 - [ ] Non-LLM tests: all pass (trace generation, dry-run loop, gate validation, rollback, zero-LLM, concurrency, registry stress, guardrail stress)
 - [ ] LLM tests: full loop integration, 10-iteration improvement, adversarial edits, analyzer quality, cost analysis
-- [x] Docker tests: build, smoke, integration, CI
+- [ ] Docker tests: build, smoke, integration (full loop, not dry-run — see #98)
 - [ ] Field test report written with all results
 - [ ] Improvement measured (target: 10%+ over 10 iterations)
 - [ ] Guardrails catch 100% of injected bad edits
