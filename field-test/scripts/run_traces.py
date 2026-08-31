@@ -297,7 +297,7 @@ def main():
             _write_results(partial=(i + 1 < len(traces)))
 
     passed = sum(1 for r in results if r and r.get("scoring", {}).get("passed"))
-    total_tokens = sum((r.get("llm_call") or {}).get("usage", {}).get("total_tokens", 0) or 0 for r in results if r)
+    total_tokens = sum(((r.get("llm_call") or {}).get("usage") or {}).get("total_tokens", 0) or 0 for r in results if r)
     total_latency = sum((r.get("llm_call") or {}).get("latency_ms", 0) or 0 for r in results if r)
     print(f"\n  Done: {passed}/{len(traces)} passed ({round(passed / len(traces) * 100, 1) if traces else 0}%)")
     print(f"  Tokens: {total_tokens} | Avg latency: {round(total_latency / len(traces), 1) if traces else 0}ms")
