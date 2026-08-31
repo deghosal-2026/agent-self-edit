@@ -1,0 +1,8 @@
+services:
+  agent-self-edit:
+    build: .
+    image: agent-self-edit:latest
+    volumes:
+      - ./test-config:/config
+    entrypoint: ["agent-self-edit"]
+    command: ["--help"]
