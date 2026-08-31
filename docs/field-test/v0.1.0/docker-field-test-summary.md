@@ -1,8 +1,8 @@
 # Docker Field Test Summary — AgentSelfEdit v0.1.0
 
-**Date:** 2026-08-31T07:36:04Z
+**Date:** 2026-08-31T08:30:28Z
 **Image:** `agent-self-edit:test`
-**OMLX Model:** `Qwen3.5-9B-MLX-4bit`
+**OMLX Model:** `Qwen3.5-4B-4bit`
 **OMLX Endpoint:** `http://localhost:8000/v1`
 
 ## Summary
@@ -11,15 +11,36 @@
 
 | # | Test | Result | LLM Calls | Exit Code |
 |---|------|--------|------------|-----------|
-| 1 | `docker-propose-dry-run-omlx` | PASS | 1 | 0 |
-| 2 | `docker-run-dry-run-omlx` | PASS | 1 | 0 |
+| 1 | `docker-propose-full-omlx` | PASS | 11 | 0 |
+| 2 | `docker-run-full-loop-omlx` | PASS | 11 | 0 |
 
 ## Observations
 
-- **docker-propose-dry-run-omlx**: LLM latency 16052ms (>10s)
-- **docker-propose-dry-run-omlx**: 969 tokens (680 in / 289 out)
-- **docker-run-dry-run-omlx**: LLM latency 18501ms (>10s)
-- **docker-run-dry-run-omlx**: 969 tokens (680 in / 289 out)
+- **docker-propose-full-omlx**: 942 tokens (680 in / 262 out)
+- **docker-propose-full-omlx**: 203 tokens (35 in / 168 out)
+- **docker-propose-full-omlx**: 154 tokens (90 in / 64 out)
+- **docker-propose-full-omlx**: LLM latency 10452ms (>10s)
+- **docker-propose-full-omlx**: 415 tokens (33 in / 382 out)
+- **docker-propose-full-omlx**: 156 tokens (88 in / 68 out)
+- **docker-propose-full-omlx**: 217 tokens (34 in / 183 out)
+- **docker-propose-full-omlx**: 220 tokens (89 in / 131 out)
+- **docker-propose-full-omlx**: 184 tokens (33 in / 151 out)
+- **docker-propose-full-omlx**: 183 tokens (88 in / 95 out)
+- **docker-propose-full-omlx**: LLM latency 11345ms (>10s)
+- **docker-propose-full-omlx**: 457 tokens (35 in / 422 out)
+- **docker-propose-full-omlx**: 171 tokens (90 in / 81 out)
+- **docker-run-full-loop-omlx**: 942 tokens (680 in / 262 out)
+- **docker-run-full-loop-omlx**: 203 tokens (35 in / 168 out)
+- **docker-run-full-loop-omlx**: 154 tokens (90 in / 64 out)
+- **docker-run-full-loop-omlx**: 415 tokens (33 in / 382 out)
+- **docker-run-full-loop-omlx**: 156 tokens (88 in / 68 out)
+- **docker-run-full-loop-omlx**: 217 tokens (34 in / 183 out)
+- **docker-run-full-loop-omlx**: 220 tokens (89 in / 131 out)
+- **docker-run-full-loop-omlx**: 184 tokens (33 in / 151 out)
+- **docker-run-full-loop-omlx**: 183 tokens (88 in / 95 out)
+- **docker-run-full-loop-omlx**: LLM latency 10932ms (>10s)
+- **docker-run-full-loop-omlx**: 457 tokens (35 in / 422 out)
+- **docker-run-full-loop-omlx**: 171 tokens (90 in / 81 out)
 
 ## Issues
 
@@ -27,17 +48,17 @@
 
 ## Per-Test Details
 
-Structured JSON results are in `field-test/v0.1.0/results/docker/omlx/qwen3.5-9b-mlx-4bit/` (2 files).
+Structured JSON results are in `field-test/v0.1.0/results/docker/omlx/qwen3.5-4b-4bit/` (2 files).
 
-### docker-propose-dry-run-omlx
-
-- **Exit code:** 0
-- **LLM calls:** 1
-- **JSON:** `field-test/v0.1.0/results/docker/omlx/qwen3.5-9b-mlx-4bit/docker-propose-dry-run-omlx.json`
-
-### docker-run-dry-run-omlx
+### docker-propose-full-omlx
 
 - **Exit code:** 0
-- **LLM calls:** 1
-- **JSON:** `field-test/v0.1.0/results/docker/omlx/qwen3.5-9b-mlx-4bit/docker-run-dry-run-omlx.json`
+- **LLM calls:** 11
+- **JSON:** `field-test/v0.1.0/results/docker/omlx/qwen3.5-4b-4bit/docker-propose-full-omlx.json`
+
+### docker-run-full-loop-omlx
+
+- **Exit code:** 0
+- **LLM calls:** 11
+- **JSON:** `field-test/v0.1.0/results/docker/omlx/qwen3.5-4b-4bit/docker-run-full-loop-omlx.json`
 

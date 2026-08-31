@@ -21,7 +21,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 IMAGE_TAG = "agent-self-edit:test"
 OMLX_URL = os.environ.get("OMLX_URL", "http://localhost:8000/v1")
 OMLX_KEY = os.environ.get("OMLX_KEY", "omlx-test")
-OMLX_MODEL = os.environ.get("OMLX_MODEL", "Qwen3.5-9B-MLX-4bit")
+OMLX_MODEL = os.environ.get("OMLX_MODEL", "Qwen3.5-4B-4bit")
 # Containers reach the host OMLX via host.docker.internal (not localhost)
 OMLX_URL_CONTAINER = os.environ.get(
     "OMLX_URL_CONTAINER", OMLX_URL.replace("localhost", "host.docker.internal")
@@ -47,18 +47,19 @@ def _run_container(args: list[str], volumes: dict[str, str] | None = None) -> su
     return subprocess.run(cmd, capture_output=True, text=True, timeout=30)
 
 
-def _create_test_config(tmp_path: Path) -> Path:
+def _create_test_config(tmp_path: Path, full_loop: bool = False) -> Path:
     config = {
         "schema_version": 1,
         "project": {"name": "docker-test", "registry_path": "/config/registry",
                     "trace_path": "/config/traces.db"},
-        "tasks": {"task_set_path": "", "batch_size": 10, "sample_floor": 10},
+        "tasks": {"task_set_path": "/config/classification.yaml" if full_loop else "",
+                  "batch_size": 10, "sample_floor": 10},
         "llm": {"provider": "openai", "model": OMLX_MODEL, "api_key": OMLX_KEY,
                 "base_url": OMLX_URL_CONTAINER, "temperature": 0.0, "max_tokens": 4096,
                 "timeout": 60},
         "ab_test": {"n_resamples": 100, "n_permutations": 100,
                     "confidence_level": 0.95, "min_effect_size": 0.05,
-                    "cost_ceiling_usd": 0.10},
+                    "cost_ceiling_usd": 0.50},
         "gate": {"max_edit_distance": 20, "drift_threshold": 0.3, "near_miss_threshold": 0.5},
         "analyzer": {"max_proposals_per_batch": 3, "cost_ceiling_usd": 0.50},
         "trigger": "batch", "trace_retention_days": 90,
@@ -173,7 +174,7 @@ def test_docker_status():
 
 # ---- Integration (real OMLX) ----
 
-RESULTS_DIR = REPO_ROOT / "field-test" / "v0.1.0" / "results" / "docker" / "omlx" / "qwen3.5-9b-mlx-4bit"
+RESULTS_DIR = REPO_ROOT / "field-test" / "v0.1.0" / "results" / "docker" / "omlx" / OMLX_MODEL.lower().replace("/", "-")
 DOCS_DIR = REPO_ROOT / "docs" / "field-test" / "v0.1.0"
 SUMMARY_MD = DOCS_DIR / "docker-field-test-summary.md"
 
@@ -248,11 +249,12 @@ def _write_docker_summary():
     else:
         lines.append("- None.")
 
+    model_dir = OMLX_MODEL.lower().replace("/", "-")
     lines += [
         "",
         "## Per-Test Details",
         "",
-        f"Structured JSON results are in `field-test/v0.1.0/results/docker/omlx/qwen3.5-9b-mlx-4bit/` ({total} files).",
+        f"Structured JSON results are in `field-test/v0.1.0/results/docker/omlx/{model_dir}/` ({total} files).",
         "",
     ]
 
@@ -262,7 +264,7 @@ def _write_docker_summary():
         lines.append("")
         lines.append(f"- **Exit code:** {r.get('exit_code')}")
         lines.append(f"- **LLM calls:** {r.get('llm_calls_captured', 0)}")
-        lines.append(f"- **JSON:** `field-test/v0.1.0/results/docker/omlx/qwen3.5-9b-mlx-4bit/{name}.json`")
+        lines.append(f"- **JSON:** `field-test/v0.1.0/results/docker/omlx/{model_dir}/{name}.json`")
         lines.append("")
 
     SUMMARY_MD.write_text("\n".join(lines) + "\n")
@@ -332,13 +334,22 @@ def _write_report(test_name: str, result: subprocess.CompletedProcess,
     print(f"  Report: {report_path}")
 
 
-def test_docker_run_dry_run_omlx():
-    """run --once --dry-run hits OMLX and captures LLM request/response."""
+def test_docker_run_full_loop_omlx():
+    """run --once (no --dry-run) hits OMLX: ingest → analyze → A/B test → gate → promote/reject."""
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory() as tmp:
         tmp_path = Path(tmp)
-        _create_test_config(tmp_path)
+        _create_test_config(tmp_path, full_loop=True)
         _seed_trace_store(tmp_path)
+
+        # Copy a trimmed classification task set (5 tasks) for faster A/B test
+        import shutil
+        cls_src = REPO_ROOT / "field-test" / "v0.1.0" / "corpus" / "synthetic" / "classification.yaml"
+        import yaml as _yaml
+        with open(cls_src) as f:
+            tasks = _yaml.safe_load(f)
+        with open(tmp_path / "classification.yaml", "w") as f:
+            _yaml.dump(tasks[:5], f)
 
         traffic_log = RESULTS_DIR / "llm-traffic-run.jsonl"
         if traffic_log.exists():
@@ -346,8 +357,8 @@ def test_docker_run_dry_run_omlx():
         volumes = {str(tmp_path): "/config", str(RESULTS_DIR): "/results"}
         env = {"AGENT_SELF_EDIT_LLM_LOG": "/results/llm-traffic-run.jsonl"}
         result = _run_container_omlx(
-            ["run", "--config", "/config/agent-self-edit.yaml", "--once", "--dry-run"],
-            volumes=volumes, env=env, timeout=120,
+            ["run", "--config", "/config/agent-self-edit.yaml", "--once"],
+            volumes=volumes, env=env, timeout=600,
         )
         assert result.returncode in (0, None), (
             f"stdout: {result.stdout}\nstderr: {result.stderr}"
@@ -366,16 +377,28 @@ def test_docker_run_dry_run_omlx():
             assert isinstance(entry["messages"], list)
             assert entry["latency_ms"] > 0
 
-        _write_report("docker-run-dry-run-omlx", result, traffic_log)
+        stdout = result.stdout
+        assert "Analysis complete" in stdout, f"Analyze stage missing: {stdout}"
+        assert "A/B test" in stdout, f"A/B test stage missing: {stdout}"
+        assert "Gate:" in stdout, f"Gate stage missing: {stdout}"
+
+        _write_report("docker-run-full-loop-omlx", result, traffic_log)
 
 
-def test_docker_propose_dry_run_omlx():
-    """propose --dry-run hits OMLX and captures the analyzer LLM call."""
+def test_docker_propose_full_omlx():
+    """propose (no --dry-run) hits OMLX: analyze → propose → A/B test → gate."""
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory() as tmp:
         tmp_path = Path(tmp)
-        _create_test_config(tmp_path)
+        _create_test_config(tmp_path, full_loop=True)
         _seed_trace_store(tmp_path)
+
+        import yaml as _yaml
+        cls_src = REPO_ROOT / "field-test" / "v0.1.0" / "corpus" / "synthetic" / "classification.yaml"
+        with open(cls_src) as f:
+            tasks = _yaml.safe_load(f)
+        with open(tmp_path / "classification.yaml", "w") as f:
+            _yaml.dump(tasks[:5], f)
 
         traffic_log = RESULTS_DIR / "llm-traffic-propose.jsonl"
         if traffic_log.exists():
@@ -383,8 +406,8 @@ def test_docker_propose_dry_run_omlx():
         volumes = {str(tmp_path): "/config", str(RESULTS_DIR): "/results"}
         env = {"AGENT_SELF_EDIT_LLM_LOG": "/results/llm-traffic-propose.jsonl"}
         result = _run_container_omlx(
-            ["propose", "--config", "/config/agent-self-edit.yaml", "--dry-run"],
-            volumes=volumes, env=env, timeout=120,
+            ["propose", "--config", "/config/agent-self-edit.yaml"],
+            volumes=volumes, env=env, timeout=600,
         )
         assert result.returncode in (0, None), (
             f"stdout: {result.stdout}\nstderr: {result.stderr}"
@@ -402,4 +425,9 @@ def test_docker_propose_dry_run_omlx():
         assert "response" in first
         assert len(first["response"]) > 0
 
-        _write_report("docker-propose-dry-run-omlx", result, traffic_log)
+        stdout = result.stdout
+        assert "A/B test" in stdout or "Proposed" in stdout, (
+            f"Expected A/B test or proposals in output: {stdout}"
+        )
+
+        _write_report("docker-propose-full-omlx", result, traffic_log)
