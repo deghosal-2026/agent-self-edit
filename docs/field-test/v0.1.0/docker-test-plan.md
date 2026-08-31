@@ -1,140 +1,207 @@
 # Docker Test Plan — AgentSelfEdit v0.1.0
 
-> Docker image build, smoke test, OMLX connectivity, and full-loop integration test for the self-improvement loop.
+> Docker tests for the self-improving agent prompt optimizer. The Docker image must build, reach the local OMLX LLM, and run the **complete self-edit loop** end-to-end: trace → analyze → A/B test → gate → promote.
 
-## 1. Objectives
+## 1. What This Project Does
 
-1. **Build** — the Docker image builds successfully from `Dockerfile`.
-2. **CLI smoke** — `agent-self-edit --help` works inside the container, all 10 commands listed.
-3. **OMLX connectivity** — container can reach the host OMLX server and the configured model is available.
-4. **Full loop integration** — the complete self-edit loop runs against real OMLX inside the container: ingest → analyze → propose → A/B test → gate → promote. LLM I/O captured.
-
-## 2. Architecture
+AgentSelfEdit is a sidecar that observes execution traces and rewrites its own system prompt:
 
 ```
-┌─────────────────────────────────────────────────────┐
-│ Host (macOS)                                        │
-│  ┌─────────────┐         ┌──────────────────────┐   │
-│  │ OMLX server │◄────────│ Docker container     │   │
-│  │ :8000/v1    │  host.  │ agent-self-edit      │   │
-│  │ Qwen3.5-9B  │ docker. │  ingest → analyze    │   │
-│  └─────────────┘ internal│  → A/B test → gate   │   │
-│                         │  → promote            │   │
-│                         └──────────────────────┘   │
-│  ┌──────────────────────────────────────────────┐ │
-│  │ field-test/v0.1.0/results/docker/             │ │
-│  │   omlx/qwen3.5-9b-mlx-4bit/                    │ │
-│  │     *-results.json  (per-test structured)       │ │
-│  │     llm-traffic-*.jsonl (raw LLM I/O)          │ │
-│  └──────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────┘
+Agent executes task ──▶ Execution trace stored (SQLite)
+                                │
+                                ▼
+                      Feedback Analyzer (LLM)
+                      reviews traces, proposes concrete edits,
+                      each with a written hypothesis
+                                │
+                                ▼
+─────────────────────  A/B Test Engine  ─────────────────────
+  candidate edit vs current prompt on a held-out task set:
+  win rate, bootstrap confidence interval, effect size,
+  permutation p-value, per-task breakdown
+────────────────────────────────────────────────────────────
+                                │
+                                ▼
+                Promotion Gate (deterministic checks)
+                1. Sample floor     4. Frozen sections
+                2. Effect size      5. Edit-distance limit
+                3. Confidence p-val 6. Drift detection
+                                │
+              ┌─────────────────┼─────────────────┐
+              ▼                 ▼                 ▼
+          Promoted         Near-miss        Rejected
+     prompt updated in     logged for       archived with
+     versioned Registry    human review     full reasoning
 ```
 
-## 3. Files
+The docker test must prove this loop works inside a container against a real LLM.
 
-| File | Purpose |
-|------|---------|
-| `Dockerfile` | Multi-stage build: builder stage (pip install build → wheel + openai), runtime stage (pip install wheel → run) |
-| `docker-compose.yml` | Defines the `agent-self-edit` service with volume mounts |
-| `tests/test_docker.py` | Docker tests (marked `pytest.mark.docker`) — build, OMLX connectivity, smoke, full loop |
-| `field-test/scripts/run_docker_tests.py` | Runner script: `pytest tests/test_docker.py -m docker` |
-| `field-test/scripts/run_docker_field_test.py` | Standalone end-to-end test (to be rewritten — see #99) |
+## 2. Objectives
+
+| # | Objective | What it proves |
+|---|-----------|----------------|
+| 1 | Image builds | `Dockerfile` produces a working image with `openai>=1.0` installed |
+| 2 | OMLX reachable from host | Local OMLX server is up and serving the configured model |
+| 3 | OMLX reachable from container | Container can reach host OMLX via `host.docker.internal` |
+| 4 | CLI works | All 10 commands listed in `--help` |
+| 5 | Config loads | `validate` and `status` work with OMLX-backed config |
+| 6 | **Full loop runs** | `agent-self-edit run --once` (no `--dry-run`) completes: ingest → analyze → A/B test → gate → promote/reject |
+| 7 | **Propose runs** | `agent-self-edit propose` (no `--dry-run`): analyze → propose → A/B test → gate |
+| 8 | **LLM I/O captured** | Every LLM call's request and response written to disk for debuggability |
+| 9 | **Prompt version changes** | Registry shows before/after prompt if gate promoted |
+
+## 3. Architecture
+
+```
+┌──────────────────────────────────────────────────────────┐
+│ Host (macOS)                                             │
+│                                                          │
+│  ┌─────────────┐     host.docker.internal    ┌────────┐  │
+│  │ OMLX server │◄────────────────────────────│ Docker │  │
+│  │ :8000/v1    │     OpenAI-compatible API    │ agent- │  │
+│  │ Qwen3.5-9B  │                              │ self-  │  │
+│  └─────────────┘                              │ edit   │  │
+│                                                └────────┘  │
+│                                                          │
+│  ┌────────────────────────────────────────────────────┐  │
+│  │ field-test/v0.1.0/results/docker/                  │  │
+│  │   omlx/qwen3.5-9b-mlx-4bit/                         │  │
+│  │     docker-run-full-loop.json    (structured)       │  │
+│  │     docker-propose-full.json     (structured)       │  │
+│  │     llm-traffic-run.jsonl        (raw LLM I/O)     │  │
+│  │     llm-traffic-propose.jsonl    (raw LLM I/O)     │  │
+│  └────────────────────────────────────────────────────┘  │
+│                                                          │
+│  ┌────────────────────────────────────────────────────┐  │
+│  │ docs/field-test/v0.1.0/                             │  │
+│  │   docker-field-test-summary.md   (human report)    │  │
+│  └────────────────────────────────────────────────────┘  │
+└──────────────────────────────────────────────────────────┘
+```
 
 ## 4. Test Matrix
 
-| # | Test | What it verifies | LLM | Pass condition |
-|---|------|------------------|-----|----------------|
-| 1 | `test_docker_build` | `docker build` succeeds | none | exit 0, image exists |
-| 2 | `test_omlx_is_up` | Host OMLX `/v1/models` reachable | none | non-empty model list |
-| 3 | `test_omlx_model_available` | `Qwen3.5-9B-MLX-4bit` in model list | none | model found |
-| 4 | `test_omlx_reachable_from_container` | Container reaches OMLX via `host.docker.internal` | none | model visible from container |
-| 5 | `test_docker_help` | `--help` lists all 10 commands | none | all commands present |
-| 6 | `test_docker_validate` | `validate` loads OMLX config | none | exit 0 or 2 |
-| 7 | `test_docker_status` | `status` runs with OMLX config | none | exit 0, 1, or 2 |
-| 8 | `test_docker_run_full_loop_omlx` | **Full loop** (not dry-run): ingest → analyze → A/B test → gate → promote | OMLX | all stages produce output, LLM I/O captured |
-| 9 | `test_docker_propose_omlx` | `propose` (no dry-run): analyze → propose → A/B test → gate | OMLX | proposals generated, gate decision made, LLM I/O captured |
+| # | Test | Stages exercised | LLM | Pass condition | Issue |
+|---|------|------------------|-----|----------------|-------|
+| 1 | `test_docker_build` | build | none | exit 0, image exists | — |
+| 2 | `test_omlx_is_up` | connectivity | none | non-empty model list | — |
+| 3 | `test_omlx_model_available` | connectivity | none | `Qwen3.5-9B-MLX-4bit` found | — |
+| 4 | `test_omlx_reachable_from_container` | connectivity | none | model visible from container | — |
+| 5 | `test_docker_help` | CLI | none | all 10 commands listed | — |
+| 6 | `test_docker_validate` | config | none | exit 0 or 2 | — |
+| 7 | `test_docker_status` | config | none | exit 0, 1, or 2 | — |
+| 8 | `test_docker_run_full_loop` | **ingest → analyze → A/B test → gate → promote** | OMLX | all stages produce output, LLM I/O captured | #98 |
+| 9 | `test_docker_propose_full` | **analyze → propose → A/B test → gate** | OMLX | proposals generated, gate decision, LLM I/O captured | #98 |
 
-### Current gap (issues #98, #103)
+### Current state
 
-Tests 8 and 9 currently run with `--dry-run`, which **skips A/B test and gate** (`run.py:46`). They must be rewritten to run the full loop with a configured task set so A/B test and gate execute.
+Tests 1-7 pass. Tests 8-9 are **broken** — they run with `--dry-run` which skips A/B test and gate (`run.py:46`). Issue #98 tracks the fix.
 
-## 5. Test Details
+## 5. Full Loop Test (the critical test)
 
-### 5.1 Build Test
+This is the test that proves the project works. It must exercise every stage of the self-edit loop against real OMLX.
+
+### 5.1 Setup
+
+The container needs:
+
+```
+/config/
+  agent-self-edit.yaml     ← config with provider=openai, model=Qwen3.5-9B-MLX-4bit,
+                            base_url=host.docker.internal:8000/v1, task_set_path=/config/classification.yaml
+  classification.yaml      ← held-out task set (30 classification tasks, ExactMatch scorer)
+  registry/                ← prompt registry (initialized with baseline prompt)
+  traces.db                 ← trace store (seeded with 10 failed classification traces)
+/results/                  ← mounted from field-test/v0.1.0/results/docker/omlx/qwen3.5-9b-mlx-4bit/
+```
+
+### 5.2 Execution
 
 ```bash
-docker build -t agent-self-edit:test .
+docker run --rm --network=host \
+  -v /tmp/test-config:/config \
+  -v field-test/v0.1.0/results/docker/omlx/qwen3.5-9b-mlx-4bit:/results \
+  -e AGENT_SELF_EDIT_LLM_LOG=/results/llm-traffic-run.jsonl \
+  agent-self-edit:test \
+  run --config /config/agent-self-edit.yaml --once
 ```
 
-- Image must build without errors.
-- Image must include `openai>=1.0` package.
+**No `--dry-run`.** The loop must execute:
 
-### 5.2 OMLX Connectivity Tests
+1. **Ingest** — TraceStore loads 10 failed traces, batch is ready
+2. **Analyze** — LLM receives the analyzer system prompt + failed traces, returns JSON proposals
+3. **A/B test** — `run_ab_test()` runs both prompts (current + proposed) against the classification task set via OMLX, scores with ExactMatch, computes win rate + bootstrap CI + permutation p-value
+4. **Gate** — `check_all()` runs 6 deterministic checks: sample floor, effect size, confidence, frozen sections, edit distance, drift
+5. **Promote or reject** — if gate says promote, registry creates new prompt version; if reject, archived with reasoning
 
-```bash
-# From host
-curl http://localhost:8000/v1/models -H "Authorization: Bearer omlx-test"
+### 5.3 Assertions
 
-# From container (via host.docker.internal)
-docker run --rm --network=host --entrypoint python3 agent-self-edit:test -c "
-import urllib.request, json
-req = urllib.request.Request('http://host.docker.internal:8000/v1/models',
-    headers={'Authorization': 'Bearer omlx-test'})
-resp = urllib.request.urlopen(req, timeout=10)
-print(json.loads(resp.read()))
-"
+```python
+# CLI completed
+assert result.returncode == 0
+
+# LLM was called (analyzer + A/B test)
+assert traffic_log.exists()
+entries = [json.loads(l) for l in traffic_log.read_text().splitlines()]
+assert len(entries) >= 2  # at least 1 analyzer call + 1 A/B test call
+
+# Each entry has full I/O
+for entry in entries:
+    assert "messages" in entry     # LLM input
+    assert "response" in entry     # LLM output
+    assert entry["model"] == OMLX_MODEL
+    assert entry["latency_ms"] > 0
+
+# CLI output shows all stages
+assert "Analysis complete" in stdout        # stage 2
+assert "A/B test" in stdout                 # stage 3
+assert "Gate:" in stdout                    # stage 4
+# "Promoted" or "Rejected" — either is valid (gate decides)
 ```
 
-### 5.3 CLI Smoke Test
+### 5.4 Config
 
-```bash
-docker run --rm agent-self-edit:test --help
+```yaml
+schema_version: 1
+project:
+  name: docker-full-loop
+  registry_path: /config/registry
+  trace_path: /config/traces.db
+tasks:
+  task_set_path: /config/classification.yaml  # REQUIRED for A/B test
+  batch_size: 10
+  sample_floor: 10
+llm:
+  provider: openai
+  model: Qwen3.5-9B-MLX-4bit
+  api_key: omlx-test
+  base_url: http://host.docker.internal:8000/v1
+  temperature: 0.0
+  max_tokens: 4096
+  timeout: 60
+ab_test:
+  n_resamples: 100
+  n_permutations: 100
+  confidence_level: 0.95
+  min_effect_size: 0.05
+  cost_ceiling_usd: 0.50
+gate:
+  max_edit_distance: 20
+  drift_threshold: 0.3
+  near_miss_threshold: 0.5
+analyzer:
+  max_proposals_per_batch: 3
+  cost_ceiling_usd: 0.50
+trigger: batch
+trace_retention_days: 90
 ```
 
-- Must output usage text listing all 10 commands: `init`, `run`, `status`, `diff`, `rollback`, `guardrails`, `lineage`, `propose`, `ingest`, `validate`.
-- Exit code 0.
+### 5.5 Seeded traces
 
-### 5.4 Full Loop Integration Test (the real test)
+10 failed classification traces — same `task_input` as the classification task set but `final_output` is wrong and `success: false`:
 
-This is the critical test. It must exercise the **entire self-edit loop** against OMLX:
-
-```
-1. Mount a volume with:
-   - config.yaml (provider=openai, model=Qwen3.5-9B-MLX-4bit, base_url=host.docker.internal:8000/v1)
-   - task_set.yaml (classification — so A/B test can run)
-   - registry/ (with initial prompt version)
-   - traces.db (with failed traces)
-
-2. Run: agent-self-edit run --once --config /config/agent-self-edit.yaml
-   (NO --dry-run)
-
-3. Verify each stage:
-   - Ingest: traces loaded
-   - Analyze: LLM called with analyzer prompt → proposals returned
-   - A/B test: run_ab_test() called with task set → winner determined
-   - Gate: check_all() called → decision (promote/reject/near_miss)
-   - Promote (if gate passes): registry.create() → new prompt version
-
-4. Capture:
-   - LLM input (messages) and output (response) for every LLM call
-   - Latency, token usage per call
-   - Proposals, gate decisions, promotions
-   - Write to results/docker/omlx/qwen3.5-9b-mlx-4bit/
-```
-
-### 5.5 Propose Test
-
-```
-1. Same setup as 5.4
-
-2. Run: agent-self-edit propose --config /config/agent-self-edit.yaml
-   (NO --dry-run)
-
-3. Verify:
-   - Analyze: LLM called → proposals returned
-   - A/B test: run_ab_test() → winner
-   - Gate: check_all() → decision
-   - LLM I/O captured
+```json
+{"task_id": "ft-001", "task_input": "My billing page shows the wrong amount.", "final_output": "billing", "expected_output": "technical", "success": false, "timestamp": "2026-09-01T10:00:00Z"}
 ```
 
 ## 6. LLM Traffic Capture
@@ -145,24 +212,31 @@ The `OpenAIProvider` writes every request/response to `AGENT_SELF_EDIT_LLM_LOG` 
 {
   "model": "Qwen3.5-9B-MLX-4bit",
   "base_url": "http://host.docker.internal:8000/v1",
-  "messages": [{"role": "user", "content": "..."}],
+  "messages": [
+    {"role": "system", "content": "You are a prompt optimization analyst..."},
+    {"role": "user", "content": "Failed traces: ..."}
+  ],
   "temperature": 0.0,
-  "response": "...",
+  "response": "[{\"section\": \"...\", \"old_text\": \"...\", \"new_text\": \"...\", ...}]",
   "usage": {"prompt_tokens": 680, "completion_tokens": 243, "total_tokens": 923},
   "latency_ms": 12739
 }
 ```
 
-The container mounts `field-test/v0.1.0/results/docker/omlx/qwen3.5-9b-mlx-4bit/` to `/results` and sets `AGENT_SELF_EDIT_LLM_LOG=/results/llm-traffic-*.jsonl`.
+This captures:
+- **Analyzer calls** — the system prompt + failed traces → JSON proposals
+- **A/B test calls** — each prompt variant run against each task in the held-out set
+
+The container mounts `results/docker/omlx/qwen3.5-9b-mlx-4bit/` to `/results` and sets `AGENT_SELF_EDIT_LLM_LOG=/results/llm-traffic-*.jsonl`.
 
 ## 7. Results Structure
 
 ```
 field-test/v0.1.0/results/docker/omlx/qwen3.5-9b-mlx-4bit/
-  docker-run-full-loop-omlx.json         ← per-test structured result
-  docker-propose-omlx.json
-  llm-traffic-run.jsonl                  ← raw LLM request/response pairs
-  llm-traffic-propose.jsonl
+  docker-run-full-loop.json          ← structured: meta + per-stage results + LLM I/O
+  docker-propose-full.json           ← structured: meta + per-stage results + LLM I/O
+  llm-traffic-run.jsonl              ← raw LLM request/response pairs (all calls)
+  llm-traffic-propose.jsonl          ← raw LLM request/response pairs (all calls)
 ```
 
 Summary report: `docs/field-test/v0.1.0/docker-field-test-summary.md`
@@ -178,12 +252,10 @@ Summary report: `docs/field-test/v0.1.0/docker-field-test-summary.md`
 
 Container reaches OMLX via `host.docker.internal:8000` (not `localhost`).
 
-## 9. CI Integration
-
-Docker tests are excluded from the default `pytest` run (marked `@pytest.mark.docker`). Run them explicitly:
+## 9. Runner Scripts
 
 ```bash
-# Via runner script
+# Full pytest suite (9 tests)
 python field-test/scripts/run_docker_tests.py
 
 # Direct
@@ -194,9 +266,9 @@ Requires: Docker daemon running, OMLX server at `http://localhost:8000/v1`.
 
 ## 10. Open Issues
 
-| Issue | Problem |
-|-------|---------|
-| [#98](https://github.com/deghosal-2026/agent-self-edit/issues/98) | Docker integration test only runs `--dry-run` — skips A/B test and gate |
-| [#99](https://github.com/deghosal-2026/agent-self-edit/issues/99) | `run_docker_field_test.py` is stale — duplicates `test_docker.py` |
-| [#102](https://github.com/deghosal-2026/agent-self-edit/issues/102) | WBS row 23 marked ✅ but acceptance criteria never fully tested |
-| [#103](https://github.com/deghosal-2026/agent-self-edit/issues/103) | A/B test engine not exercised in any field test |
+| Issue | Problem | Status |
+|-------|---------|--------|
+| [#98](https://github.com/deghosal-2026/agent-self-edit/issues/98) | Docker integration test only runs `--dry-run` — skips A/B test and gate | open |
+| [#99](https://github.com/deghosal-2026/agent-self-edit/issues/99) | `run_docker_field_test.py` is stale — duplicates `test_docker.py` | open |
+| [#102](https://github.com/deghosal-2026/agent-self-edit/issues/102) | WBS row 23 marked ✅ but acceptance criteria never fully tested | open |
+| [#103](https://github.com/deghosal-2026/agent-self-edit/issues/103) | A/B test engine not exercised in any field test | open |
