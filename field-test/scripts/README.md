@@ -18,6 +18,33 @@ Scoring adapts to the trace type:
 
 `OPENROUTER_API_KEY` must be set in the environment. No defaults.
 
+### Quick test (1-2 traces, both arms)
+
+```bash
+# Generate a small synthetic set, trim to 2 traces
+python field-test/scripts/generate_traces.py \
+  field-test/v0.1.0/corpus/synthetic/classification.yaml \
+  --output /tmp/synth.jsonl --failure-rate 0.3
+
+# Local OMLX — 2 synthetic + 2 real
+export OPENROUTER_API_KEY=omlx-test
+python field-test/scripts/run_traces.py /tmp/synth.jsonl \
+  --provider omlx --model qwen3.5-4b-4bit --endpoint http://localhost:8000/v1 --limit 2
+python field-test/scripts/run_traces.py \
+  field-test/v0.1.0/corpus/real-life/real-traces/hf-customer-support-traces.jsonl \
+  --provider omlx --model qwen3.5-4b-4bit --endpoint http://localhost:8000/v1 --limit 2
+
+# Cloud OpenRouter — 2 synthetic + 2 real
+export OPENROUTER_API_KEY=sk-or-v1-...
+python field-test/scripts/run_traces.py /tmp/synth.jsonl \
+  --provider openai --model openai/gpt-4o-mini --endpoint https://openrouter.ai/api/v1 --limit 2
+python field-test/scripts/run_traces.py \
+  field-test/v0.1.0/corpus/real-life/real-traces/hf-customer-support-traces.jsonl \
+  --provider openai --model openai/gpt-4o-mini --endpoint https://openrouter.ai/api/v1 --limit 2
+```
+
+`--limit N` runs only the first N traces from any trace file. Use it for quick sanity checks.
+
 ### Local OMLX
 
 ```bash

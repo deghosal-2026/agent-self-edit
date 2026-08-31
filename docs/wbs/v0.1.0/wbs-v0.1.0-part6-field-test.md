@@ -59,7 +59,7 @@
 |---|------|---------------|----------------------|---------|------------|--------|--------|
 | 21 | Dockerfile + compose | `Dockerfile` (multi-stage), `docker-compose.yml` | Build stage: pip install; runtime stage: python -m; volume mounts for config, registry, traces | F-14 | [D10 §14.2](../../design/ab-test-engine-design.md#143–integration-tests-hermetic-ci-safe) | image builds; container runs | [#69](https://github.com/deghosal-2026/agent-self-edit/issues/69) · ✅ |
 | 22 | Docker smoke test | `tests/test_docker.py` | `docker build . && docker run agent-self-edit --help`; verify image builds and runs; CLI commands work inside container | F-14 | [D10 §14.2](../../design/ab-test-engine-design.md#143–integration-tests-hermetic-ci-safe) | image builds; help works | [#69](https://github.com/deghosal-2026/agent-self-edit/issues/69) · ✅ |
-| 23 | Docker integration test | `tests/test_docker.py` | Run full loop (with OMLX real LLM) in Docker container; verify: trace ingestion, analysis, A/B test, promotion gate, LLM I/O capture all work | F-14 | [D10 §14.2](../../design/ab-test-engine-design.md#143–integration-tests-hermetic-ci-safe) | loop completes in container; LLM I/O captured to `field-test/v0.1.0/results/` | [#69](https://github.com/deghosal-2026/agent-self-edit/issues/69) · [#98](https://github.com/deghosal-2026/agent-self-edit/issues/98) · ⬜ |
+| 23 | Docker integration test | `tests/test_docker.py` | Run full loop (with OMLX real LLM) in Docker container; verify: trace ingestion, analysis, A/B test, promotion gate, LLM I/O capture all work. **Note:** A/B test bug found — run.py passes proposal fragment instead of full candidate prompt (see docker-test-run-report.md §8). Gate correctly rejects. | F-14 | [D10 §14.2](../../design/ab-test-engine-design.md#143–integration-tests-hermetic-ci-safe) | 9/9 tests pass, LLM I/O captured to `field-test/v0.1.0/results/docker/omlx/qwen3.5-4b-4bit/` | [#69](https://github.com/deghosal-2026/agent-self-edit/issues/69) · ✅ [#98](https://github.com/deghosal-2026/agent-self-edit/issues/98) · ✅ [#103](https://github.com/deghosal-2026/agent-self-edit/issues/103) · ✅ |
 
 #### Analysis & Report
 
@@ -94,7 +94,7 @@
 - [ ] Baseline measurement completed
 - [ ] Non-LLM tests: all pass (trace generation, dry-run loop, gate validation, rollback, zero-LLM, concurrency, registry stress, guardrail stress)
 - [ ] LLM tests: full loop integration, 10-iteration improvement, adversarial edits, analyzer quality, cost analysis
-- [ ] Docker tests: build, smoke, integration (full loop, not dry-run — see #98)
+- [x] Docker tests: build, smoke, integration (full loop against OMLX — #98, #103 closed. A/B test bug found: run.py passes fragment not full prompt)
 - [ ] Field test report written with all results
 - [ ] Improvement measured (target: 10%+ over 10 iterations)
 - [ ] Guardrails catch 100% of injected bad edits

@@ -198,6 +198,8 @@ def main():
                         help="API base URL")
     parser.add_argument("--system-prompt", default=None,
                         help="System prompt for the LLM (auto-detected if not provided)")
+    parser.add_argument("--limit", type=int, default=None,
+                        help="Only run first N traces (for quick testing)")
     parser.add_argument("--output", "-o", help="Output JSON file (default: auto-generated)")
     args = parser.parse_args()
 
@@ -215,6 +217,8 @@ def main():
     if not traces:
         print("ERROR: no traces found in file", file=sys.stderr)
         sys.exit(1)
+    if args.limit and args.limit > 0:
+        traces = traces[:args.limit]
 
     domain = detect_domain(args.trace_file, traces[0])
     system_prompt = args.system_prompt or _DOMAIN_PROMPTS[domain]

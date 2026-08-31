@@ -65,7 +65,7 @@ The docker test must prove this loop works inside a container against a real LLM
 │                                                          │
 │  ┌────────────────────────────────────────────────────┐  │
 │  │ field-test/v0.1.0/results/docker/                  │  │
-│  │   omlx/qwen3.5-9b-mlx-4bit/                         │  │
+│  │   omlx/qwen3.5-4b-4bit/                            │  │
 │  │     docker-run-full-loop.json    (structured)       │  │
 │  │     docker-propose-full.json     (structured)       │  │
 │  │     llm-traffic-run.jsonl        (raw LLM I/O)     │  │
@@ -95,7 +95,7 @@ The docker test must prove this loop works inside a container against a real LLM
 
 ### Current state
 
-Tests 1-7 pass. Tests 8-9 are **broken** — they run with `--dry-run` which skips A/B test and gate (`run.py:46`). Issue #98 tracks the fix.
+Tests 1-7 pass. Tests 8-9 **now pass** (previously broken with `--dry-run`, fixed — see #98 closed).
 
 ## 5. Full Loop Test (the critical test)
 
@@ -112,7 +112,7 @@ The container needs:
   classification.yaml      ← held-out task set (30 classification tasks, ExactMatch scorer)
   registry/                ← prompt registry (initialized with baseline prompt)
   traces.db                 ← trace store (seeded with 10 failed classification traces)
-/results/                  ← mounted from field-test/v0.1.0/results/docker/omlx/qwen3.5-9b-mlx-4bit/
+/results/                  ← mounted from field-test/v0.1.0/results/docker/omlx/qwen3.5-4b-4bit/
 ```
 
 ### 5.2 Execution
@@ -120,7 +120,7 @@ The container needs:
 ```bash
 docker run --rm --network=host \
   -v /tmp/test-config:/config \
-  -v field-test/v0.1.0/results/docker/omlx/qwen3.5-9b-mlx-4bit:/results \
+  -v field-test/v0.1.0/results/docker/omlx/qwen3.5-4b-4bit:/results \
   -e AGENT_SELF_EDIT_LLM_LOG=/results/llm-traffic-run.jsonl \
   agent-self-edit:test \
   run --config /config/agent-self-edit.yaml --once
@@ -227,12 +227,12 @@ This captures:
 - **Analyzer calls** — the system prompt + failed traces → JSON proposals
 - **A/B test calls** — each prompt variant run against each task in the held-out set
 
-The container mounts `results/docker/omlx/qwen3.5-9b-mlx-4bit/` to `/results` and sets `AGENT_SELF_EDIT_LLM_LOG=/results/llm-traffic-*.jsonl`.
+The container mounts `results/docker/omlx/qwen3.5-4b-4bit/` to `/results` and sets `AGENT_SELF_EDIT_LLM_LOG=/results/llm-traffic-*.jsonl`.
 
 ## 7. Results Structure
 
 ```
-field-test/v0.1.0/results/docker/omlx/qwen3.5-9b-mlx-4bit/
+field-test/v0.1.0/results/docker/omlx/qwen3.5-4b-4bit/
   docker-run-full-loop.json          ← structured: meta + per-stage results + LLM I/O
   docker-propose-full.json           ← structured: meta + per-stage results + LLM I/O
   llm-traffic-run.jsonl              ← raw LLM request/response pairs (all calls)
@@ -268,7 +268,7 @@ Requires: Docker daemon running, OMLX server at `http://localhost:8000/v1`.
 
 | Issue | Problem | Status |
 |-------|---------|--------|
-| [#98](https://github.com/deghosal-2026/agent-self-edit/issues/98) | Docker integration test only runs `--dry-run` — skips A/B test and gate | open |
+| [#98](https://github.com/deghosal-2026/agent-self-edit/issues/98) | Docker integration test only runs `--dry-run` — skips A/B test and gate | closed (fixed) |
 | [#99](https://github.com/deghosal-2026/agent-self-edit/issues/99) | `run_docker_field_test.py` is stale — duplicates `test_docker.py` | open |
 | [#102](https://github.com/deghosal-2026/agent-self-edit/issues/102) | WBS row 23 marked ✅ but acceptance criteria never fully tested | open |
-| [#103](https://github.com/deghosal-2026/agent-self-edit/issues/103) | A/B test engine not exercised in any field test | open |
+| [#103](https://github.com/deghosal-2026/agent-self-edit/issues/103) | A/B test engine not exercised in any field test | closed (fixed) |

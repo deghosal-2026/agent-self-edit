@@ -132,13 +132,13 @@ field-test/v0.1.0/
 ├── results/
 │   ├── docker/
 │   │   └── omlx/
-│   │       └── qwen3.5-9b-mlx-4bit/
+│   │       └── qwen3.5-4b-4bit/
 │   │           ├── docker-run-full-loop.json
 │   │           ├── docker-propose-full.json
 │   │           ├── llm-traffic-run.jsonl
 │   │           └── llm-traffic-propose.jsonl
 │   ├── omlx/
-│   │   └── qwen3.5-9b-mlx-4bit/
+│   │   └── qwen3.5-4b-4bit/
 │   │       ├── *-results.json
 │   │       └── llm-traffic-*.jsonl
 │   ├── openai/
@@ -230,8 +230,8 @@ Results are stored under `field-test/v0.1.0/results/<provider>/<model>/`.
 | Docker help | none | all 10 commands listed | ✅ | — |
 | Docker validate | none | exit 0 or 2 | ✅ | — |
 | Docker status | none | exit 0, 1, or 2 | ✅ | — |
-| Docker full loop | OMLX | ingest → analyze → A/B test → gate → promote, LLM I/O captured | ⬜ | #98 |
-| Docker propose full | OMLX | analyze → propose → A/B test → gate, LLM I/O captured | ⬜ | #98 |
+| Docker full loop | OMLX | ingest → analyze → A/B test → gate → promote, LLM I/O captured | ✅ | #98 closed |
+| Docker propose full | OMLX | analyze → propose → A/B test → gate, LLM I/O captured | ✅ | #98 closed |
 
 ## 11. Deliverables
 
@@ -249,9 +249,9 @@ Results are stored under `field-test/v0.1.0/results/<provider>/<model>/`.
 | [#95](https://github.com/deghosal-2026/agent-self-edit/issues/95) | `run_traces.py` is wrong tool — should run self-edit loop |
 | [#96](https://github.com/deghosal-2026/agent-self-edit/issues/96) | Scoring always passes — ignores `trace.success` |
 | [#97](https://github.com/deghosal-2026/agent-self-edit/issues/97) | Duplicate `task_id` in `agent-observatory-traces.jsonl` |
-| [#98](https://github.com/deghosal-2026/agent-self-edit/issues/98) | Docker integration test only runs `--dry-run` |
+| [#98](https://github.com/deghosal-2026/agent-self-edit/issues/98) | Docker integration test only runs `--dry-run` | closed (fixed) |
 | [#99](https://github.com/deghosal-2026/agent-self-edit/issues/99) | `run_docker_field_test.py` is stale |
 | [#100](https://github.com/deghosal-2026/agent-self-edit/issues/100) | LLM field tests (rows 15-20) not implemented |
 | [#101](https://github.com/deghosal-2026/agent-self-edit/issues/101) | `FIELD_TEST_REPORT.md` missing |
 | [#102](https://github.com/deghosal-2026/agent-self-edit/issues/102) | WBS row 23 falsely marked done |
-| [#103](https://github.com/deghosal-2026/agent-self-edit/issues/103) | A/B test engine not exercised |
+| [#103](https://github.com/deghosal-2026/agent-self-edit/issues/103) | A/B test engine not exercised | closed (fixed) |
