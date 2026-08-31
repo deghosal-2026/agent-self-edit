@@ -112,9 +112,9 @@ _DOMAIN_PROMPTS = {
     "pi-coding": "You are a coding assistant. Help the user complete the coding task.",
     "observatory": "You are an agent observability analyst. Describe what the agent did and whether it succeeded.",
     "evalforge": "You are a test scenario runner. Determine whether the agent passed or failed the scenario and explain why.",
-    "classification": "You are a classifier. Classify the input into one of the provided categories. Output only the category label.",
-    "extraction": "You are an information extraction assistant. Extract the requested fields from the input. Output only the extracted fields.",
-    "generation": "You are a text generation assistant. Generate the requested text following all constraints.",
+    "classification": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. No reasoning.",
+    "extraction": "Extract the requested fields from the input. Output ONLY the extracted fields, one per line, as 'field: value'. Nothing else.",
+    "generation": "Generate the requested text following all constraints. Output ONLY the generated text.",
     "mixed": "You are a helpful assistant. Complete the task as instructed.",
 }
 

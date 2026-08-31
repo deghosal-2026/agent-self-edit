@@ -167,31 +167,35 @@ The biggest mistake was building a generic LLM eval runner (`run_traces.py`) ins
 
 A row marked ✅ must satisfy every condition in its acceptance criteria. "A/B test, promotion gate" was listed as acceptance criteria but never tested. This was a false completion claim that propagated through the project tracking.
 
-### 5.4 Local MLX Qwen models are not suitable for A/B testing on real traces
+### 5.4 Local MLX Qwen models CAN produce labels — but need explicit format instructions
 
-Both Qwen3.5-4B-4bit and Qwen3.5-9B-MLX-4bit produce conversational, multi-sentence responses to classification tasks. The A/B test engine uses ExactMatch scoring which expects the output to be exactly the category label (e.g. `"technical"`). The models write things like `"I can help you troubleshoot this! To get to the bottom of it, I'll need..."` instead of `"technical"`.
+Initial testing showed both Qwen3.5-4B-4bit and Qwen3.5-9B-MLX-4bit producing conversational, multi-sentence responses instead of category labels. ExactMatch scored 0 for both prompts → A/B test always tied → no promotion possible.
 
-This means:
-- Both prompt A and prompt B score 0 on every task
-- All deltas = 0 → the A/B test always returns a tie (p=1.0)
-- The gate always rejects → no edit ever promotes → the loop cannot improve
+**Root cause was the system prompt, not the model.** The original classification prompt was `"You are a classifier. Classify the input into one of the provided categories. Output only the category label."` — vague enough that the models produced full sentences.
 
-**Why local MLX Qwen models fail for A/B testing:**
-1. **Output format mismatch** — the models don't follow "output only the label" instructions. They produce full conversational responses with reasoning, apologies, and follow-up questions. ExactMatch can never match these.
-2. **No instruction-following discipline** — smaller models (4B, 9B) don't adhere to format constraints in the system prompt. Even with "Classify the input. Output only the category." the models still write paragraphs.
-3. **Both prompts score identically** — since the model ignores the prompt's formatting instructions anyway, changing the prompt doesn't change the output format. Both prompts produce the same conversational style → same scores → tie.
-4. **The A/B test can never show improvement** — if the scorer can't distinguish a correct from incorrect classification, no prompt edit can produce a measurable delta. The loop is stuck.
+With an explicit prompt that lists the categories and forbids extra text:
+```
+Classify the input into exactly one of: urgent, billing, technical, feature, security, other.
+Output ONLY the category name. Nothing else. No explanation. No reasoning.
+```
 
-**What would work:**
-- A cloud model (e.g. `openai/gpt-4o-mini`) that follows format instructions and outputs just the label
-- A Contains scorer instead of ExactMatch (checks if the label appears anywhere in the response)
-- An LLM-as-judge scorer that evaluates whether the response correctly classifies the input
+Both models produce just the label:
 
-| Model | Output format | ExactMatch score | A/B test result | Can promote? |
-|-------|--------------|-----------------|-----------------|--------------|
-| Qwen3.5-4B-4bit | Full sentences | 0 for both | tie (p=1.0) | No |
-| Qwen3.5-9B-MLX-4bit | Full sentences | 0 for both | tie (p=1.0) | No |
-| openai/gpt-4o-mini (expected) | Label only | 0 or 1 | real deltas | Yes |
+| Model | Prompt | Output | ExactMatch? |
+|-------|--------|--------|-------------|
+| Qwen3.5-4B-4bit | Explicit format | `billing` | ✅ matches format |
+| Qwen3.5-9B-MLX-4bit | Explicit format | `billing` | ✅ matches format |
+
+The models classify "My billing page shows the wrong amount" as `billing` (the expected answer is `technical` — the model is wrong, but the format is correct). This means the A/B test CAN now produce non-zero deltas — if a prompt edit makes the model classify correctly, ExactMatch will score 1 instead of 0.
+
+**Lesson:** Before declaring a model "not suitable," fix the prompt. Small models need explicit, constraining format instructions: list the valid outputs, forbid extra text, set low max_tokens. The system prompt is the lever — the model is capable, the prompt was wrong.
+
+**Speed comparison (still relevant):**
+
+| Model | Avg latency per call | 10-trace run | Usable for iteration |
+|-------|---------------------|-------------|---------------------|
+| Qwen3.5-9B-MLX-4bit | ~11,239ms | ~2 min (6/10 completed before abort) | Marginal |
+| Qwen3.5-4B-4bit | ~6,823ms | ~68s (10/10 completed) | Yes |
 
 ### 5.5 LLM I/O capture is non-negotiable for debuggability
 
