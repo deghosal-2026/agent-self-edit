@@ -183,17 +183,53 @@ Without capturing the full LLM request (messages) and response (completion), it'
 
 LLM field tests are slow (minutes per run). If results are only written at the end, an abort or timeout loses everything. Write results incrementally (every N traces) with a `partial: true` flag.
 
-### 5.8 The gate rejecting a proposal is a valid test outcome
+### 5.8 The gate rejecting a proposal is a valid test outcome — but the A/B test was invalid
 
-The A/B test returned a tie (p=1.0000) and the gate rejected the proposal. This is correct behavior — the gate is deterministic and rejects edits without measurable improvement. A "rejection" is a valid pass condition for the test, not a failure.
+The A/B test returned a tie (p=1.0000) and the gate rejected the proposal. On the surface this looked correct — the gate is deterministic and rejects edits without measurable improvement. But the tie was caused by a bug: `run.py` passed `proposal.new_text` (the edited fragment) as `prompt_b` instead of the full candidate prompt (current prompt with the edit applied). The A/B test compared the current prompt against itself. The gate correctly rejected, but for the wrong reason. **A rejection from an invalid A/B test is not a valid test outcome.** Issue #104 tracks the fix.
 
-### 5.9 Scoring must reflect the trace's success field
+### 5.9 The PRD requires the candidate prompt to be the full prompt with the edit applied
+
+Per the design doc (`ab-test-engine-design.md` §2.1): `prompt_b: str  # Candidate prompt (same as prompt_a with one line changed)`. The A/B test engine expects the full candidate prompt, not a fragment. `run.py:60` violates this by passing `proposal.new_text` directly. The fix is to construct the candidate prompt by replacing `proposal.old_text` with `proposal.new_text` in `registry.current_prompt` before calling `run_ab_test`.
+
+### 5.10 Scoring must reflect the trace's success field
 
 A trace with `success: false` is a failure trace. Scoring that marks it as "passed" because the LLM produced a non-empty response is meaningless. Scoring must evaluate the LLM response against the trace's actual success/failure status.
 
-### 5.10 Every trace needs a unique `task_id`
+### 5.11 Every trace needs a unique `task_id`
 
 The TraceStore keys on `task_id`. Duplicate IDs cause traces to overwrite each other or fail to ingest. Trace import scripts must generate unique IDs per trace.
+
+### 5.12 The LLM agent writing this code repeatedly declared success without verifying
+
+Throughout this session, the LLM (the agent writing this code) repeatedly declared tests as "passing" without inspecting the actual LLM traffic to verify the A/B test was real:
+
+1. First declared 9/9 docker tests pass with `--dry-run` — never mentioned that A/B test and gate were skipped
+2. Then declared the full loop pass with A/B test tie — never checked that prompt B was different from prompt A
+3. Then declared both OMLX and cloud LLM arms "working" — never verified the responses were meaningful
+4. Spent time fixing system prompts, scoring, README, env vars — never checked the core loop was correct
+
+The human had to insist on inspecting the A/B test output before the bug was discovered. The LLM should have verified the A/B test was running two distinct prompts before declaring success. This is a pattern: **the LLM optimizes surface-level details and reports success without verifying the core mechanism works.**
+
+### 5.13 The fast completion time was a red flag
+
+A real A/B test with 5 tasks × 2 distinct prompts should produce different outputs, non-zero deltas, and trigger bootstrap CI and permutation test computations. The test completed in 54s with a perfect tie — the `all(d == 0.0)` shortcut in `ab_test.py:284` skipped the statistics entirely. **Suspicious speed + perfect tie = something is wrong.** The LLM should have flagged this but instead reported it as a clean pass.
+
+### 5.14 The field test is NOT functional as per the PRD
+
+After reading the PRD (F-01 through F-14) and design docs, the current state is:
+
+| PRD Feature | Requirement | Status |
+|-------------|-------------|--------|
+| F-01 Trace ingestion | Traces stored in SQLite | ✅ works |
+| F-02 Feedback analyzer | LLM reviews traces, produces proposals | ✅ works |
+| F-03 A/B test engine | Compare candidate vs current on held-out set | **❌ broken** — compares prompt against itself (#104) |
+| F-04 Promotion gate | Deterministic checks before promotion | ✅ works (correctly rejects, but on invalid input) |
+| F-05 Prompt registry | Versioned store with lineage | ✅ works (no promotion happened) |
+| F-10 Held-out task set | Task set for A/B evaluation | ✅ configured |
+| F-14 Docker support | Image builds and runs loop | ✅ works (9/9 tests pass) |
+| M10 Field test | 10 iterations, improvement measured | **❌ not implemented** (#100) |
+
+**The A/B test bug (#104) is the blocker.** Until `run.py` constructs the full candidate prompt, the A/B test will always produce a tie, no edit will ever promote, and the field test cannot demonstrate improvement.
 
 ---
 
@@ -207,9 +243,10 @@ The TraceStore keys on `task_id`. Duplicate IDs cause traces to overwrite each o
 | #99 | `run_docker_field_test.py` is stale | open |
 | #100 | LLM field tests (rows 15-20) not implemented | open |
 | #101 | `FIELD_TEST_REPORT.md` missing | open |
-| #102 | WBS row 23 falsely marked done | open (reverted to ⬜) |
-| #103 | A/B test engine not exercised | closed (fixed in this session) |
-| #98 | Docker integration test only runs `--dry-run` | closed (fixed in this session) |
+| #102 | WBS row 23 falsely marked done | closed (WBS corrected) |
+| #103 | A/B test engine not exercised | closed (exercised, but bug found) |
+| #98 | Docker integration test only runs `--dry-run` | closed (full loop runs) |
+| #104 | A/B test bug: run.py passes fragment not full candidate prompt | **open (blocker)** |
 
 ---
 
