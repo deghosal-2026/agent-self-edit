@@ -345,7 +345,7 @@ class PromotionGate:
     ) -> GateResult:
         result = check_all(edit, ab_result, current_prompt, original_prompt, config)
         if self.audit is not None:
-            entry = {
+            entry: dict[str, Any] = {
                 "timestamp": utc_now_iso(),
                 "edit_id": result.edit_id,
                 "decision": result.decision,
@@ -355,6 +355,11 @@ class PromotionGate:
                     for c in result.checks
                 ],
             }
+            if edit is not None:
+                # Store the proposed new text so near-miss dedup (M7 #49) can
+                # compare future proposals against rejected/near-miss edits.
+                entry["proposal_text"] = edit.new_text
+                entry["proposal_section"] = edit.section
             self.audit.log(entry)
         return result
 
@@ -386,6 +391,37 @@ class GateAuditLog:
             if entry.get("edit_id") == edit_id:
                 matches.append(entry)
         return matches
+
+    def near_misses(self, limit: int = 20) -> StdList[EditProposal]:
+        """Return recent rejected / near-miss proposals for dedup (M7 #49).
+
+        Reconstructs ``EditProposal`` objects from audit entries that
+        carry ``proposal_text``. Entries without the field (pre-#84) are
+        skipped. Returns newest first.
+        """
+        from .types import EditProposal as _EditProposal
+
+        proposals: StdList[_EditProposal] = []
+        for entry in reversed(self._read_lines()):
+            decision = entry.get("decision")
+            if decision not in ("reject", "near_miss"):
+                continue
+            text = entry.get("proposal_text")
+            if not text:
+                continue
+            proposals.append(
+                _EditProposal(
+                    section=entry.get("proposal_section") or "",
+                    old_text="",
+                    new_text=text,
+                    hypothesis=entry.get("reason") or "",
+                    expected_improvement="",
+                    edit_id=entry.get("edit_id"),
+                )
+            )
+            if len(proposals) >= limit:
+                break
+        return proposals
 
     def list(self, limit: int = 100) -> StdList[dict[str, Any]]:
         entries = self._read_lines()

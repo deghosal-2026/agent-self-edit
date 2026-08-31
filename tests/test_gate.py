@@ -490,3 +490,69 @@ def test_promotion_gate_writes_audit(tmp_path):
     entries = gate.audit.list()
     assert len(entries) == 1
     assert entries[0]["edit_id"] == "edit-42"
+
+
+# ---- #84: near-miss audit source for M7 dedup ----
+
+def test_audit_entry_stores_proposal_text(tmp_path):
+    gate = PromotionGate(audit_path=tmp_path / "audit.jsonl")
+    assert gate.audit is not None
+    gate.check(
+        _proposal(old_text="stable", new_text="new text here", edit_id="e1"),
+        _ab_result(), "stable", "stable", _config(),
+    )
+    entries = gate.audit.list()
+    assert entries[0]["proposal_text"] == "new text here"
+    assert entries[0]["proposal_section"] == "role"
+
+
+def test_audit_entry_without_edit_no_proposal(tmp_path):
+    # a near-miss from check_all without an edit → no proposal_text field
+    gate = PromotionGate(audit_path=tmp_path / "audit.jsonl")
+    assert gate.audit is not None
+    gate.check(None, _ab_result(n_trials=5), "stable", "stable", _config(sample_floor=10))
+    entries = gate.audit.list()
+    assert "proposal_text" not in entries[0]
+
+
+def test_near_misses_returns_rejected_proposals(tmp_path):
+    log = GateAuditLog(tmp_path / "audit.jsonl")
+    # promote (ignored), reject (returned), near_miss (returned)
+    log.log({"edit_id": "p1", "decision": "promote", "proposal_text": "good edit"})
+    log.log({"edit_id": "r1", "decision": "reject", "proposal_text": "bad edit"})
+    log.log({"edit_id": "n1", "decision": "near_miss", "proposal_text": "borderline edit"})
+    props = log.near_misses()
+    assert len(props) == 2
+    assert {p.edit_id for p in props} == {"n1", "r1"}
+
+
+def test_near_misses_skips_missing_text(tmp_path):
+    log = GateAuditLog(tmp_path / "audit.jsonl")
+    log.log({"edit_id": "r1", "decision": "reject", "proposal_text": "text"})
+    log.log({"edit_id": "r2", "decision": "reject"})  # no proposal_text (pre-#84)
+    props = log.near_misses()
+    assert len(props) == 1
+    assert props[0].edit_id == "r1"
+
+
+def test_near_misses_newest_first_and_limit(tmp_path):
+    log = GateAuditLog(tmp_path / "audit.jsonl")
+    for i in range(5):
+        log.log({"edit_id": f"r{i}", "decision": "reject", "proposal_text": f"t{i}"})
+    props = log.near_misses(limit=2)
+    assert [p.edit_id for p in props] == ["r4", "r3"]
+
+
+def test_promotion_gate_reject_then_near_miss_query(tmp_path):
+    gate = PromotionGate(audit_path=tmp_path / "audit.jsonl")
+    assert gate.audit is not None
+    # force a reject via low sample floor → proposal_text stored
+    gate.check(
+        _proposal(old_text="stable", new_text="candidate", edit_id="e7"),
+        _ab_result(n_trials=3, p=0.9, effect=0.0),
+        "stable", "stable", _config(sample_floor=10),
+    )
+    props = gate.audit.near_misses()
+    assert len(props) == 1
+    assert props[0].edit_id == "e7"
+    assert props[0].new_text == "candidate"
