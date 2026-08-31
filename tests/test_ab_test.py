@@ -1,0 +1,244 @@
+"""Tests for the A/B test engine: task runner, statistics, cost, runner."""
+
+import pytest
+
+from agent_self_edit.ab_test import (
+    ABResult,
+    BootstrapResult,
+    bootstrap_ci,
+    effect_size,
+    estimate_cost,
+    permutation_test,
+    run_ab_test,
+    run_task,
+)
+from agent_self_edit.config import ABTestConfig, Config, ProjectConfig
+from agent_self_edit.llm import LLMProvider, MockProvider, ProviderError
+from agent_self_edit.scorers import ExactMatchScorer
+from agent_self_edit.tasks import Task, TaskSet
+
+
+def _task(task_id="t1", input_="classify this", expected="cat"):
+    return Task(id=task_id, input=input_, expected_output=expected)
+
+
+def _task_set(n=6, prefix="t"):
+    return TaskSet(tasks={f"{prefix}{i}": _task(f"{prefix}{i}") for i in range(n)})
+
+
+def _config(cost_ceiling=0.10, n_resamples=500, n_perm=200):
+    return Config(
+        project=ProjectConfig(name="x"),
+        ab_test=ABTestConfig(
+            n_resamples=n_resamples,
+            n_permutations=n_perm,
+            confidence_level=0.95,
+            min_effect_size=0.0,
+            cost_ceiling_usd=cost_ceiling,
+        ),
+    )
+
+
+# ---- run_task (#16) ----
+
+def test_run_task_success():
+    llm = MockProvider(responses="cat")
+    result = run_task(_task(), "You are a classifier.", llm)
+    assert result.success is True
+    assert result.output == "cat"
+    assert result.latency_ms >= 0
+    assert result.token_count > 0
+
+
+def test_run_task_empty_prompt():
+    llm = MockProvider(responses="cat")
+    result = run_task(_task(), "   ", llm)
+    assert result.success is False
+    assert result.error == "empty prompt"
+    assert result.output == ""
+
+
+def test_run_task_provider_error_returns_failure():
+    class Boom(LLMProvider):
+        def complete(self, prompt, system_prompt="", temperature=0.0):
+            raise ProviderError("timeout")
+
+    result = run_task(_task(), "prompt", Boom())
+    assert result.success is False
+    assert result.output == ""
+    assert "timeout" in (result.error or "")
+
+
+def test_run_task_measures_latency():
+    import time
+
+    class Slow(LLMProvider):
+        def complete(self, prompt, system_prompt="", temperature=0.0):
+            time.sleep(0.01)
+            return "cat"
+
+    result = run_task(_task(), "prompt", Slow())
+    assert result.latency_ms >= 10
+
+
+# ---- bootstrap_ci (#19) ----
+
+def test_bootstrap_identical_scores_zero_ci():
+    res = bootstrap_ci([0.7, 0.8, 0.9], [0.7, 0.8, 0.9], n_resamples=500)
+    assert res.ci_low == 0.0
+    assert res.ci_high == 0.0
+    assert res.mean == pytest.approx(0.0)
+
+
+def test_bootstrap_single_trial_narrow():
+    res = bootstrap_ci([0.5], [0.9], n_resamples=500)
+    # n < 2 => degenerate CI, no crash
+    assert res.mean == 0.0
+
+
+def test_bootstrap_empty():
+    res = bootstrap_ci([], [], n_resamples=500)
+    assert res.mean == 0.0 and res.ci_low == 0.0
+
+
+def test_bootstrap_positive_delta_ci_above_zero():
+    a = [0.4, 0.5, 0.6, 0.5]
+    b = [0.8, 0.9, 0.7, 0.8]
+    res = bootstrap_ci(a, b, n_resamples=2000)
+    assert res.ci_low > 0.0
+
+
+# ---- permutation_test (#20) ----
+
+def test_permutation_identical_p_high():
+    p = permutation_test([0.6, 0.7, 0.5], [0.6, 0.7, 0.5], n_permutations=200)
+    assert p > 0.5
+
+
+def test_permutation_different_p_low():
+    p = permutation_test(
+        [0.2, 0.1, 0.3, 0.15, 0.25, 0.12],
+        [0.9, 0.8, 0.7, 0.85, 0.75, 0.82],
+        n_permutations=2000,
+    )
+    assert p < 0.01
+
+
+def test_permutation_empty_returns_one():
+    assert permutation_test([], [], n_permutations=10) == 1.0
+
+
+# ---- effect_size + cost (#21) ----
+
+def test_effect_size_positive():
+    es = effect_size([0.5, 0.5], [0.6, 0.6])
+    assert pytest.approx(es) == 0.2
+
+
+def test_effect_size_baseline_zero_inf():
+    es = effect_size([0.0, 0.0], [0.5, 0.5])
+    assert es == float("inf")
+
+
+def test_effect_size_baseline_zero_nogain():
+    es = effect_size([0.0, 0.0], [0.0, 0.0])
+    assert es == 0.0
+
+
+def test_effect_size_negative():
+    es = effect_size([0.8, 0.8], [0.5, 0.5])
+    assert es == pytest.approx(-0.375)
+
+
+def test_estimate_cost_value():
+    assert estimate_cost(1000) == pytest.approx(0.0033)
+    assert estimate_cost(0) == 0.0
+
+
+# ---- run_ab_test (#18) ----
+
+def test_ab_run_paired_calls_both_prompts():
+    llm = MockProvider(responses=lambda prompt, sp: "cat")
+    ts = _task_set(4)
+    scorer = ExactMatchScorer()
+    res = run_ab_test("prompt a", "prompt b", ts, llm, scorer, _config())
+    assert res.n_trials == 4
+    assert res.winner in ("a", "b", "tie", "inconclusive")
+
+
+def test_ab_identical_prompts_tie():
+    llm = MockProvider(responses=lambda prompt, sp: "cat")
+    ts = _task_set(5)
+    scorer = ExactMatchScorer()
+    res = run_ab_test("same", "same", ts, llm, scorer, _config())
+    assert res.winner == "tie"
+    assert res.p_value == 1.0
+
+
+def test_ab_winner_b_when_b_better():
+    # All 8 tasks score 0 with A, but B is better via marker
+    def adaptive(prompt, sp):
+        return "cat" if "PROMPT_B_MARKER" in prompt else "dog"
+
+    llm2 = MockProvider(responses=adaptive)
+    ts = _task_set(8)
+    scorer = ExactMatchScorer()
+    full_a = "pa"
+    full_b = "pb PROMPT_B_MARKER"
+    res2 = run_ab_test(full_a, full_b, ts, llm2, scorer, _config())
+    assert res2.n_trials == 8
+    assert any(r.score_b > r.score_a for r in res2.per_task)
+
+
+def test_ab_empty_task_set():
+    llm = MockProvider(responses="cat")
+    ts = TaskSet()
+    scorer = ExactMatchScorer()
+    res = run_ab_test("a", "b", ts, llm, scorer, _config())
+    assert res.n_trials == 0
+    assert res.winner == "inconclusive"
+
+
+def test_ab_cost_ceiling_aborts():
+    llm = MockProvider(responses="a long answer " * 50)
+    ts = _task_set(30, prefix="cost")
+    scorer = ExactMatchScorer()
+    # ceiling so low that any single trial trips it
+    res = run_ab_test("a", "b", ts, llm, scorer, _config(cost_ceiling=0.0000001))
+    assert res.winner == "inconclusive"
+    assert res.n_trials < 30  # aborted early
+
+
+def test_ab_failure_rate_abort():
+    class Boom(LLMProvider):
+        def complete(self, prompt, system_prompt="", temperature=0.0):
+            raise ProviderError("down")
+
+    ts = _task_set(10)
+    res = run_ab_test("a", "b", ts, Boom(), ExactMatchScorer(), _config())
+    assert res.winner == "inconclusive"
+    assert res.n_trials == 10
+
+
+def test_ab_per_task_breakdown():
+    llm = MockProvider(responses=lambda prompt, sp: "cat")
+    ts = _task_set(3)
+    res = run_ab_test("pa", "pb", ts, llm, ExactMatchScorer(), _config())
+    assert len(res.per_task) == 3
+    first = res.per_task[0]
+    assert first.task_id.startswith("t")
+    assert first.output_a == "cat"
+    assert first.score_a == 1.0
+
+
+def test_ab_result_type_counts():
+    llm = MockProvider(responses=lambda prompt, sp: "dog")
+    ts = _task_set(6)
+    res = run_ab_test("pa", "pb", ts, llm, ExactMatchScorer(), _config())
+    assert isinstance(res, ABResult)
+    assert isinstance(res.per_task[0].delta, float)
+
+
+def test_bootstrap_result_dataclass():
+    r = BootstrapResult(mean=0, ci_low=0, ci_high=0, std=0)
+    assert r.std == 0

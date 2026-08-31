@@ -1,0 +1,332 @@
+"""Task runner, A/B test engine, statistics, and cost tracking."""
+
+from __future__ import annotations
+
+import random
+import statistics
+import time
+from dataclasses import dataclass, field
+from typing import Literal
+
+from .config import ABTestConfig, Config
+from .llm.base import LLMProvider, ProviderError
+from .scorers import Scorer
+from .tasks import Task, TaskSet
+from .types import utc_now_iso  # noqa: F401  (re-export convenience)
+
+_COST_PER_1K_TOKENS = 0.0033  # approx gpt-4o-mini blend ($ per 1K tokens)
+
+
+@dataclass(frozen=True)
+class TaskResult:
+    """Result of running one task against one prompt."""
+
+    output: str
+    success: bool
+    latency_ms: float
+    token_count: int
+    error: str | None = None
+
+
+@dataclass(frozen=True)
+class PerTask:
+    """Paired per-task comparison for the A/B result."""
+
+    task_id: str
+    task_input: str
+    expected_output: str
+    output_a: str
+    score_a: float
+    output_b: str
+    score_b: float
+    delta: float
+    latency_a_ms: float
+    latency_b_ms: float
+    tokens_a: int
+    tokens_b: int
+    error_a: str | None = None
+    error_b: str | None = None
+
+
+@dataclass(frozen=True)
+class ABResult:
+    """Statistical result of comparing prompt B against prompt A."""
+
+    winner: Literal["a", "b", "tie", "inconclusive"]
+    mean_delta: float
+    ci_low: float
+    ci_high: float
+    p_value: float
+    effect_size: float
+    n_trials: int
+    per_task: list[PerTask] = field(default_factory=list)
+    cost_usd: float = 0.0
+    token_count: int = 0
+
+
+@dataclass(frozen=True)
+class BootstrapResult:
+    mean: float
+    ci_low: float
+    ci_high: float
+    std: float
+
+
+def estimate_tokens(text: str) -> int:
+    """Rough token estimate: ~4 characters per token."""
+    return max(1, len(text) // 4)
+
+
+def estimate_cost(token_count: int, price_per_1k: float = _COST_PER_1K_TOKENS) -> float:
+    """Estimate USD cost for ``token_count`` tokens."""
+    return token_count * price_per_1k / 1000.0
+
+
+# ---------------------------------------------------------------------------
+# Task runner (#16)
+# ---------------------------------------------------------------------------
+
+
+def run_task(task: Task, prompt: str, llm: LLMProvider) -> TaskResult:
+    """Run ``task`` against one ``prompt`` and measure latency + tokens."""
+    if not prompt.strip():
+        return TaskResult(output="", success=False, latency_ms=0.0, token_count=0,
+                          error="empty prompt")
+
+    full_prompt = f"{prompt}\n\n---\n\nTask: {task.input}"
+    start = time.monotonic()
+    try:
+        output = llm.complete(prompt=full_prompt, system_prompt="", temperature=0.0)
+    except ProviderError as e:
+        return TaskResult(output="", success=False, latency_ms=0.0, token_count=0,
+                          error=str(e))
+    latency_ms = (time.monotonic() - start) * 1000.0
+    tokens = estimate_tokens(full_prompt) + estimate_tokens(output)
+    return TaskResult(
+        output=output,
+        success=True,
+        latency_ms=latency_ms,
+        token_count=tokens,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Statistics (#19, #20, #21)
+# ---------------------------------------------------------------------------
+
+
+def bootstrap_ci(
+    scores_a: list[float],
+    scores_b: list[float],
+    n_resamples: int = 10000,
+    ci_level: float = 0.95,
+) -> BootstrapResult:
+    """Bootstrap CI for the mean delta = mean(score_b - score_a).
+
+    Uses a deterministic seed for reproducibility.
+    """
+    n = len(scores_a)
+    if n == 0:
+        return BootstrapResult(mean=0.0, ci_low=0.0, ci_high=0.0, std=0.0)
+    if n < 2:
+        return BootstrapResult(mean=0.0, ci_low=0.0, ci_high=0.0, std=0.0)
+
+    deltas = [b - a for a, b in zip(scores_a, scores_b)]
+    mean_delta = sum(deltas) / n
+
+    if n_resamples <= 0:
+        return BootstrapResult(mean=mean_delta, ci_low=mean_delta, ci_high=mean_delta, std=0.0)
+
+    rng = random.Random(0)
+    means: list[float] = []
+    for _ in range(n_resamples):
+        sample = [rng.choice(deltas) for _ in range(n)]
+        means.append(sum(sample) / n)
+
+    means.sort()
+    tail = (1.0 - ci_level) / 2.0
+    low_idx = int(tail * n_resamples)
+    high_idx = int((1.0 - tail) * n_resamples) - 1
+    ci_low = means[low_idx]
+    ci_high = means[high_idx]
+    std = statistics.stdev(means) if len(means) > 1 else 0.0
+    return BootstrapResult(mean=mean_delta, ci_low=ci_low, ci_high=ci_high, std=std)
+
+
+def permutation_test(
+    scores_a: list[float],
+    scores_b: list[float],
+    n_permutations: int = 1000,
+) -> float:
+    """One-tailed permutation p-value: how often a random split beats observed.
+
+    Deterministic seed for reproducibility.
+    """
+    n = len(scores_a)
+    if n == 0:
+        return 1.0
+    observed_diff = sum(scores_b) / n - sum(scores_a) / n
+    pooled = list(scores_a) + list(scores_b)
+    rng = random.Random(0)
+
+    count = 0
+    for _ in range(n_permutations):
+        rng.shuffle(pooled)
+        fake_a = pooled[:n]
+        fake_b = pooled[n:]
+        fake_diff = sum(fake_b) / n - sum(fake_a) / n
+        if fake_diff >= observed_diff:
+            count += 1
+    return count / n_permutations
+
+
+def effect_size(scores_a: list[float], scores_b: list[float]) -> float:
+    """Relative improvement = (mean_b - mean_a) / mean_a.
+
+    Baseline of 0 renders ``inf`` for any positive improvement (handled by
+    the caller), and 0.0 for no change.
+    """
+    if not scores_a or not scores_b:
+        return 0.0
+    mean_a = sum(scores_a) / len(scores_a)
+    mean_b = sum(scores_b) / len(scores_b)
+    if mean_a == 0:
+        if mean_b > 0:
+            return float("inf")
+        return 0.0
+    return (mean_b - mean_a) / mean_a
+
+
+# ---------------------------------------------------------------------------
+# A/B test runner (#18)
+# ---------------------------------------------------------------------------
+
+
+def _resolve_ab_config(config: Config | None) -> ABTestConfig:
+    return config.ab_test if config is not None else ABTestConfig()
+
+
+def run_ab_test(
+    prompt_a: str,
+    prompt_b: str,
+    task_set: TaskSet,
+    llm: LLMProvider,
+    scorer: Scorer,
+    config: Config | None = None,
+) -> ABResult:
+    """Run the paired A/B comparison of ``prompt_b`` vs ``prompt_a``."""
+    ab_config = _resolve_ab_config(config)
+    tasks = task_set.list_tasks()
+    results: list[PerTask] = []
+    total_tokens = 0
+    failures = 0
+
+    for task in tasks:
+        result_a = run_task(task, prompt_a, llm)
+        result_b = run_task(task, prompt_b, llm)
+
+        score_a = (
+            scorer.score(task.expected_output, result_a.output)[1]
+            if not result_a.error
+            else 0.0
+        )
+        score_b = (
+            scorer.score(task.expected_output, result_b.output)[1]
+            if not result_b.error
+            else 0.0
+        )
+
+        if result_a.error or result_b.error:
+            failures += 1
+
+        total_tokens += result_a.token_count + result_b.token_count
+        results.append(
+            PerTask(
+                task_id=task.id,
+                task_input=task.input,
+                expected_output=task.expected_output,
+                output_a=result_a.output,
+                score_a=score_a,
+                output_b=result_b.output,
+                score_b=score_b,
+                delta=score_b - score_a,
+                latency_a_ms=result_a.latency_ms,
+                latency_b_ms=result_b.latency_ms,
+                tokens_a=result_a.token_count,
+                tokens_b=result_b.token_count,
+                error_a=result_a.error,
+                error_b=result_b.error,
+            )
+        )
+
+        # Cost ceiling abort (D3 §8.1)
+        if estimate_cost(total_tokens) > ab_config.cost_ceiling_usd:
+            return _inconclusive(results, total_tokens)
+
+    if tasks and failures / len(tasks) > 0.2:
+        return _inconclusive(results, total_tokens)
+
+    scores_a = [r.score_a for r in results]
+    scores_b = [r.score_b for r in results]
+    mean_a = sum(scores_a) / len(scores_a) if scores_a else 0.0
+    mean_b = sum(scores_b) / len(scores_b) if scores_b else 0.0
+
+    if not scores_a:
+        return _inconclusive([], 0)
+
+    deltas = [r.delta for r in results]
+    if all(d == 0.0 for d in deltas):
+        winner: Literal["a", "b", "tie", "inconclusive"] = "tie"
+        ci = BootstrapResult(mean=0.0, ci_low=0.0, ci_high=0.0, std=0.0)
+        p_value = 1.0
+    else:
+        ci = bootstrap_ci(
+            scores_a, scores_b,
+            n_resamples=ab_config.n_resamples,
+        )
+        p_value = permutation_test(
+            scores_a, scores_b,
+            n_permutations=ab_config.n_permutations,
+        )
+        effect = effect_size(scores_a, scores_b)
+        if (
+            ci.ci_low > 0
+            and p_value < ab_config.confidence_level
+            and effect >= ab_config.min_effect_size
+        ):
+            winner = "b"
+        elif ci.ci_high < 0 and p_value < ab_config.confidence_level:
+            winner = "a"
+        else:
+            winner = "inconclusive"
+
+    return ABResult(
+        winner=winner,
+        mean_delta=mean_b - mean_a,
+        ci_low=ci.ci_low,
+        ci_high=ci.ci_high,
+        p_value=p_value,
+        effect_size=effect_size(scores_a, scores_b),
+        n_trials=len(results),
+        per_task=results,
+        cost_usd=estimate_cost(total_tokens),
+        token_count=total_tokens,
+    )
+
+
+def _inconclusive(
+    per_task: list[PerTask],
+    token_count: int,
+) -> ABResult:
+    return ABResult(
+        winner="inconclusive",
+        mean_delta=0.0,
+        ci_low=0.0,
+        ci_high=0.0,
+        p_value=1.0,
+        effect_size=0.0,
+        n_trials=len(per_task),
+        per_task=per_task,
+        cost_usd=estimate_cost(token_count),
+        token_count=token_count,
+    )

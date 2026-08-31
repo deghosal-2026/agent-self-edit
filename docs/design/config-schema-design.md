@@ -39,6 +39,7 @@ ab_test:
   n_permutations: 1000                 # permutation test shuffles
   confidence_level: 0.95               # 0.5 .. 0.999
   min_effect_size: 0.05                # min relative improvement (5%)
+  cost_ceiling_usd: 0.10               # abort if per-A/B-test cost exceeds this
 
 # ── Promotion gate ──
 gate:
@@ -68,6 +69,7 @@ trace_retention_days: 90               # 0 = delete everything
 | `ab_test.confidence_level` | in [0.5, 0.999] | `confidence_level must be between 0.5 and 0.999` |
 | `ab_test.min_effect_size` | in [0, 1] | `min_effect_size must be between 0 and 1` |
 | `gate.max_edit_distance` | > 0 | `max_edit_distance must be > 0, got {n}` |
+| `ab_test.cost_ceiling_usd` | > 0 | `cost_ceiling_usd must be > 0, got {n}` |
 | `gate.drift_threshold` | in [0, 1] | `drift_threshold must be between 0 and 1` |
 | `gate.near_miss_threshold` | in [0, 1] | `near_miss_threshold must be between 0 and 1` |
 | `llm.provider` | one of `openai`, `mock` | `llm.provider must be 'openai' or 'mock'` |

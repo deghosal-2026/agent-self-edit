@@ -21,13 +21,13 @@
 
 | # | Task | Build (files) | Behavior + edge cases | Feature | Design Ref | Verify | Status |
 |---|------|---------------|----------------------|---------|------------|--------|--------|
-| 1 | LLM provider interface | `src/agent_self_edit/llm/base.py`: `LLMProvider` ABC; `src/agent_self_edit/llm/openai.py`: `OpenAIProvider`; `src/agent_self_edit/llm/mock.py`: `MockProvider` | `complete(prompt, system_prompt, temperature) -> str`; `MockProvider` returns predetermined responses; `OpenAIProvider` formats messages correctly; timeout raises `ProviderError` | F-03 | [D3 §3.1](../../design/ab-test-engine-design.md#32–how-the-agent-is-called) | mock provider in CI; real provider manually | [#15](https://github.com/deghosal-2026/agent-self-edit/issues/15) · ⬜ |
-| 2 | Task runner | `src/agent_self_edit/ab_test.py`: `run_task(task, prompt, llm_provider) -> TaskResult` | `TaskResult`: output, success, latency_ms, token_count; provider error → `TaskResult(success=False)`; empty prompt returns empty output | F-03 | [D3 §3.1](../../design/ab-test-engine-design.md#32–how-the-agent-is-called) | task runs with mock provider; latency + tokens tracked | [#16](https://github.com/deghosal-2026/agent-self-edit/issues/16) · ⬜ |
-| 3 | Scorer interface | `src/agent_self_edit/scorers.py`: `Scorer` ABC, `ExactMatchScorer`, `ContainsScorer`, `LLMJudgeScorer` | `score(expected, actual) -> (bool, float)`; ExactMatch: exact string compare; Contains: substring match; LLMJudge: LLM call with scoring rubric; scorer not found → `ScorerError` | F-03 | [D3 §4.1-4.4](../../design/ab-test-engine-design.md#5–scoring-how-agent-output-is-evaluated) | each scorer with exact/partial/no-match fixtures | [#17](https://github.com/deghosal-2026/agent-self-edit/issues/17) · ⬜ |
-| 4 | A/B test runner | `run_ab_test(prompt_a, prompt_b, task_set, llm_provider, scorer) -> ABResult` | Paired design: same task run against both prompts; collects win/loss/tie per task; per-task breakdown in results; empty task set → empty result | F-03 | [D3 §5.1](../../design/ab-test-engine-design.md#52–main-loop) | paired design verified; win/loss/tie correct; per-task breakdown | [#18](https://github.com/deghosal-2026/agent-self-edit/issues/18) · ⬜ |
-| 5 | Bootstrap CI | `bootstrap_ci(scores_a, scores_b, n_resamples=10000) -> BootstrapResult` | 95% CI from 2.5th/97.5th percentiles; 10K resamples; identical scores → CI = [0, 0]; single trial → wide CI; all scores identical → zero variance | F-03 | [D3 §4.2, §6.1](../../design/ab-test-engine-design.md#43–step-2-bootstrap-confidence-interval) | known data produces expected CI; identical scores; single trial | [#19](https://github.com/deghosal-2026/agent-self-edit/issues/19) · ⬜ |
-| 6 | Permutation test | `permutation_test(scores_a, scores_b, n_permutations=1000) -> float` | p-value via label shuffling; identical distributions → p ≈ 1.0; very different → p ≈ 0.0; n_permutations configurable | F-03 | [D3 §4.3, §6.2](../../design/ab-test-engine-design.md#44–step-3-permutation-test-p-value) | known distributions; identical; very different; small n | [#20](https://github.com/deghosal-2026/agent-self-edit/issues/20) · ⬜ |
-| 7 | Effect size + cost tracking | `effect_size(scores_a, scores_b) -> float`; `ABResult.cost_usd` | Relative improvement = (new - old) / old; baseline=0 → inf handled; cost ceiling enforced; abort if ceiling exceeded | F-03 | [D3 §4.4, §8.1](../../design/ab-test-engine-design.md#45–step-4-effect-size) | division by zero; ceiling abort; cost accuracy | [#21](https://github.com/deghosal-2126/agent-self-edit/issues/21) · ⬜ |
+| 1 | LLM provider interface | `src/agent_self_edit/llm/base.py`: `LLMProvider` ABC; `src/agent_self_edit/llm/openai.py`: `OpenAIProvider`; `src/agent_self_edit/llm/mock.py`: `MockProvider` | `complete(prompt, system_prompt, temperature) -> str`; `MockProvider` returns predetermined responses; `OpenAIProvider` formats messages correctly; timeout raises `ProviderError` | F-03 | [D3 §3.1](../../design/ab-test-engine-design.md#32–how-the-agent-is-called) | mock provider in CI; real provider manually | [#15](https://github.com/deghosal-2026/agent-self-edit/issues/15) · ✅ |
+| 2 | Task runner | `src/agent_self_edit/ab_test.py`: `run_task(task, prompt, llm_provider) -> TaskResult` | `TaskResult`: output, success, latency_ms, token_count; provider error → `TaskResult(success=False)`; empty prompt returns empty output | F-03 | [D3 §3.1](../../design/ab-test-engine-design.md#32–how-the-agent-is-called) | task runs with mock provider; latency + tokens tracked | [#16](https://github.com/deghosal-2026/agent-self-edit/issues/16) · ✅ |
+| 3 | Scorer interface | `src/agent_self_edit/scorers.py`: `Scorer` ABC, `ExactMatchScorer`, `ContainsScorer`, `LLMJudgeScorer` | `score(expected, actual) -> (bool, float)`; ExactMatch: exact string compare; Contains: substring match; LLMJudge: LLM call with scoring rubric; scorer not found → `ScorerError` | F-03 | [D3 §4.1-4.4](../../design/ab-test-engine-design.md#5–scoring-how-agent-output-is-evaluated) | each scorer with exact/partial/no-match fixtures | [#17](https://github.com/deghosal-2026/agent-self-edit/issues/17) · ✅ |
+| 4 | A/B test runner | `run_ab_test(prompt_a, prompt_b, task_set, llm_provider, scorer) -> ABResult` | Paired design: same task run against both prompts; collects win/loss/tie per task; per-task breakdown in results; empty task set → empty result | F-03 | [D3 §5.1](../../design/ab-test-engine-design.md#52–main-loop) | paired design verified; win/loss/tie correct; per-task breakdown | [#18](https://github.com/deghosal-2026/agent-self-edit/issues/18) · ✅ |
+| 5 | Bootstrap CI | `bootstrap_ci(scores_a, scores_b, n_resamples=10000) -> BootstrapResult` | 95% CI from 2.5th/97.5th percentiles; 10K resamples; identical scores → CI = [0, 0]; single trial → wide CI; all scores identical → zero variance | F-03 | [D3 §4.2, §6.1](../../design/ab-test-engine-design.md#43–step-2-bootstrap-confidence-interval) | known data produces expected CI; identical scores; single trial | [#19](https://github.com/deghosal-2026/agent-self-edit/issues/19) · ✅ |
+| 6 | Permutation test | `permutation_test(scores_a, scores_b, n_permutations=1000) -> float` | p-value via label shuffling; identical distributions → p ≈ 1.0; very different → p ≈ 0.0; n_permutations configurable | F-03 | [D3 §4.3, §6.2](../../design/ab-test-engine-design.md#44–step-3-permutation-test-p-value) | known distributions; identical; very different; small n | [#20](https://github.com/deghosal-2026/agent-self-edit/issues/20) · ✅ |
+| 7 | Effect size + cost tracking | `effect_size(scores_a, scores_b) -> float`; `ABResult.cost_usd` | Relative improvement = (new - old) / old; baseline=0 → inf handled; cost ceiling enforced; abort if ceiling exceeded | F-03 | [D3 §4.4, §8.1](../../design/ab-test-engine-design.md#45–step-4-effect-size) | division by zero; ceiling abort; cost accuracy | [#21](https://github.com/deghosal-2126/agent-self-edit/issues/21) · ✅ |
 
 ### M3 Success Metrics
 
@@ -46,15 +46,15 @@
 
 ### M3 Exit Gate
 
-- [ ] LLM provider works with mock and real providers
-- [ ] Task runner produces correct results
-- [ ] All 3 scorers work correctly
-- [ ] A/B test runner produces valid paired results
-- [ ] Bootstrap CI is statistically valid
-- [ ] Permutation test is statistically valid
-- [ ] Effect size is correct; cost tracking enforced
-- [ ] Ruff clean, mypy strict clean, all tests pass, coverage > 92%
-- [ ] **Design docs authored:** D3 (ab-test-engine), D13 (DD-06/07/08)
+- [x] LLM provider works with mock and real providers
+- [x] Task runner produces correct results
+- [x] All 3 scorers work correctly
+- [x] A/B test runner produces valid paired results
+- [x] Bootstrap CI is statistically valid
+- [x] Permutation test is statistically valid
+- [x] Effect size is correct; cost tracking enforced
+- [x] Ruff clean, mypy strict clean, all tests pass, coverage > 92%
+- [x] **Design docs authored:** D3 (ab-test-engine), D13 (DD-06/07/08)
 
 **Dependency:** M1. **Produces for M4+:** `ABResult`, `TaskResult`, `Scorer` interface, `bootstrap_ci()`, `permutation_test()`, `effect_size()`, `LLMProvider` interface.
 

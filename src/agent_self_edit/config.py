@@ -41,6 +41,7 @@ class ABTestConfig:
     n_permutations: int = 1000
     confidence_level: float = 0.95
     min_effect_size: float = 0.05
+    cost_ceiling_usd: float = 0.10
 
 
 @dataclass(frozen=True)
@@ -148,6 +149,11 @@ def validate_config(config: Config) -> list[str]:
     if not (0 <= config.ab_test.min_effect_size <= 1):
         errors.append(
             f"min_effect_size must be between 0 and 1, got {config.ab_test.min_effect_size}"
+        )
+
+    if config.ab_test.cost_ceiling_usd <= 0:
+        errors.append(
+            f"cost_ceiling_usd must be > 0, got {config.ab_test.cost_ceiling_usd}"
         )
 
     if config.gate.max_edit_distance < 1:
