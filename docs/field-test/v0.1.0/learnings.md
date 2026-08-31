@@ -131,6 +131,18 @@ None of this mattered because the fundamental issue — the A/B test comparing a
 
 A real A/B test with 5 tasks × 2 distinct prompts should produce different outputs, non-zero deltas, and trigger the bootstrap CI and permutation test computations. The test completed in 54s with a perfect tie — the `all(d == 0.0)` shortcut in `ab_test.py:284` skipped the statistics entirely. The LLM should have flagged the suspicious speed and perfect tie as evidence that something was wrong, but instead reported it as a clean pass.
 
+### 3.10 Domain detection used filename only — synthetic traces got wrong prompt
+
+`run_traces.py` `detect_domain()` only checked the filename. A synthetic classification trace file saved as `/tmp/synth.jsonl` matched none of the domain patterns and fell through to `mixed`, which used the generic prompt "You are a helpful assistant. Complete the task as instructed." — no format instruction, no category list. Both OMLX and cloud models produced full sentences → 0% ExactMatch.
+
+**Fix:** Added content-based fallback detection — check `expected_output` against known category labels and check `metadata.scorer` for "exact" or "contains".
+
+**Lesson:** Filename-based detection breaks when files are renamed or saved to temp paths. Always have a content-based fallback.
+
+### 3.11 Same env var for both LLM arms causes key collision
+
+The README tells you to `export OPENROUTER_API_KEY=omlx-test` for OMLX runs and `export OPENROUTER_API_KEY=sk-or-v1-...` for cloud runs. If you run the OMLX section first, `omlx-test` stays exported. When you then run the cloud commands, OpenRouter gets `omlx-test` as the key → 401 authentication error. The same env var serves both arms with different values, so you must remember to re-export between arms.
+
 ---
 
 ## 4. What Got Fixed

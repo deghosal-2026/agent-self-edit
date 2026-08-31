@@ -125,6 +125,8 @@ def detect_domain(trace_file: str, first_trace: dict) -> str:
     domain = metadata.get("domain", "")
     source = metadata.get("source", "")
     task_input = first_trace.get("task_input", "")
+    expected = first_trace.get("expected_output", "")
+    metadata_tags = metadata.get("tags", []) if isinstance(metadata, dict) else []
 
     if "customer-support" in name or "triage" in domain:
         return "customer-support"
@@ -144,6 +146,20 @@ def detect_domain(trace_file: str, first_trace: dict) -> str:
         return "generation"
     if "mixed" in name:
         return "mixed"
+
+    # Fallback: detect from trace content
+    # Synthetic classification traces have short expected_output (a label)
+    # and metadata with scorer: exact
+    if isinstance(expected, str) and expected.strip() in (
+        "urgent", "billing", "technical", "feature", "security", "other"
+    ):
+        return "classification"
+    if metadata.get("scorer") == "exact" or "exact" in str(metadata_tags):
+        return "classification"
+    if metadata.get("scorer") == "contains":
+        return "extraction"
+
+    return "mixed"
     return "mixed"
 
 
