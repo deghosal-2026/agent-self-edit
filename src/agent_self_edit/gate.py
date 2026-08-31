@@ -121,8 +121,8 @@ def check_frozen_sections(
     sections = parse_frozen_sections(current_prompt)
     frozen_names: set[str] = set()
     for sec in sections:
-        if sec["name"] is not None:
-            frozen_names.add(sec["name"])
+        if sec.section_name is not None:
+            frozen_names.add(sec.section_name)
 
     if frozen_sections is not None:
         requested = set(frozen_sections)
@@ -159,14 +159,14 @@ def check_frozen_sections(
     violations = 0
     violated: list[str] = []
     for sec in sections:
-        if sec["name"] is None:
+        if sec.section_name is None:
             continue
-        if frozen_sections is not None and sec["name"] not in set(frozen_sections):
+        if frozen_sections is not None and sec.section_name not in set(frozen_sections):
             continue
-        block = "\n".join(sec["lines"]) if sec["lines"] else ""
+        block = "\n".join(sec.lines) if sec.lines else ""
         if block and block not in proposed:
             violations += 1
-            violated.append(sec["name"] or "core")
+            violated.append(sec.section_name or "core")
 
     passed = violations == 0
     return CheckResult(
@@ -201,7 +201,7 @@ def check_edit_distance(
             threshold=threshold,
             details="no edit proposal; cannot measure edit distance",
         )
-    changed = compute_edit_distance(current_prompt, edit.new_text)
+    changed = compute_edit_distance(current_prompt, edit.new_text).total
     passed = changed <= threshold
     return CheckResult(
         name="edit_distance",

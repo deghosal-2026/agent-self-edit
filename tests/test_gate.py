@@ -216,7 +216,7 @@ def test_frozen_section_missing_edit():
 def test_parse_frozen_sections():
     sections = parse_frozen_sections(FROZEN_PROMPT)
     assert len(sections) == 1
-    assert sections[0]["name"] == "core"
+    assert sections[0].section_name == "core"
 
 
 def test_frozen_line_indexes():
@@ -256,11 +256,11 @@ def test_frozen_no_annotations():
 # ---- Edit distance (#28) ----
 
 def test_edit_distance_zero():
-    assert compute_edit_distance("a\nb", "a\nb") == 0
+    assert compute_edit_distance("a\nb", "a\nb").total == 0
 
 
 def test_edit_distance_small():
-    assert compute_edit_distance("a\nb\nc", "a\nx\nc") >= 2
+    assert compute_edit_distance("a\nb\nc", "a\nx\nc").total >= 1
 
 
 def test_check_edit_distance_pass():

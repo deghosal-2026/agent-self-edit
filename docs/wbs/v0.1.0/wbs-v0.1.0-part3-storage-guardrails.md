@@ -82,12 +82,12 @@
 
 | # | Task | Build (files) | Behavior + edge cases | Feature | Design Ref | Verify | Status |
 |---|------|---------------|----------------------|---------|------------|--------|--------|
-| 1 | Frozen section parser | `parse_frozen_sections(prompt_text) -> list[FrozenSection]` | Parse `<!-- frozen -->` annotations; `FrozenSection`: start_line, end_line, section_name; no frozen sections → empty list; malformed annotation → `GuardrailError` | F-06 | [D6](../../design/guardrail-module-design.md) | single/multiple/no frozen sections; malformed | [#39](https://github.com/deghosal-2026/agent-self-edit/issues/39) · ⬜ |
-| 2 | Frozen section validator | `validate_frozen_sections(prompt_text, frozen_sections) -> bool` | Verify frozen sections exist in current prompt; section renumbered after edit → fail; all sections match → pass | F-06 | [D6](../../design/guardrail-module-design.md) | sections exist/don't exist; renumbered after edit | [#40](https://github.com/deghosal-2026/agent-self-edit/issues/40) · ⬜ |
-| 3 | Edit-distance calculator | `compute_edit_distance(old_prompt, new_prompt) -> EditDistance` | `EditDistance`: lines_added, lines_removed, lines_modified, total, frozen_lines_changed; identical prompts → 0 total; completely different → all lines changed; frozen section changes counted separately | F-07 | [D6](../../design/guardrail-module-design.md) | identical/different; frozen vs non-frozen changes | [#41](https://github.com/deghosal-2026/agent-self-edit/issues/41) · ⬜ |
-| 4 | TF-IDF drift calculator | `compute_drift_tfidf(prompt_a, prompt_b) -> float` | TF-IDF vectorization; cosine similarity; drift = 1 - similarity; range [0, 1]; identical prompts → drift = 0; completely different → drift ≈ 1; symmetric | F-04 | [D6](../../design/guardrail-module-design.md) | identical/different/similar; symmetry verified | [#42](https://github.com/deghosal-2026/agent-self-edit/issues/42) · ⬜ |
-| 5 | Drift calculator (embedding) | `compute_drift_embedding(prompt_a, prompt_b, llm_provider) -> float` | Sentence embedding via LLM provider; cosine similarity; falls back to TF-IDF if embedding unavailable | F-04 | [D6](../../design/guardrail-module-design.md) | embedding vs TF-IDF; fallback on failure | [#43](https://github.com/deghosal-2026/agent-self-edit/issues/43) · ⬜ |
-| 6 | Per-section drift + guardrail report | `compute_per_section_drift(prompt_a, prompt_b, sections) -> dict[str, float]`; `GuardrailReport` dataclass | Per-section drift computed; `GuardrailReport.__str__()` human-readable; `__repr__()` machine-readable | F-06, F-07 | [D6](../../design/guardrail-module-design.md) | per-section drift; report formatting | [#44](https://github.com/deghosal-2026/agent-self-edit/issues/44) · ⬜ |
+| 1 | Frozen section parser | `parse_frozen_sections(prompt_text) -> list[FrozenSection]` | Parse `<!-- frozen -->` annotations; `FrozenSection`: start_line, end_line, section_name; no frozen sections → empty list; malformed annotation → `GuardrailError` | F-06 | [D6](../../design/guardrail-module-design.md) | single/multiple/no frozen sections; malformed | [#39](https://github.com/deghosal-2026/agent-self-edit/issues/39) · ✅ |
+| 2 | Frozen section validator | `validate_frozen_sections(prompt_text, frozen_sections) -> bool` | Verify frozen sections exist in current prompt; section renumbered after edit → fail; all sections match → pass | F-06 | [D6](../../design/guardrail-module-design.md) | sections exist/don't exist; renumbered after edit | [#40](https://github.com/deghosal-2026/agent-self-edit/issues/40) · ✅ |
+| 3 | Edit-distance calculator | `compute_edit_distance(old_prompt, new_prompt) -> EditDistance` | `EditDistance`: lines_added, lines_removed, lines_modified, total, frozen_lines_changed; identical prompts → 0 total; completely different → all lines changed; frozen section changes counted separately | F-07 | [D6](../../design/guardrail-module-design.md) | identical/different; frozen vs non-frozen changes | [#41](https://github.com/deghosal-2026/agent-self-edit/issues/41) · ✅ |
+| 4 | TF-IDF drift calculator | `compute_drift_tfidf(prompt_a, prompt_b) -> float` | TF-IDF vectorization; cosine similarity; drift = 1 - similarity; range [0, 1]; identical prompts → drift = 0; completely different → drift ≈ 1; symmetric | F-04 | [D6](../../design/guardrail-module-design.md) | identical/different/similar; symmetry verified | [#42](https://github.com/deghosal-2026/agent-self-edit/issues/42) · ✅ |
+| 5 | Drift calculator (embedding) | `compute_drift_embedding(prompt_a, prompt_b, llm_provider) -> float` | Sentence embedding via LLM provider; cosine similarity; falls back to TF-IDF if embedding unavailable | F-04 | [D6](../../design/guardrail-module-design.md) | embedding vs TF-IDF; fallback on failure | [#43](https://github.com/deghosal-2026/agent-self-edit/issues/43) · ✅ |
+| 6 | Per-section drift + guardrail report | `compute_per_section_drift(prompt_a, prompt_b, sections) -> dict[str, float]`; `GuardrailReport` dataclass | Per-section drift computed; `GuardrailReport.__str__()` human-readable; `__repr__()` machine-readable | F-06, F-07 | [D6](../../design/guardrail-module-design.md) | per-section drift; report formatting | [#44](https://github.com/deghosal-2026/agent-self-edit/issues/44) · ✅ |
 
 ### M6 Success Metrics
 
@@ -106,13 +106,13 @@
 
 ### M6 Exit Gate
 
-- [ ] Frozen sections are parsed and validated correctly
-- [ ] Edit distance is accurate for all cases
-- [ ] TF-IDF drift is computed correctly (symmetric, range [0,1])
-- [ ] Embedding drift works with TF-IDF fallback
-- [ ] Per-section drift is accurate
-- [ ] Guardrail report is human-readable
-- [ ] Ruff clean, mypy strict clean, all tests pass, coverage > 92%
-- [ ] **Design docs authored:** D6 (guardrail-module), D13 (DD-13)
+- [x] Frozen sections are parsed and validated correctly
+- [x] Edit distance is accurate for all cases
+- [x] TF-IDF drift is computed correctly (symmetric, range [0,1])
+- [x] Embedding drift works with TF-IDF fallback
+- [x] Per-section drift is accurate
+- [x] Guardrail report is human-readable
+- [x] Ruff clean, mypy strict clean, all tests pass, coverage > 92%
+- [x] **Design docs authored:** D6 (guardrail-module), D13 (DD-13)
 
 **Dependency:** M5. **Produces for M7+:** `parse_frozen_sections()`, `compute_edit_distance()`, `compute_drift_tfidf()`, `compute_drift_embedding()`, `GuardrailReport`.
