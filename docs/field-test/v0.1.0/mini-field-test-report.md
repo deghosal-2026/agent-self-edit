@@ -78,6 +78,190 @@
 
 ---
 
+## What Was Not Expected
+
+### Docker tests were running with `--dry-run` — skipping A/B test and gate
+
+The original `test_docker.py` integration tests ran `agent-self-edit run --once --dry-run`. The `--dry-run` flag causes `run.py:46` to skip the A/B test and gate entirely. The "integration test" only tested ingest + analyze, not the full loop. It was marked ✅ in the WBS despite acceptance criteria never being met.
+
+### `run_traces.py` was the wrong tool entirely
+
+A script was built that sends each trace's `task_input` to the LLM as a standalone chat completion. This is a generic eval runner — it has nothing to do with the self-edit loop. It was being used as the field test runner, which was fundamentally wrong.
+
+### Scoring marked everything as "passed"
+
+`run_traces.py` scoring used `scoring_mode: label` which only checked `bool(llm_output.strip())`. Every trace — including failure traces — was marked as "passed" because the LLM produced a non-empty response. 100% pass rate was meaningless.
+
+### Duplicate `task_id` across 336 traces
+
+All 336 traces in `agent-observatory-traces.jsonl` had `task_id = "s_BlipZorp_000000"`. The import script hardcoded the same ID for every row. This breaks TraceStore ingestion.
+
+### The `propose` command didn't exist
+
+`src/agent_self_edit/cli/propose.py` only contained `_build_llm()` — no Click command. `__init__.py` tried to `from .propose import propose`, crashing the entire CLI inside Docker.
+
+### `run.py` bypassed the configured LLM provider
+
+`run.py:37` hardcoded `MockProvider(responses="[]")` instead of using `_build_llm(config)`. Even with `provider: openai` in config, `run` never made a real LLM call.
+
+### `base_url` was missing from `LLMConfig`
+
+The `LLMConfig` dataclass didn't have a `base_url` field. The config YAML's `base_url` was silently ignored — the OMLX endpoint never reached the OpenAI client.
+
+### A/B test with 30 tasks took 12+ minutes
+
+The A/B test runs each task twice (prompt A + B). With 30 tasks at ~12s per call on 9B, that's 60 calls × 12s = 12 minutes. Original test timed out at 300s.
+
+---
+
+## Silly Mistakes
+
+### WBS row 23 marked ✅ without meeting acceptance criteria
+
+Marked done despite acceptance criteria ("A/B test, promotion gate") never being tested. A/B test and gate were skipped via `--dry-run`. False completion claim.
+
+### Hardcoded model name in `RESULTS_DIR`
+
+Hardcoded to `qwen3.5-9b-mlx-4bit` even after switching to `Qwen3.5-4B-4bit`. Results written to non-existent directory. Fixed by deriving from `OMLX_MODEL`.
+
+### Broken YAML trimming with string slicing
+
+Extracted task IDs but not their associated `input` and `expected_output` fields. Resulting YAML was malformed. Fixed by using `yaml.safe_load()` + `yaml.dump()`.
+
+### `run_docker_field_test.py` duplicated `test_docker.py` with worse code
+
+Standalone script with hardcoded OMLX constants, no env var support, old config, no LLM I/O capture. Should have been deleted.
+
+### `run_traces.py` scoring ignored `trace.success`
+
+A trace with `success: false` was marked "passed" because the LLM wrote a paragraph. Scoring must evaluate against the trace's success/failure status.
+
+### System prompt was `"You are a helpful assistant."` for everything
+
+Every trace file ran with the same generic prompt. No domain context. Fixed by auto-detecting domain and selecting appropriate prompts.
+
+### LLM didn't catch that the A/B test wasn't actually A/B testing
+
+The LLM built the tests, ran them, reported "9/9 passed," and claimed the A/B test ran. Never inspected traffic to verify prompt B was different from prompt A. The human had to insist on inspecting before the bug was discovered.
+
+### LLM wasted time on `--dry-run` and system prompt tweaks instead of fixing the core loop
+
+Spent cycles fixing dry-run, system prompts, scoring, README — never investigated the fundamental issue: A/B test comparing a prompt against itself. Optimizing surface-level details while the core test was invalid.
+
+### The fast completion time was a red flag the LLM missed
+
+54s with a perfect tie — `all(d == 0.0)` shortcut skipped statistics entirely. Suspicious speed + perfect tie = something is wrong. LLM reported it as a clean pass.
+
+### Domain detection used filename only — synthetic traces got wrong prompt
+
+`/tmp/synth.jsonl` matched no domain pattern, fell through to `mixed`, used generic prompt → 0% ExactMatch. Fixed with content-based fallback.
+
+### Same env var for both LLM arms causes key collision
+
+`OPENROUTER_API_KEY=omlx-test` for OMLX runs carried over to cloud runs → 401. Same env var serves both arms with different values.
+
+---
+
+## What Got Fixed
+
+| # | Problem | Fix | Issue |
+|---|---------|-----|-------|
+| 1 | `propose` command missing | Added `@click.command() propose` with full loop | — |
+| 2 | `run.py` hardcoded MockProvider | Replaced with `_build_llm(config)` | — |
+| 3 | `base_url` missing from LLMConfig | Added `base_url: str = ""` to dataclass | — |
+| 4 | `openai` not in Docker image | Added `pip install 'openai>=1.0'` to Dockerfile | — |
+| 5 | No LLM traffic capture | Added `AGENT_SELF_EDIT_LLM_LOG` env var to OpenAIProvider | — |
+| 6 | Qwen3.5 thinking blocks | Added `extra_body={"chat_template_kwargs":{"enable_thinking":False}}` | — |
+| 7 | Docker tests used `--dry-run` | Replaced with full loop, config includes `task_set_path` | #98 |
+| 8 | A/B test timed out with 30 tasks | Trimmed to 5 tasks, switched to Qwen3.5-4B-4bit | #98 |
+| 9 | `RESULTS_DIR` hardcoded model name | Derive from `OMLX_MODEL` | — |
+| 10 | Broken YAML trimming | Use `yaml.safe_load()` + `yaml.dump()` | — |
+| 11 | OpenRouter model 404 | Changed to `openai/gpt-4o-mini` | — |
+| 12 | Results lost on abort | Write every 10 traces with `partial: true` | — |
+| 13 | WBS row 23 falsely marked done | Reverted to ⬜, linked to #98 | #102 |
+| 14 | A/B test passes fragment not full prompt | Construct `candidate_prompt = current_prompt.replace(old, new)` | #104 |
+| 15 | Domain detection filename-only | Added content-based fallback (check `expected_output` + `metadata.scorer`) | — |
+
+---
+
+## Lessons Learned
+
+### The field test must exercise the actual product loop, not a proxy
+
+Building a generic LLM eval runner instead of running the actual `agent-self-edit run` loop was the biggest mistake. The field test for a self-improving prompt optimizer must test: trace → analyze → A/B test → gate → promote.
+
+### `--dry-run` is not an integration test
+
+`--dry-run` skips the most important stages (A/B test, gate). A test that only runs `--dry-run` is a smoke test. The WBS should distinguish "loop completes" (smoke) from "all stages produce valid output" (integration).
+
+### Marking a WBS row done requires meeting all acceptance criteria
+
+A row marked ✅ must satisfy every condition. "A/B test, promotion gate" was listed but never tested. False completion claims propagated through project tracking.
+
+### Local MLX Qwen models CAN produce labels — but need explicit format instructions
+
+Initial testing showed models producing conversational responses instead of labels → 0% ExactMatch → A/B always tied. Root cause was the system prompt, not the model. With `Output ONLY the category name. Nothing else.` both 4B and 9B produce labels. **Before declaring a model "not suitable," fix the prompt.**
+
+### LLM I/O capture is non-negotiable for debuggability
+
+Without full request/response capture, it's impossible to debug why the A/B test returned a tie. `AGENT_SELF_EDIT_LLM_LOG` JSONL capture should be on by default.
+
+### Container networking requires `host.docker.internal`
+
+`localhost` inside Docker refers to the container, not the host. OMLX must be reached via `host.docker.internal:8000`.
+
+### Results must be written incrementally
+
+LLM field tests are slow. If results are only written at the end, an abort loses everything. Write every N traces with `partial: true`.
+
+### The gate rejecting a proposal is valid — but only if the A/B test was real
+
+The gate correctly rejected (tie, p=1.0), but the tie was caused by a bug (comparing prompt against itself). A rejection from an invalid A/B test is not a valid outcome. The A/B test must use two distinct prompts.
+
+### The LLM agent repeatedly declared success without verifying
+
+The LLM declared tests passing without inspecting traffic. It optimized surface-level details while the core mechanism was broken. **The LLM should verify the core mechanism works before declaring success.** Suspicious speed + perfect tie = red flag.
+
+### PRD compliance status (after #104 fix)
+
+| PRD Feature | Status |
+|-------------|--------|
+| F-01 Trace ingestion | ✅ works |
+| F-02 Feedback analyzer | ✅ works |
+| F-03 A/B test engine | ✅ works (2 distinct prompts verified) |
+| F-04 Promotion gate | ✅ works (correctly rejects on tie) |
+| F-05 Prompt registry | ✅ works |
+| F-10 Held-out task set | ✅ configured |
+| F-14 Docker support | ✅ works (9/9 tests pass) |
+| M10 Field test | ❌ not implemented (#100) |
+
+---
+
+## Open Items
+
+| Issue | Description | Status |
+|-------|-------------|--------|
+| #93 | D10 field test plan design doc | open |
+| #94 | Field test report deliverables | open |
+| #95 | `run_traces.py` is wrong tool | open |
+| #96 | Scoring ignores `trace.success` | open |
+| #97 | Duplicate `task_id` in observatory traces | open |
+| #99 | `run_docker_field_test.py` is stale | open |
+| #100 | LLM field tests (rows 15-20) not implemented | open |
+| #101 | `FIELD_TEST_REPORT.md` missing | open |
+| #105 | Ruff: 13 lint errors | open |
+| #106 | Mypy: 5 type errors | open |
+| #107 | Guardrail FP/FN + cost vs real LLM | open |
+| #108 | Docker: no latency/token assertions | open |
+| #109 | Docker: identical seeded traces | open |
+| #110 | Docker: accepts tie without delta check | open |
+| #98 | Docker integration only `--dry-run` | closed |
+| #102 | WBS row 23 falsely marked done | closed |
+| #103 | A/B test engine not exercised | closed |
+| #104 | A/B test fragment bug | closed |
+
+---
+
 ## Next Steps — Fixes Before Full Run
 
 | # | Fix | Issue | Why it blocks the full run |
