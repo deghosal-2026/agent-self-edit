@@ -4,7 +4,8 @@
 > **PRD coverage:** [F-09](../../design/prd/05-features.md) (CLI), [F-12](../../design/prd/05-features.md) (rollback)
 > **CUJs covered:** CUJ 5 (first-time setup — init), CUJ 4 (rollback), CUJ 1 (status/diff/propose)
 > **Dependency:** M9 depends on M7 (analyzer) + M8 (diff) + M5 (registry) + M4 (gate) + M3 (A/B test) + M2 (trace) + M1 (config)
-> **Issue Range:** #56–#63
+> **Issue Range:** #56–#63 (+ #89–#91 M9 design gaps)
+> **Note:** D9 design doc (`docs/design/cli-surface-design.md`) does not exist yet — must be authored before building (#89).
 
 ---
 
@@ -58,3 +59,14 @@
 - [ ] **Design docs authored:** D9 (cli-surface-design), D13 (DD-16/17)
 
 **Dependency:** M7 (analyzer) + M8 (diff) + M5 (registry) + M4 (gate) + M3 (A/B test) + M2 (trace) + M1 (config). **Produces for M10+:** complete CLI with all commands.
+
+### M9 Design Gaps Found (PRD vs WBS Audit, 2026-08-30)
+
+> D9 design doc (`docs/design/cli-surface-design.md`) does not exist and is referenced by all 8 tickets. Three additional gaps found. **Author D9 first, then build.**
+
+| # | Gap | PRD requirement | Current state | Ticket | Fix |
+|---|-----|----------------|---------------|--------|-----|
+| G-1 | D9 design doc missing | All 8 tickets reference D9 | File does not exist | [#89](https://github.com/deghosal-2026/agent-self-edit/issues/89) · ⬜ | Author D9 with all commands, flags, wiring, loop, errors |
+| G-2 | `run` loop algorithm | PRD says "starts the loop" | No concrete algorithm | [#89](https://github.com/deghosal-2026/agent-self-edit/issues/89) · ⬜ | Specify poll→batch→analyze→test→gate→log→repeat; `--once`/`--dry-run` semantics |
+| G-3 | `status --json` schema | PRD: "prompt version, last edit, guardrail pass rate, improvement trend, total edits, total cost" | No JSON shape pinned | [#90](https://github.com/deghosal-2026/agent-self-edit/issues/90) · ⬜ | Add JSON schema to D9; empty state: "no data" |
+| G-4 | `validate` command spec | Not in PRD roadmap (additive) | WBS #62 adds it without spec | [#91](https://github.com/deghosal-2026/agent-self-edit/issues/91) · ⬜ | Add 3-check spec (config, task set, registry) to D9 |
