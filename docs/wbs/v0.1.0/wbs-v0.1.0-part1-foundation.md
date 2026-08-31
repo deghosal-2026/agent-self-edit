@@ -21,13 +21,13 @@
 
 | # | Task | Build (files) | Behavior + edge cases | Feature | Design Ref | Verify | Status |
 |---|------|---------------|----------------------|---------|------------|--------|--------|
-| 1 | Package scaffold | `pyproject.toml`, `src/agent_self_edit/__init__.py`, `tests/__init__.py`, `tests/conftest.py` | `pip install -e .` succeeds; `python -c "import agent_self_edit"` succeeds; pytest discovers tests | F-13 (partial) | D1 | clean venv install + import | [#1](https://github.com/deghosal-2026/agent-self-edit/issues/1) · ⬜ |
-| 2 | Config file format | `src/agent_self_edit/config.py`: `Config` dataclass, `load_config(path)`, `validate_config(config)`, `ConfigError` | Valid config loads without errors; invalid config returns list of errors; config round-trips through YAML; missing file raises `FileNotFoundError` | F-13 | D1 | valid/invalid fixture YAMLs; round-trip test | [#3](https://github.com/deghosal-3036/agent-self-edit/issues/3) · ⬜ |
-| 3 | Config validation | Validation rules in `config.py`: `max_edit_distance > 0`, `drift_threshold in [0,1]`, `confidence_level in [0.5, 0.999]`, `sample_floor >= 10`, `trigger in {batch, time, manual}` | Each rule produces a clear error message; multiple violations all reported; boundary values tested | F-13 | D1 | each rule independently tested with pass/fail fixtures | [#4](https://github.com/deghosal-2026/agent-self-edit/issues/4) · ⬜ |
-| 4 | Held-out task set loader | `src/agent_self_edit/tasks.py`: `TaskSet` class, `load_task_set(path)`, `validate_task_set(task_set)` | YAML and JSON formats supported; missing required fields return validation errors; duplicate task IDs rejected; empty task set accepted | F-10 | D1 | YAML + JSON fixtures; duplicate IDs; empty set | [#5](https://github.com/deghosal-2026/agent-self-edit/issues/5) · ⬜ |
-| 5 | Task set management API | `TaskSet.add_task()`, `remove_task()`, `list_tasks()`, `validate_set()` | Thread-safe with read-write lock; add persists; remove removes; list returns all; validate returns pass/fail per task; concurrent modifications don't corrupt | F-10 | D1 | concurrent add/remove; validate after mutation | [#6](https://github.com/deghosal-2026/agent-self-edit/issues/6) · ⬜ |
-| 6 | CI pipeline | `.github/workflows/ci.yml`, `.github/dependabot.yml`, `.github/PULL_REQUEST_TEMPLATE.md` | CI runs on push and PR; ruff passes; mypy strict passes; coverage reports generated; dependabot creates PRs | F-13 (partial) | — | push triggers CI; lint + coverage + test pass | [#7](https://github.com/deghosal-2027/agent-self-edit/issues/7) · ⬜ |
-| 7 | OSS community files | `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `SUPPORT.md`, `.github/ISSUE_TEMPLATE/bug_report.md`, `.github/ISSUE_TEMPLATE/feature_request.md` | CONTRIBUTING covers: how to report bugs, coding standards, PR process; SECURITY covers vulnerability reporting; templates have correct YAML frontmatter | — | — | all files exist, contain meaningful content | [#8](https://github.com/deghosal-2026/agent-self-edit/issues/8) · ⬜ |
+| 1 | Package scaffold | `pyproject.toml`, `src/agent_self_edit/__init__.py`, `tests/__init__.py`, `tests/conftest.py` | `pip install -e .` succeeds; `python -c "import agent_self_edit"` succeeds; pytest discovers tests | F-13 (partial) | D1 | clean venv install + import | [#1](https://github.com/deghosal-2026/agent-self-edit/issues/1) · ✅ |
+| 2 | Config file format | `src/agent_self_edit/config.py`: `Config` dataclass, `load_config(path)`, `validate_config(config)`, `ConfigError` | Valid config loads without errors; invalid config returns list of errors; config round-trips through YAML; missing file raises `FileNotFoundError` | F-13 | D1 | valid/invalid fixture YAMLs; round-trip test | [#3](https://github.com/deghosal-3036/agent-self-edit/issues/3) · ✅ |
+| 3 | Config validation | Validation rules in `config.py`: `max_edit_distance > 0`, `drift_threshold in [0,1]`, `confidence_level in [0.5, 0.999]`, `sample_floor >= 10`, `trigger in {batch, time, manual}` | Each rule produces a clear error message; multiple violations all reported; boundary values tested | F-13 | D1 | each rule independently tested with pass/fail fixtures | [#4](https://github.com/deghosal-2026/agent-self-edit/issues/4) · ✅ |
+| 4 | Held-out task set loader | `src/agent_self_edit/tasks.py`: `TaskSet` class, `load_task_set(path)`, `validate_task_set(task_set)` | YAML and JSON formats supported; missing required fields return validation errors; duplicate task IDs rejected; empty task set accepted | F-10 | D1 | YAML + JSON fixtures; duplicate IDs; empty set | [#5](https://github.com/deghosal-2026/agent-self-edit/issues/5) · ✅ |
+| 5 | Task set management API | `TaskSet.add_task()`, `remove_task()`, `list_tasks()`, `validate_set()` | Thread-safe with read-write lock; add persists; remove removes; list returns all; validate returns pass/fail per task; concurrent modifications don't corrupt | F-10 | D1 | concurrent add/remove; validate after mutation | [#6](https://github.com/deghosal-2026/agent-self-edit/issues/6) · ✅ |
+| 6 | CI pipeline | `.github/workflows/ci.yml`, `.github/dependabot.yml`, `.github/PULL_REQUEST_TEMPLATE.md` | CI runs on push and PR; ruff passes; mypy strict passes; coverage reports generated; dependabot creates PRs | F-13 (partial) | — | push triggers CI; lint + coverage + test pass | [#7](https://github.com/deghosal-2027/agent-self-edit/issues/7) · ✅ |
+| 7 | OSS community files | `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `SUPPORT.md`, `.github/ISSUE_TEMPLATE/bug_report.md`, `.github/ISSUE_TEMPLATE/feature_request.md` | CONTRIBUTING covers: how to report bugs, coding standards, PR process; SECURITY covers vulnerability reporting; templates have correct YAML frontmatter | — | — | all files exist, contain meaningful content | [#8](https://github.com/deghosal-2026/agent-self-edit/issues/8) · ✅ |
 
 ### M1 Success Metrics
 
@@ -46,13 +46,13 @@
 
 ### M1 Exit Gate
 
-- [ ] `pip install -e .` succeeds
-- [ ] Config loads and validates correctly
-- [ ] Task set loads and validates correctly
-- [ ] All 6 community files exist
-- [ ] Ruff clean, mypy strict clean, all tests pass, coverage > 92%
-- [ ] CI pipeline is green on push
-- [ ] **Design docs authored:** D1 (config-schema), D13 (DD-01/02/03)
+- [x] `pip install -e .` succeeds
+- [x] Config loads and validates correctly
+- [x] Task set loads and validates correctly
+- [x] All 6 community files exist
+- [x] Ruff clean, mypy strict clean, all tests pass, coverage > 92%
+- [x] CI pipeline is green on push
+- [x] **Design docs authored:** D1 (config-schema), D13 (DD-01/02/03)
 
 **Dependency:** none. **Produces for M2+:** `Config` dataclass, `TaskSet`, `load_config()`, `validate_config()`, CI pipeline, community files.
 
