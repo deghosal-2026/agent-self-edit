@@ -1,6 +1,6 @@
 {
   "test": "docker-propose-full-omlx",
-  "date": "2026-08-31T08:30:28Z",
+  "date": "2026-08-31T08:51:27Z",
   "image": "agent-self-edit:test",
   "omlx_model": "Qwen3.5-4B-4bit",
   "exit_code": 0,
@@ -22,7 +22,7 @@
         "completion_tokens": 262,
         "total_tokens": 942
       },
-      "latency_ms": 7742
+      "latency_ms": 7962
     },
     {
       "model": "Qwen3.5-4B-4bit",
@@ -40,7 +40,7 @@
         "completion_tokens": 168,
         "total_tokens": 203
       },
-      "latency_ms": 4325
+      "latency_ms": 4436
     },
     {
       "model": "Qwen3.5-4B-4bit",
@@ -58,7 +58,7 @@
         "completion_tokens": 64,
         "total_tokens": 154
       },
-      "latency_ms": 1854
+      "latency_ms": 1926
     },
     {
       "model": "Qwen3.5-4B-4bit",
@@ -76,7 +76,7 @@
         "completion_tokens": 382,
         "total_tokens": 415
       },
-      "latency_ms": 10452
+      "latency_ms": 9847
     },
     {
       "model": "Qwen3.5-4B-4bit",
@@ -94,7 +94,7 @@
         "completion_tokens": 68,
         "total_tokens": 156
       },
-      "latency_ms": 2147
+      "latency_ms": 2026
     },
     {
       "model": "Qwen3.5-4B-4bit",
@@ -112,7 +112,7 @@
         "completion_tokens": 183,
         "total_tokens": 217
       },
-      "latency_ms": 4773
+      "latency_ms": 4874
     },
     {
       "model": "Qwen3.5-4B-4bit",
@@ -130,7 +130,7 @@
         "completion_tokens": 131,
         "total_tokens": 220
       },
-      "latency_ms": 3475
+      "latency_ms": 3627
     },
     {
       "model": "Qwen3.5-4B-4bit",
@@ -148,7 +148,7 @@
         "completion_tokens": 151,
         "total_tokens": 184
       },
-      "latency_ms": 3927
+      "latency_ms": 4209
     },
     {
       "model": "Qwen3.5-4B-4bit",
@@ -166,7 +166,7 @@
         "completion_tokens": 95,
         "total_tokens": 183
       },
-      "latency_ms": 2673
+      "latency_ms": 2843
     },
     {
       "model": "Qwen3.5-4B-4bit",
@@ -184,7 +184,7 @@
         "completion_tokens": 422,
         "total_tokens": 457
       },
-      "latency_ms": 11345
+      "latency_ms": 10489
     },
     {
       "model": "Qwen3.5-4B-4bit",
@@ -202,7 +202,7 @@
         "completion_tokens": 81,
         "total_tokens": 171
       },
-      "latency_ms": 2437
+      "latency_ms": 2265
     }
   ],
   "stdout": "Analyzing 10 failed traces (of 10 in batch)\nProposed 1 edits (cost=$0.0032)\n  - [Role Definition / Classification Logic] The model is over-indexing on the keyword 'billing' in the user's input. The traces show a consistent failure where the model ignores the semantic meaning of the error (a display bug) and defaults to the category containing the keyword. Explicitly defining the precedence of 'system error' over 'category keyword' should resolve this.\n  A/B: tie (p=1.0000, n=5)\n  Gate: reject\n",

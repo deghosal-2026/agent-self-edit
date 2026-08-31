@@ -1,6 +1,6 @@
 {
   "test": "docker-run-full-loop-omlx",
-  "date": "2026-08-31T08:29:32Z",
+  "date": "2026-08-31T08:50:32Z",
   "image": "agent-self-edit:test",
   "omlx_model": "Qwen3.5-4B-4bit",
   "exit_code": 0,
@@ -22,7 +22,7 @@
         "completion_tokens": 262,
         "total_tokens": 942
       },
-      "latency_ms": 7720
+      "latency_ms": 7295
     },
     {
       "model": "Qwen3.5-4B-4bit",
@@ -40,7 +40,7 @@
         "completion_tokens": 168,
         "total_tokens": 203
       },
-      "latency_ms": 4364
+      "latency_ms": 4530
     },
     {
       "model": "Qwen3.5-4B-4bit",
@@ -58,7 +58,7 @@
         "completion_tokens": 64,
         "total_tokens": 154
       },
-      "latency_ms": 1878
+      "latency_ms": 1923
     },
     {
       "model": "Qwen3.5-4B-4bit",
@@ -76,7 +76,7 @@
         "completion_tokens": 382,
         "total_tokens": 415
       },
-      "latency_ms": 9844
+      "latency_ms": 9814
     },
     {
       "model": "Qwen3.5-4B-4bit",
@@ -94,7 +94,7 @@
         "completion_tokens": 68,
         "total_tokens": 156
       },
-      "latency_ms": 2051
+      "latency_ms": 2020
     },
     {
       "model": "Qwen3.5-4B-4bit",
@@ -112,7 +112,7 @@
         "completion_tokens": 183,
         "total_tokens": 217
       },
-      "latency_ms": 4883
+      "latency_ms": 4854
     },
     {
       "model": "Qwen3.5-4B-4bit",
@@ -130,7 +130,7 @@
         "completion_tokens": 131,
         "total_tokens": 220
       },
-      "latency_ms": 3742
+      "latency_ms": 3601
     },
     {
       "model": "Qwen3.5-4B-4bit",
@@ -148,7 +148,7 @@
         "completion_tokens": 151,
         "total_tokens": 184
       },
-      "latency_ms": 4032
+      "latency_ms": 4050
     },
     {
       "model": "Qwen3.5-4B-4bit",
@@ -166,7 +166,7 @@
         "completion_tokens": 95,
         "total_tokens": 183
       },
-      "latency_ms": 2813
+      "latency_ms": 2953
     },
     {
       "model": "Qwen3.5-4B-4bit",
@@ -184,7 +184,7 @@
         "completion_tokens": 422,
         "total_tokens": 457
       },
-      "latency_ms": 10932
+      "latency_ms": 10717
     },
     {
       "model": "Qwen3.5-4B-4bit",
@@ -202,7 +202,7 @@
         "completion_tokens": 81,
         "total_tokens": 171
       },
-      "latency_ms": 2295
+      "latency_ms": 2421
     }
   ],
   "stdout": "Processing 10 traces (10 failed)\nAnalysis complete: 1 proposals, cost=$0.0032\n  A/B test: tie (p=1.0000, n=5)\n  Gate: reject\nLoop stopped.\n",

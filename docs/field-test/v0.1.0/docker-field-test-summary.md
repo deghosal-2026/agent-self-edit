@@ -1,6 +1,6 @@
 # Docker Field Test Summary — AgentSelfEdit v0.1.0
 
-**Date:** 2026-08-31T08:30:28Z
+**Date:** 2026-08-31T08:51:27Z
 **Image:** `agent-self-edit:test`
 **OMLX Model:** `Qwen3.5-4B-4bit`
 **OMLX Endpoint:** `http://localhost:8000/v1`
@@ -19,14 +19,13 @@
 - **docker-propose-full-omlx**: 942 tokens (680 in / 262 out)
 - **docker-propose-full-omlx**: 203 tokens (35 in / 168 out)
 - **docker-propose-full-omlx**: 154 tokens (90 in / 64 out)
-- **docker-propose-full-omlx**: LLM latency 10452ms (>10s)
 - **docker-propose-full-omlx**: 415 tokens (33 in / 382 out)
 - **docker-propose-full-omlx**: 156 tokens (88 in / 68 out)
 - **docker-propose-full-omlx**: 217 tokens (34 in / 183 out)
 - **docker-propose-full-omlx**: 220 tokens (89 in / 131 out)
 - **docker-propose-full-omlx**: 184 tokens (33 in / 151 out)
 - **docker-propose-full-omlx**: 183 tokens (88 in / 95 out)
-- **docker-propose-full-omlx**: LLM latency 11345ms (>10s)
+- **docker-propose-full-omlx**: LLM latency 10489ms (>10s)
 - **docker-propose-full-omlx**: 457 tokens (35 in / 422 out)
 - **docker-propose-full-omlx**: 171 tokens (90 in / 81 out)
 - **docker-run-full-loop-omlx**: 942 tokens (680 in / 262 out)
@@ -38,7 +37,7 @@
 - **docker-run-full-loop-omlx**: 220 tokens (89 in / 131 out)
 - **docker-run-full-loop-omlx**: 184 tokens (33 in / 151 out)
 - **docker-run-full-loop-omlx**: 183 tokens (88 in / 95 out)
-- **docker-run-full-loop-omlx**: LLM latency 10932ms (>10s)
+- **docker-run-full-loop-omlx**: LLM latency 10717ms (>10s)
 - **docker-run-full-loop-omlx**: 457 tokens (35 in / 422 out)
 - **docker-run-full-loop-omlx**: 171 tokens (90 in / 81 out)
 

@@ -59,7 +59,14 @@
 |---|------|---------------|----------------------|---------|------------|--------|--------|
 | 21 | Dockerfile + compose | `Dockerfile` (multi-stage), `docker-compose.yml` | Build stage: pip install; runtime stage: python -m; volume mounts for config, registry, traces | F-14 | [D10 §14.2](../../design/ab-test-engine-design.md#143–integration-tests-hermetic-ci-safe) | image builds; container runs | [#69](https://github.com/deghosal-2026/agent-self-edit/issues/69) · ✅ |
 | 22 | Docker smoke test | `tests/test_docker.py` | `docker build . && docker run agent-self-edit --help`; verify image builds and runs; CLI commands work inside container | F-14 | [D10 §14.2](../../design/ab-test-engine-design.md#143–integration-tests-hermetic-ci-safe) | image builds; help works | [#69](https://github.com/deghosal-2026/agent-self-edit/issues/69) · ✅ |
-| 23 | Docker integration test | `tests/test_docker.py` | Run full loop (with OMLX real LLM) in Docker container; verify: trace ingestion, analysis, A/B test, promotion gate, LLM I/O capture all work. **Note:** A/B test bug found — run.py passes proposal fragment instead of full candidate prompt (see docker-test-run-report.md §8). Gate correctly rejects. | F-14 | [D10 §14.2](../../design/ab-test-engine-design.md#143–integration-tests-hermetic-ci-safe) | 9/9 tests pass, LLM I/O captured to `field-test/v0.1.0/results/docker/omlx/qwen3.5-4b-4bit/` | [#69](https://github.com/deghosal-2026/agent-self-edit/issues/69) · ✅ [#98](https://github.com/deghosal-2026/agent-self-edit/issues/98) · ✅ [#103](https://github.com/deghosal-2026/agent-self-edit/issues/103) · ✅ |
+| 23 | Docker integration test | `tests/test_docker.py` | Run full loop (with OMLX real LLM) in Docker container; verify: trace ingestion, analysis, A/B test, promotion gate, LLM I/O capture all work. **Note:** A/B test bug found — run.py passes proposal fragment instead of full candidate prompt (see docker-test-run-report.md §8, #104). Gate correctly rejects. Loop runs end-to-end but A/B test is invalid until #104 fixed. | F-14 | [D10 §14.2](../../design/ab-test-engine-design.md#143–integration-tests-hermetic-ci-safe) | 9/9 tests pass, LLM I/O captured to `field-test/v0.1.0/results/docker/omlx/qwen3.5-4b-4bit/` | [#69](https://github.com/deghosal-2026/agent-self-edit/issues/69) · ✅ [#98](https://github.com/deghosal-2026/agent-self-edit/issues/98) · ✅ [#103](https://github.com/deghosal-2026/agent-self-edit/issues/103) · ✅ |
+
+#### A/B Test Fix (Blocker)
+
+| # | Task | Build (files) | Behavior + edge cases | Feature | Design Ref | Verify | Status |
+|---|------|---------------|----------------------|---------|------------|--------|--------|
+| 23a | Fix A/B test candidate prompt construction | `src/agent_self_edit/cli/run.py` | `run.py:60` passes `proposal.new_text` (fragment) as `prompt_b`. Must construct full candidate prompt: `registry.current_prompt.replace(proposal.old_text, proposal.new_text)` | F-03 | [ab-test-engine-design.md §2.1](../../design/ab-test-engine-design.md#21-inputs) | A/B test produces non-zero deltas, bootstrap CI runs, real winner determined | [#104](https://github.com/deghosal-2026/agent-self-edit/issues/104) · ⬜ |
+| 23b | Verify A/B test with real distinct prompts | `tests/test_docker.py` | After #104 fix, re-run docker full loop. Verify LLM traffic shows two distinct prompts, non-zero deltas, real statistics | F-03 | [ab-test-engine-design.md §3](../../design/ab-test-engine-design.md#3-the-task-runner) | traffic log shows prompt A ≠ prompt B, deltas ≠ 0 | [#104](https://github.com/deghosal-2026/agent-self-edit/issues/104) · ⬜ |
 
 #### Analysis & Report
 
@@ -94,8 +101,10 @@
 - [ ] Baseline measurement completed
 - [ ] Non-LLM tests: all pass (trace generation, dry-run loop, gate validation, rollback, zero-LLM, concurrency, registry stress, guardrail stress)
 - [ ] LLM tests: full loop integration, 10-iteration improvement, adversarial edits, analyzer quality, cost analysis
-- [x] Docker tests: build, smoke, integration (full loop against OMLX — #98, #103 closed. A/B test bug found: run.py passes fragment not full prompt)
-- [ ] Field test report written with all results
+- [x] Docker tests: build, smoke, integration (full loop against OMLX — #98, #103 closed. A/B test bug #104 open: run.py passes fragment not full prompt)
+- [ ] A/B test fix (#104): construct full candidate prompt, verify non-zero deltas, real statistics
+- [ ] LLM field tests (#100): 10-iteration improvement, adversarial, cost analysis
+- [ ] Field test report written with all results (#101)
 - [ ] Improvement measured (target: 10%+ over 10 iterations)
 - [ ] Guardrails catch 100% of injected bad edits
 - [ ] Zero bad edits promoted in any test

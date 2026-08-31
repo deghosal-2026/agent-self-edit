@@ -57,8 +57,11 @@ def _run_once(config_path: str, batch_size: int | None, dry_run: bool) -> None:
         task_set = load_task_set(config.tasks.task_set_path)
 
         scorer = ExactMatchScorer()
+        candidate_prompt = registry.current_prompt.replace(
+            proposal.old_text, proposal.new_text
+        )
         ab_result = run_ab_test(
-            registry.current_prompt, proposal.new_text, task_set, llm, scorer, config
+            registry.current_prompt, candidate_prompt, task_set, llm, scorer, config
         )
         click.echo(
             f"  A/B test: {ab_result.winner} "

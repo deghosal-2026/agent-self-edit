@@ -74,8 +74,11 @@ def propose(config_path: str, dry_run: bool) -> None:
     scorer = ExactMatchScorer()
 
     for proposal in result.proposals:
+        candidate_prompt = registry.current_prompt.replace(
+            proposal.old_text, proposal.new_text
+        )
         ab_result = run_ab_test(
-            registry.current_prompt, proposal.new_text, task_set, llm, scorer, config
+            registry.current_prompt, candidate_prompt, task_set, llm, scorer, config
         )
         click.echo(
             f"  A/B: {ab_result.winner} (p={ab_result.p_value:.4f}, n={ab_result.n_trials})"

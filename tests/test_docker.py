@@ -382,6 +382,23 @@ def test_docker_run_full_loop_omlx():
         assert "A/B test" in stdout, f"A/B test stage missing: {stdout}"
         assert "Gate:" in stdout, f"Gate stage missing: {stdout}"
 
+        # Verify A/B test actually ran two distinct prompts
+        # Call 1 = analyzer; calls 2+ = A/B test (pairs of prompt A / prompt B)
+        if len(entries) > 1:
+            ab_calls = entries[1:]
+            prompt_contents = set()
+            for e in ab_calls:
+                # The full prompt is in the first message content (before "\n---\nTask:")
+                content = e["messages"][0]["content"]
+                prompt_part = content.split("\n---\n")[0] if "\n---\n" in content else content
+                prompt_contents.add(prompt_part[:200])
+            assert len(prompt_contents) >= 2, (
+                f"A/B test used only {len(prompt_contents)} distinct prompt(s) — "
+                f"expected at least 2 (current + candidate). "
+                f"This means run.py passed the same prompt for A and B. "
+                f"See issue #104. Prompt contents: {prompt_contents}"
+            )
+
         _write_report("docker-run-full-loop-omlx", result, traffic_log)
 
 
@@ -429,5 +446,18 @@ def test_docker_propose_full_omlx():
         assert "A/B test" in stdout or "Proposed" in stdout, (
             f"Expected A/B test or proposals in output: {stdout}"
         )
+
+        # Verify A/B test actually ran two distinct prompts (if A/B ran)
+        if "A/B test" in stdout and len(entries) > 1:
+            ab_calls = entries[1:]
+            prompt_contents = set()
+            for e in ab_calls:
+                content = e["messages"][0]["content"]
+                prompt_part = content.split("\n---\n")[0] if "\n---\n" in content else content
+                prompt_contents.add(prompt_part[:200])
+            assert len(prompt_contents) >= 2, (
+                f"A/B test used only {len(prompt_contents)} distinct prompt(s) — "
+                f"expected at least 2. See issue #104. Prompts: {prompt_contents}"
+            )
 
         _write_report("docker-propose-full-omlx", result, traffic_log)
