@@ -71,12 +71,12 @@
 
 | # | Task | Build (files) | Behavior + edge cases | Feature | Design Ref | Verify | Status |
 |---|------|---------------|----------------------|---------|------------|--------|--------|
-| 1 | Trace schema | `src/agent_self_edit/types.py`: `Trace` dataclass, `validate_trace(trace: dict) -> Trace` | Valid trace deserializes; missing required fields raise error; extra fields ignored; timestamps parsed as ISO 8601; `failure_reason` optional; `steps` optional | F-01 | [D2](../../design/trace-schema-design.md) | valid/invalid JSON fixtures; field-by-field edge cases | [#9](https://github.com/deghosal-2026/agent-self-edit/issues/9) · ⬜ |
-| 2 | Trace store | `src/agent_self_edit/trace.py`: `TraceStore.__init__(path)`, `store(trace)`, `get(task_id)`, `list(success=None, prompt_version=None, limit=100)`, `count(success=None)`, `delete_before(timestamp)` | SQLite DB created on init; indexes on task_id, prompt_version, success; schema migration on version change; `list` returns correct filtered results; 0 traces → empty list | F-01 | [D2](../../design/trace-schema-design.md) | CRUD on temp DB; filtered queries; schema migration | [#10](https://github.com/deghosal-2026/agent-self-edit/issues/10) · ⬜ |
-| 3 | Trace ingestion API | `TraceStore.ingest(trace) -> str` | Validates via `validate_trace()`; stores via `store()`; returns `task_id`; batch counter increments; invalid traces raise `ValueError` without incrementing | F-01 | [D2](../../design/trace-schema-design.md) | valid + invalid traces; batch counter accuracy | [#11](https://github.com/deghosal-2026/agent-self-edit/issues/11) · ⬜ |
-| 4 | Trace batching | `TraceStore.batch_ready()`, `get_batch(size)`, `acknowledge(task_ids)` | `batch_ready()` returns True when pending >= batch_size; `get_batch()` returns oldest N unprocessed; `acknowledge()` marks processed; partial acknowledgement works | F-01 | [D2](../../design/trace-schema-design.md) | batch size boundary; partial ack; no pending traces | [#12](https://github.com/deghosal-2026/agent-self-edit/issues/12) · ⬜ |
-| 5 | Trace adapter interface | `src/agent_self_edit/adapters/`: `base.py` (ABC), `stdin.py` (StdinAdapter), `file.py` (FileAdapter) | `StdinAdapter` reads JSON lines from stdin; `FileAdapter` watches directory for new `.json` files; both call `ingest()` for each trace | F-01 | [D2](../../design/trace-schema-design.md) | stdin pipe test; file watch + add; malformed input | [#13](https://github.com/deghosal-2026/agent-self-edit/issues/13) · ⬜ |
-| 6 | Trace cleanup | `TraceStore.cleanup(retention_days=90)` | Deletes traces older than retention; preserves traces within window; called on startup and every 24h; cleanup logged; retention_days=0 deletes everything | F-01 | [D2](../../design/trace-schema-design.md) | old traces deleted; recent preserved; 0 retention edge case | [#14](https://github.com/deghosal-2026/agent-self-edit/issues/14) · ⬜ |
+| 1 | Trace schema | `src/agent_self_edit/types.py`: `Trace` dataclass, `validate_trace(trace: dict) -> Trace` | Valid trace deserializes; missing required fields raise error; extra fields ignored; timestamps parsed as ISO 8601; `failure_reason` optional; `steps` optional | F-01 | [D2](../../design/trace-schema-design.md) | valid/invalid JSON fixtures; field-by-field edge cases | [#9](https://github.com/deghosal-2026/agent-self-edit/issues/9) · ✅ |
+| 2 | Trace store | `src/agent_self_edit/trace.py`: `TraceStore.__init__(path)`, `store(trace)`, `get(task_id)`, `list(success=None, prompt_version=None, limit=100)`, `count(success=None)`, `delete_before(timestamp)` | SQLite DB created on init; indexes on task_id, prompt_version, success; schema migration on version change; `list` returns correct filtered results; 0 traces → empty list | F-01 | [D2](../../design/trace-schema-design.md) | CRUD on temp DB; filtered queries; schema migration | [#10](https://github.com/deghosal-2026/agent-self-edit/issues/10) · ✅ |
+| 3 | Trace ingestion API | `TraceStore.ingest(trace) -> str` | Validates via `validate_trace()`; stores via `store()`; returns `task_id`; batch counter increments; invalid traces raise `ValueError` without incrementing | F-01 | [D2](../../design/trace-schema-design.md) | valid + invalid traces; batch counter accuracy | [#11](https://github.com/deghosal-2026/agent-self-edit/issues/11) · ✅ |
+| 4 | Trace batching | `TraceStore.batch_ready()`, `get_batch(size)`, `acknowledge(task_ids)` | `batch_ready()` returns True when pending >= batch_size; `get_batch()` returns oldest N unprocessed; `acknowledge()` marks processed; partial acknowledgement works | F-01 | [D2](../../design/trace-schema-design.md) | batch size boundary; partial ack; no pending traces | [#12](https://github.com/deghosal-2026/agent-self-edit/issues/12) · ✅ |
+| 5 | Trace adapter interface | `src/agent_self_edit/adapters/`: `base.py` (ABC), `stdin.py` (StdinAdapter), `file.py` (FileAdapter) | `StdinAdapter` reads JSON lines from stdin; `FileAdapter` watches directory for new `.json` files; both call `ingest()` for each trace | F-01 | [D2](../../design/trace-schema-design.md) | stdin pipe test; file watch + add; malformed input | [#13](https://github.com/deghosal-2026/agent-self-edit/issues/13) · ✅ |
+| 6 | Trace cleanup | `TraceStore.cleanup(retention_days=90)` | Deletes traces older than retention; preserves traces within window; called on startup and every 24h; cleanup logged; retention_days=0 deletes everything | F-01 | [D2](../../design/trace-schema-design.md) | old traces deleted; recent preserved; 0 retention edge case | [#14](https://github.com/deghosal-2026/agent-self-edit/issues/14) · ✅ |
 
 ### M2 Success Metrics
 
@@ -95,13 +95,13 @@
 
 ### M2 Exit Gate
 
-- [ ] Trace schema validates correctly
-- [ ] SQLite store is created and queryable
-- [ ] `ingest()` validates, stores, returns task_id
-- [ ] Batching triggers correctly
-- [ ] Both adapters work (stdin + file)
-- [ ] Cleanup deletes old traces
-- [ ] Ruff clean, mypy strict clean, all tests pass, coverage > 92%
-- [ ] **Design docs authored:** D2 (trace-schema), D13 (DD-04/05)
+- [x] Trace schema validates correctly
+- [x] SQLite store is created and queryable
+- [x] `ingest()` validates, stores, returns task_id
+- [x] Batching triggers correctly
+- [x] Both adapters work (stdin + file)
+- [x] Cleanup deletes old traces
+- [x] Ruff clean, mypy strict clean, all tests pass, coverage > 92%
+- [x] **Design docs authored:** D2 (trace-schema), D13 (DD-04/05)
 
 **Dependency:** M1. **Produces for M7+:** `Trace` dataclass, `TraceStore`, `TraceAdapter` interface, `StdinAdapter`, `FileAdapter`.
