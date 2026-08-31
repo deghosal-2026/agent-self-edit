@@ -1,0 +1,342 @@
+{
+  "meta": {
+    "provider": "omlx",
+    "model": "qwen3.5-4b-4bit",
+    "endpoint": "http://localhost:8000/v1",
+    "trace_file": "field-test/v0.1.0/corpus/real-life/real-traces/hf-customer-support-traces.jsonl",
+    "system_prompt": "You are a customer support agent. Respond helpfully and professionally to the customer's issue.",
+    "domain": "customer-support",
+    "date": "2026-08-31T09:16:19Z",
+    "n_traces": 10,
+    "n_done": 10,
+    "partial": false,
+    "n_passed": 10,
+    "n_failed": 0,
+    "accuracy": 100.0,
+    "total_tokens": 2173,
+    "total_latency_ms": 47731,
+    "avg_latency_ms": 4773.1
+  },
+  "results": [
+    {
+      "task_id": "run-0000",
+      "task_input": "My order arrived damaged, what are my options?",
+      "llm_call": {
+        "error": null,
+        "latency_ms": 5919,
+        "messages": [
+          {
+            "role": "system",
+            "content": "You are a customer support agent. Respond helpfully and professionally to the customer's issue."
+          },
+          {
+            "role": "user",
+            "content": "My order arrived damaged, what are my options?"
+          }
+        ],
+        "response": "I am very sorry to hear that your order arrived damaged. That is certainly frustrating, and I want to help you resolve this as quickly as possible.\n\nHere are the typical options available to you, depending on the severity of the damage and the seller's policy:\n\n1.  **Request a Refund:** You can request a full refund for the item.\n2.  **Request a Replacement:** You can ask for a brand new item to be shipped to you immediately.\n3.  **Request a Partial Refund:** If the item is partially damaged or usable but not perfect, you may be eligible for a partial refund or a store credit.\n\n**To get started, please provide a few details so I can assist you better:**\n*   What is your **Order Number**?\n*   How would you describe the damage (e.g., crushed box, broken item, missing parts)?\n*   Do you have a **photo** of the damaged item and the packaging?\n\nOnce you share this information, I can guide you through the specific steps to initiate a claim or arrange a replacement for you.",
+        "usage": {
+          "prompt_tokens": 45,
+          "completion_tokens": 227,
+          "total_tokens": 272
+        }
+      },
+      "scoring": {
+        "scoring_mode": "label",
+        "expected_output": "Successful customer-support-triage task",
+        "original_output": "Subject: Regarding your Order 20231115-4455 - Damaged Items\n\nDear [Customer Name],\n\nI am so sorry to hear that your recent order (20231115-4455) arrived with damaged items. We take full responsibility for ensuring your order arrives in perfect condition, and I sincerely apologize for the inconvenience this has caused.\n\nWe want to resolve this issue for you as quickly as possible. To that end, we can offer the following options:\n\n1.  **Replacement:** We can ship a brand new Ergonomic Office Chair",
+        "original_success": true,
+        "llm_output": "I am very sorry to hear that your order arrived damaged. That is certainly frustrating, and I want to help you resolve this as quickly as possible.\n\nHere are the typical options available to you, depending on the severity of the damage and the seller's policy:\n\n1.  **Request a Refund:** You can request a full refund for the item.\n2.  **Request a Replacement:** You can ask for a brand new item to be shipped to you immediately.\n3.  **Request a Partial Refund:** If the item is partially damaged or usable but not perfect, you may be eligible for a partial refund or a store credit.\n\n**To get started, please provide a few details so I can assist you better:**\n*   What is your **Order Number**?\n*   How would you describe the damage (e.g., crushed box, broken item, missing parts)?\n*   Do you have a **photo** of the damaged item and the packaging?\n\nOnce you share this information, I can guide you through the specific steps to initiate a claim or arrange a replacement for you.",
+        "passed": true
+      }
+    },
+    {
+      "task_id": "run-0001",
+      "task_input": "I need to update my shipping address for an order that hasn't shipped yet.",
+      "llm_call": {
+        "error": null,
+        "latency_ms": 3922,
+        "messages": [
+          {
+            "role": "system",
+            "content": "You are a customer support agent. Respond helpfully and professionally to the customer's issue."
+          },
+          {
+            "role": "user",
+            "content": "I need to update my shipping address for an order that hasn't shipped yet."
+          }
+        ],
+        "response": "Hello! I'd be happy to help you update your shipping address.\n\nTo get started, could you please provide the following details:\n\n1.  **Your Order Number**\n2.  **Your Current Email Address** (associated with the account)\n3.  **The New Shipping Address** you would like to use\n\nOnce you share this information, I can locate your order and process the address change for you immediately. Please note that if the order has already been shipped, we may need to contact the carrier to update the tracking information, but since you mentioned it hasn't shipped yet, we should be able to update it directly in our system.",
+        "usage": {
+          "prompt_tokens": 51,
+          "completion_tokens": 134,
+          "total_tokens": 185
+        }
+      },
+      "scoring": {
+        "scoring_mode": "label",
+        "expected_output": "Successful customer-support-triage task",
+        "original_output": "Subject: Regarding your shipping address change request for order #20231115-789423\n\nDear Customer,\n\nThank you for contacting us.\n\nWe received your request to update the shipping address for order #20231115-789423. The new address you provided is 456 Oak Ave, Sometown, CA 90210.\n\nTo ensure the security of your account and order, we require verification of this change via phone or chat. Please contact our support team at your earliest convenience to complete this verification process. Once verifie",
+        "original_success": true,
+        "llm_output": "Hello! I'd be happy to help you update your shipping address.\n\nTo get started, could you please provide the following details:\n\n1.  **Your Order Number**\n2.  **Your Current Email Address** (associated with the account)\n3.  **The New Shipping Address** you would like to use\n\nOnce you share this information, I can locate your order and process the address change for you immediately. Please note that if the order has already been shipped, we may need to contact the carrier to update the tracking information, but since you mentioned it hasn't shipped yet, we should be able to update it directly in our system.",
+        "passed": true
+      }
+    },
+    {
+      "task_id": "run-0002",
+      "task_input": "I accidentally ordered the wrong size, can I exchange it?",
+      "llm_call": {
+        "error": null,
+        "latency_ms": 6409,
+        "messages": [
+          {
+            "role": "system",
+            "content": "You are a customer support agent. Respond helpfully and professionally to the customer's issue."
+          },
+          {
+            "role": "user",
+            "content": "I accidentally ordered the wrong size, can I exchange it?"
+          }
+        ],
+        "response": "Yes, absolutely! We can certainly help you with that.\n\nTo process the exchange for you, I will need a few details:\n\n1.  **Order Number:** Could you please provide the order number associated with your purchase?\n2.  **Current Status:** Have you already received the package, or are you still waiting for it to arrive?\n3.  **Return Method:** Do you have the item with you, or would you like to return it to us once it arrives?\n\n**Next Steps:**\n*   **If you haven't received it yet:** You can usually cancel or modify the order directly through your account page on our website, provided the order hasn't been shipped yet.\n*   **If you have received it:** Please keep the item in its original packaging with tags attached. You can initiate a return/exchange request here, and we will provide you with a prepaid shipping label and instructions.\n\nPlease let me know your order number and current status, and I'll guide you through the process immediately!",
+        "usage": {
+          "prompt_tokens": 47,
+          "completion_tokens": 211,
+          "total_tokens": 258
+        }
+      },
+      "scoring": {
+        "scoring_mode": "label",
+        "expected_output": "Successful customer-support-triage task",
+        "original_output": "Subject: Regarding your exchange request for Order #20231108-12345\n\nDear Customer,\n\nThank you for contacting us. We understand you'd like to exchange your ComfortFit T-Shirt (Size M) for a Size L. \n\nWe're happy to process this exchange for you. Please return the original item to the following address:\n\n[Your Company Return Address]\n\nPlease note that customers are responsible for return shipping costs.\n\nOnce we receive the returned item, we will ship out the Size L, which is currently in stock (2",
+        "original_success": true,
+        "llm_output": "Yes, absolutely! We can certainly help you with that.\n\nTo process the exchange for you, I will need a few details:\n\n1.  **Order Number:** Could you please provide the order number associated with your purchase?\n2.  **Current Status:** Have you already received the package, or are you still waiting for it to arrive?\n3.  **Return Method:** Do you have the item with you, or would you like to return it to us once it arrives?\n\n**Next Steps:**\n*   **If you haven't received it yet:** You can usually cancel or modify the order directly through your account page on our website, provided the order hasn't been shipped yet.\n*   **If you have received it:** Please keep the item in its original packaging with tags attached. You can initiate a return/exchange request here, and we will provide you with a prepaid shipping label and instructions.\n\nPlease let me know your order number and current status, and I'll guide you through the process immediately!",
+        "passed": true
+      }
+    },
+    {
+      "task_id": "run-0003",
+      "task_input": "I can't find the product I'm looking for on your website.",
+      "llm_call": {
+        "error": null,
+        "latency_ms": 2977,
+        "messages": [
+          {
+            "role": "system",
+            "content": "You are a customer support agent. Respond helpfully and professionally to the customer's issue."
+          },
+          {
+            "role": "user",
+            "content": "I can't find the product I'm looking for on your website."
+          }
+        ],
+        "response": "I'm sorry to hear that you're having trouble finding the product you're looking for! I'd be happy to help you locate it.\n\nCould you please provide a few more details?\n*   What specific product are you looking for?\n*   Are you searching by name, category, or a specific feature?\n*   Have you tried using the search bar or filtering options?\n\nOnce I have a bit more information, I can guide you to the right section or help you find the item directly.",
+        "usage": {
+          "prompt_tokens": 49,
+          "completion_tokens": 104,
+          "total_tokens": 153
+        }
+      },
+      "scoring": {
+        "scoring_mode": "label",
+        "expected_output": "Successful customer-support-triage task",
+        "original_output": "Subject: Regarding your recent search on our website\n\nDear John,\n\nThank you for visiting our website. We understand you were unable to find the product you were looking for. We apologize for any inconvenience this may have caused.\n\nWe wanted to let you know that Product A is currently out of stock. We expect to have it back in stock around February 15, 2024. \n\nIn the meantime, we'd like to offer you a 10% discount (code: SORRY10) on either Product B ($135.00 after discount) or Product C ($180.00",
+        "original_success": true,
+        "llm_output": "I'm sorry to hear that you're having trouble finding the product you're looking for! I'd be happy to help you locate it.\n\nCould you please provide a few more details?\n*   What specific product are you looking for?\n*   Are you searching by name, category, or a specific feature?\n*   Have you tried using the search bar or filtering options?\n\nOnce I have a bit more information, I can guide you to the right section or help you find the item directly.",
+        "passed": true
+      }
+    },
+    {
+      "task_id": "run-0004",
+      "task_input": "How do I return an item I purchased?",
+      "llm_call": {
+        "error": null,
+        "latency_ms": 6539,
+        "messages": [
+          {
+            "role": "system",
+            "content": "You are a customer support agent. Respond helpfully and professionally to the customer's issue."
+          },
+          {
+            "role": "user",
+            "content": "How do I return an item I purchased?"
+          }
+        ],
+        "response": "Hello! I'd be happy to help you with the return process.\n\nTo provide you with the most accurate instructions, could you please let me know **which store or website** you purchased the item from?\n\nGenerally, the process involves these steps:\n1.  **Check the Return Policy:** Look for the \"Returns\" or \"FAQ\" section on the retailer's website or check your order confirmation email for the deadline and conditions (e.g., item must be unworn/unopened).\n2.  **Initiate the Return:** Most retailers have a \"My Account\" section where you can select an item and choose \"Return.\" This will often generate a Return Merchandise Authorization (RMA) number or a prepaid shipping label.\n3.  **Pack the Item:** Place the item back in its original packaging with all tags and accessories included.\n4.  **Ship the Item:** Pack the box securely and drop it off at the carrier indicated on the label.\n5.  **Track the Return:** Keep your tracking number handy. Once the retailer receives and inspects the item, the refund will be processed.\n\nIf you can tell me the specific store, I can guide you through their specific steps!",
+        "usage": {
+          "prompt_tokens": 44,
+          "completion_tokens": 249,
+          "total_tokens": 293
+        }
+      },
+      "scoring": {
+        "scoring_mode": "label",
+        "expected_output": "Successful customer-support-triage task",
+        "original_output": "Subject: Re: Your Return Request - Order #20231115-4829\n\nDear John Doe,\n\nThank you for contacting us regarding a return for your Quantum X90 Gaming Mouse (Order #20231115-4829). We understand you'd like to return the item, and we're happy to help.\n\nWe've confirmed that your request is within the 30-day return window. Our standard return policy requires the item to be returned in new condition and with its original packaging. \n\nWe've also noted some reports of scroll wheel malfunction and connect",
+        "original_success": true,
+        "llm_output": "Hello! I'd be happy to help you with the return process.\n\nTo provide you with the most accurate instructions, could you please let me know **which store or website** you purchased the item from?\n\nGenerally, the process involves these steps:\n1.  **Check the Return Policy:** Look for the \"Returns\" or \"FAQ\" section on the retailer's website or check your order confirmation email for the deadline and conditions (e.g., item must be unworn/unopened).\n2.  **Initiate the Return:** Most retailers have a \"My Account\" section where you can select an item and choose \"Return.\" This will often generate a Return Merchandise Authorization (RMA) number or a prepaid shipping label.\n3.  **Pack the Item:** Place the item back in its original packaging with all tags and accessories included.\n4.  **Ship the Item:** Pack the box securely and drop it off at the carrier indicated on the label.\n5.  **Track the Return:** Keep your tracking number handy. Once the retailer receives and inspects the item, the refund will be processed.\n\nIf you can tell me the specific store, I can guide you through their specific steps!",
+        "passed": true
+      }
+    },
+    {
+      "task_id": "run-0005",
+      "task_input": "What is your return policy?",
+      "llm_call": {
+        "error": null,
+        "latency_ms": 2609,
+        "messages": [
+          {
+            "role": "system",
+            "content": "You are a customer support agent. Respond helpfully and professionally to the customer's issue."
+          },
+          {
+            "role": "user",
+            "content": "What is your return policy?"
+          }
+        ],
+        "response": "Hello! I'd be happy to help you with our return policy.\n\nTo provide you with the most accurate information, could you please let me know **which specific product or service** you are inquiring about?\n\nPolicies can vary depending on the item (e.g., electronics, clothing, digital downloads) and the time frame in which the purchase was made. Once you provide those details, I can guide you through the exact steps for returning your item.",
+        "usage": {
+          "prompt_tokens": 41,
+          "completion_tokens": 93,
+          "total_tokens": 134
+        }
+      },
+      "scoring": {
+        "scoring_mode": "label",
+        "expected_output": "Successful customer-support-triage task",
+        "original_output": "Subject: Regarding Your Return Policy Inquiry\n\nDear Customer,\n\nThank you for reaching out! We're happy to clarify our return policy for you.\n\nGenerally, we accept returns within 30 days of purchase, provided the items are in new condition. In these cases, the customer is responsible for covering the return shipping costs.\n\nGreat news! For orders placed after November 1st, 2024, we've extended the return window to 60 days.\n\nFinally, if you receive a damaged or defective item, we'll gladly cover t",
+        "original_success": false,
+        "llm_output": "Hello! I'd be happy to help you with our return policy.\n\nTo provide you with the most accurate information, could you please let me know **which specific product or service** you are inquiring about?\n\nPolicies can vary depending on the item (e.g., electronics, clothing, digital downloads) and the time frame in which the purchase was made. Once you provide those details, I can guide you through the exact steps for returning your item.",
+        "passed": true
+      }
+    },
+    {
+      "task_id": "run-0006",
+      "task_input": "I need help activating my new device.",
+      "llm_call": {
+        "error": null,
+        "latency_ms": 3250,
+        "messages": [
+          {
+            "role": "system",
+            "content": "You are a customer support agent. Respond helpfully and professionally to the customer's issue."
+          },
+          {
+            "role": "user",
+            "content": "I need help activating my new device."
+          }
+        ],
+        "response": "Hello! I'd be happy to help you get your new device activated.\n\nTo provide the most accurate guidance, could you please tell me a bit more about the device? For example:\n\n*   What type of device is it? (e.g., smartphone, laptop, tablet, smart TV, gaming console)\n*   What brand and model are you using?\n*   Are you encountering any specific error messages or issues during the setup process?\n\nOnce I have those details, I can walk you through the activation steps or troubleshoot any problems you might be facing.",
+        "usage": {
+          "prompt_tokens": 43,
+          "completion_tokens": 117,
+          "total_tokens": 160
+        }
+      },
+      "scoring": {
+        "scoring_mode": "label",
+        "expected_output": "Successful customer-support-triage task",
+        "original_output": "Subject: Re: Device Activation Assistance\n\nDear Customer,\n\nThank you for reaching out to us regarding the activation of your new device. We're happy to help get you up and running.\n\nTo assist you effectively, we need to know the model number of your device. This information will allow us to provide you with specific instructions and troubleshoot any potential issues. Please reply to this email with the model number, which is usually located on the device itself, the box it came in, or your purch",
+        "original_success": true,
+        "llm_output": "Hello! I'd be happy to help you get your new device activated.\n\nTo provide the most accurate guidance, could you please tell me a bit more about the device? For example:\n\n*   What type of device is it? (e.g., smartphone, laptop, tablet, smart TV, gaming console)\n*   What brand and model are you using?\n*   Are you encountering any specific error messages or issues during the setup process?\n\nOnce I have those details, I can walk you through the activation steps or troubleshoot any problems you might be facing.",
+        "passed": true
+      }
+    },
+    {
+      "task_id": "run-0007",
+      "task_input": "My payment keeps getting declined.",
+      "llm_call": {
+        "error": null,
+        "latency_ms": 5777,
+        "messages": [
+          {
+            "role": "system",
+            "content": "You are a customer support agent. Respond helpfully and professionally to the customer's issue."
+          },
+          {
+            "role": "user",
+            "content": "My payment keeps getting declined."
+          }
+        ],
+        "response": "I'm sorry to hear you're experiencing this issue. Payment declines can be frustrating, but we can usually resolve them quickly.\n\nTo help me assist you better, could you please provide a few details:\n\n1. **Which payment method** are you using? (e.g., Credit Card, Debit Card, PayPal, Apple Pay, etc.)\n2. **What is the approximate amount** of the transaction?\n3. **When did this start happening?** (e.g., \"Every time I try to pay since yesterday\")\n4. **Do you have any specific error message** displayed when the payment fails? (e.g., \"Insufficient funds,\" \"Card declined,\" \"Transaction blocked,\" etc.)\n5. **Are you trying to pay for a subscription, a one-time purchase, or a refund?**\n\nOnce I have this information, I can guide you through the most likely solutions or help you contact the appropriate support team.",
+        "usage": {
+          "prompt_tokens": 41,
+          "completion_tokens": 193,
+          "total_tokens": 234
+        }
+      },
+      "scoring": {
+        "scoring_mode": "label",
+        "expected_output": "Successful customer-support-triage task",
+        "original_output": "Subject: Regarding Your Recent Order - Payment Issue\n\nDear Customer,\n\nWe're writing to inform you that there was an issue processing the payment for your recent order. Our system indicates that the card ending in 4242 was declined due to an incorrect CVV and exceeding the card limit.\n\nWe've confirmed that the billing address on file (123 Main St, Anytown, CA 91234) is accurate. To resolve this, we kindly ask you to verify your CVV and available card limit with your bank or credit card provider.\n",
+        "original_success": true,
+        "llm_output": "I'm sorry to hear you're experiencing this issue. Payment declines can be frustrating, but we can usually resolve them quickly.\n\nTo help me assist you better, could you please provide a few details:\n\n1. **Which payment method** are you using? (e.g., Credit Card, Debit Card, PayPal, Apple Pay, etc.)\n2. **What is the approximate amount** of the transaction?\n3. **When did this start happening?** (e.g., \"Every time I try to pay since yesterday\")\n4. **Do you have any specific error message** displayed when the payment fails? (e.g., \"Insufficient funds,\" \"Card declined,\" \"Transaction blocked,\" etc.)\n5. **Are you trying to pay for a subscription, a one-time purchase, or a refund?**\n\nOnce I have this information, I can guide you through the most likely solutions or help you contact the appropriate support team.",
+        "passed": true
+      }
+    },
+    {
+      "task_id": "run-0008",
+      "task_input": "I'm having trouble redeeming my rewards points.",
+      "llm_call": {
+        "error": null,
+        "latency_ms": 4910,
+        "messages": [
+          {
+            "role": "system",
+            "content": "You are a customer support agent. Respond helpfully and professionally to the customer's issue."
+          },
+          {
+            "role": "user",
+            "content": "I'm having trouble redeeming my rewards points."
+          }
+        ],
+        "response": "I'm sorry to hear you're experiencing trouble redeeming your rewards points. I'd be happy to help you resolve this!\n\nTo get started, could you please provide a few more details?\n*   **Which platform or app** are you trying to use? (e.g., the website, a specific mobile app, or a physical kiosk)\n*   **What specific error message** are you seeing? (If there is one, please copy and paste it here).\n*   **When did this issue start?** Did it work recently, or is this a new problem?\n*   **What type of reward** were you trying to redeem?\n\nOnce I have a bit more context, I can guide you through the troubleshooting steps or help you escalate this to our technical team if needed.",
+        "usage": {
+          "prompt_tokens": 45,
+          "completion_tokens": 164,
+          "total_tokens": 209
+        }
+      },
+      "scoring": {
+        "scoring_mode": "label",
+        "expected_output": "Successful customer-support-triage task",
+        "original_output": "Subject: Regarding Your Recent Rewards Redemption Attempt\n\nDear Jane Doe,\n\nThank you for contacting us. I understand you recently attempted to redeem 3000 points ($30) on November 15th, 2024, but the transaction was unsuccessful. I sincerely apologize for any inconvenience this may have caused.\n\nThe reason for the failed redemption is that you currently have 2500 points available, equivalent to $25. Additionally, we experienced a temporary system issue on November 14th, which was resolved on Nov",
+        "original_success": true,
+        "llm_output": "I'm sorry to hear you're experiencing trouble redeeming your rewards points. I'd be happy to help you resolve this!\n\nTo get started, could you please provide a few more details?\n*   **Which platform or app** are you trying to use? (e.g., the website, a specific mobile app, or a physical kiosk)\n*   **What specific error message** are you seeing? (If there is one, please copy and paste it here).\n*   **When did this issue start?** Did it work recently, or is this a new problem?\n*   **What type of reward** were you trying to redeem?\n\nOnce I have a bit more context, I can guide you through the troubleshooting steps or help you escalate this to our technical team if needed.",
+        "passed": true
+      }
+    },
+    {
+      "task_id": "run-0009",
+      "task_input": "I haven't received a confirmation email after placing my order.",
+      "llm_call": {
+        "error": null,
+        "latency_ms": 5419,
+        "messages": [
+          {
+            "role": "system",
+            "content": "You are a customer support agent. Respond helpfully and professionally to the customer's issue."
+          },
+          {
+            "role": "user",
+            "content": "I haven't received a confirmation email after placing my order."
+          }
+        ],
+        "response": "I'm sorry to hear that you haven't received your confirmation email. This can be frustrating, and I'd be happy to help you resolve it.\n\nTo get started, could you please provide a few details?\n\n1.  **When** did you place the order?\n2.  Do you have a **confirmation number** or the **order ID** from the time you placed the order?\n3.  Did you receive any notification on your **phone** or in your **browser** when you placed the order?\n\nOnce I have this information, I can check our system for you.\n\n**In the meantime, here are a few quick things you can try:**\n*   **Check your Spam/Junk folder:** Sometimes automated emails get filtered there.\n*   **Check your email filters:** If you have a specific rule that moves emails from certain senders to another folder, it might be hiding the message.\n*   **Check your email address:** Please ensure you entered the correct email address when placing the order.\n\nPlease reply with the details above, and I'll take it from there.",
+        "usage": {
+          "prompt_tokens": 47,
+          "completion_tokens": 228,
+          "total_tokens": 275
+        }
+      },
+      "scoring": {
+        "scoring_mode": "label",
+        "expected_output": "Successful customer-support-triage task",
+        "original_output": "Subject: Regarding your Order #7891 Confirmation\n\nDear Customer,\n\nThank you for contacting us regarding your order confirmation. We understand your concern about not receiving an email.\n\nWe've checked our system and found that order #7891 is currently in 'pending' status. Unfortunately, the payment for this order has failed after three attempts. As per our policy, confirmation emails are only sent after a successful payment and when the order status changes to 'confirmed.'\n\nSince the payment fai",
+        "original_success": true,
+        "llm_output": "I'm sorry to hear that you haven't received your confirmation email. This can be frustrating, and I'd be happy to help you resolve it.\n\nTo get started, could you please provide a few details?\n\n1.  **When** did you place the order?\n2.  Do you have a **confirmation number** or the **order ID** from the time you placed the order?\n3.  Did you receive any notification on your **phone** or in your **browser** when you placed the order?\n\nOnce I have this information, I can check our system for you.\n\n**In the meantime, here are a few quick things you can try:**\n*   **Check your Spam/Junk folder:** Sometimes automated emails get filtered there.\n*   **Check your email filters:** If you have a specific rule that moves emails from certain senders to another folder, it might be hiding the message.\n*   **Check your email address:** Please ensure you entered the correct email address when placing the order.\n\nPlease reply with the details above, and I'll take it from there.",
+        "passed": true
+      }
+    }
+  ]
+}
