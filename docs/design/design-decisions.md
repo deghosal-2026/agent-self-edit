@@ -91,3 +91,8 @@
 **Date:** M5 (discrepancy audit fix)
 **Decision:** Frozen-section parsing, edit-distance calculation, and TF-IDF drift primitives live in `src/agent_self_edit/guardrails.py` as a standalone module, independent of the promotion gate.
 **Rationale:** PRD 02-architecture §2.2.5 specifies a separate Guardrail Module (F-06/F-07). The promotion gate (M4) re-imports the primitives; the analyzer (M7) and diff visualization (M8) can reuse them without depending on the gate.
+
+## DD-19 — Dedup uses TF-IDF similarity, not embedding
+**Date:** M7
+**Decision:** Proposal deduplication (#49) uses TF-IDF cosine similarity via `compute_drift_tfidf()` (skip if `1 - drift > threshold`, default 0.85), not embedding similarity as the M7 ticket wording states.
+**Rationale:** The `LLMProvider` interface has only `complete()` — there is no embedding endpoint in v0.1.0. Consistent with DD-13 (TF-IDF for all similarity in v0.1.0; embeddings deferred to v0.2.0). Hermetic, deterministic, zero extra dependencies.

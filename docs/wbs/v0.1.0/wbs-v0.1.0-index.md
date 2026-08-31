@@ -35,7 +35,7 @@ M1 ──► M3 ──► M4 ──► M5 ──► M6 ──► M7 ──► M8
 - M4 (Promotion Gate) depends on M3 (A/B Test results)
 - M5 (Prompt Registry) depends on M4 (gate decisions to store)
 - M6 (Guardrail Module) depends on M5 (needs registry to diff against)
-- M7 (Analyzer) depends on M2 (traces) and M6 (guardrails for proposal constraints)
+- M7 (Analyzer) depends on M2 (traces) and M6 (guardrails for proposal constraints); near-miss dedup adds an M4 GateAuditLog dependency (#84)
 - M8 (Diff Viz) depends on M5 (needs registry to diff versions)
 - M9 (CLI) depends on M7 and M8 — wraps all operations
 - M10 (Field Test) depends on M9 — needs the CLI to run
