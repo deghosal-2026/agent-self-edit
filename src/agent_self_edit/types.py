@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Literal
 
 _ISO_8601 = re.compile(
     r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:?\d{2})$"
@@ -125,3 +125,37 @@ def validate_trace(trace: dict[str, Any]) -> Trace:
 def utc_now_iso() -> str:
     """Current UTC time as an ISO 8601 string (UTC, second precision)."""
     return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+
+
+@dataclass(frozen=True)
+class EditProposal:
+    """A candidate prompt edit proposed by the feedback analyzer."""
+
+    section: str
+    old_text: str
+    new_text: str
+    hypothesis: str
+    expected_improvement: str
+    evidence_traces: list[str] = field(default_factory=list)
+    edit_id: str | None = None
+
+
+@dataclass(frozen=True)
+class CheckResult:
+    """Outcome of a single promotion-gate check."""
+
+    name: str
+    passed: bool
+    value: float
+    threshold: float
+    details: str
+
+
+@dataclass(frozen=True)
+class GateResult:
+    """Overall decision of the promotion gate."""
+
+    decision: Literal["promote", "reject", "near_miss"]
+    checks: tuple[CheckResult, ...] = field(default_factory=tuple)
+    edit_id: str | None = None
+    reason: str = ""

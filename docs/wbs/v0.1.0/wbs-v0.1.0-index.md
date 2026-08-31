@@ -11,7 +11,7 @@
 | M1 | Scaffold + Config | F-13, F-10, F-01 (partial) | CUJ 5 | [#1–#8](https://github.com/deghosal-2026/agent-self-edit/issues/1) | [part1](wbs-v0.1.0-part1-foundation.md) | ✅ Done |
 | M2 | Trace Ingestion | F-01, F-13 | CUJ 1 | [#9–#14](https://github.com/deghosal-2026/agent-self-edit/issues/8) | [part1](wbs-v0.1.0-part1-foundation.md) | ✅ Done |
 | M3 | A/B Test Engine | F-03 | CUJ 1 | [#15–#21](https://github.com/deghosal-2026/agent-self-edit/issues/14) | [part2](wbs-v0.1.0-part2-core-engine.md) | ✅ Done |
-| M4 | Promotion Gate | F-04, F-11 | CUJ 2 | [#22–#31](https://github.com/deghosal-2026/agent-self-edit/issues/21) | [part2](wbs-v0.1.0-part2-core-engine.md) | ⬜ Pending |
+| M4 | Promotion Gate | F-04, F-11 | CUJ 2 | [#22–#31](https://github.com/deghosal-2026/agent-self-edit/issues/21) | [part2](wbs-v0.1.0-part2-core-engine.md) | ✅ Done |
 | M5 | Prompt Registry | F-05, F-12 | CUJ 3, CUJ 4 | [#32–#38](https://github.com/deghosal-2026/agent-self-edit/issues/31) | [part3](wbs-v0.1.0-part3-storage-guardrails.md) | ⬜ Pending |
 | M6 | Guardrail Module | F-06, F-07 | CUJ 9 | [#39–#44](https://github.com/deghosal-2026/agent-self-edit/issues/38) | [part3](wbs-v0.1.0-part3-storage-guardrails.md) | ⬜ Pending |
 | M7 | Feedback Analyzer | F-02 | CUJ 1, CUJ 2 | [#45–#51](https://github.com/deghosal-2026/agent-self-edit/issues/44) | [part4](wbs-v0.1.0-part4-intelligence.md) | ⬜ Pending |
