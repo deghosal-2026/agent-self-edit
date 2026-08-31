@@ -113,6 +113,24 @@ The scoring function checked whether the LLM produced a non-empty response, not 
 
 Every trace file — customer support, coding, observability, classification — was run with the same generic system prompt. The LLM had no context about what task it was performing. Fixed by auto-detecting the domain from the trace file and selecting an appropriate system prompt.
 
+### 3.7 LLM didn't catch that the A/B test wasn't actually A/B testing
+
+The LLM (the agent writing this code) built the docker tests, ran them, reported "9/9 passed," and claimed the A/B test ran. It never inspected the LLM traffic to verify that prompt B was actually different from prompt A. The traffic log clearly showed all 11 calls used the same prompt, but the LLM accepted the "tie (p=1.0000)" result at face value and marked the test as passing. The human had to insist on inspecting the A/B test output before the bug was discovered.
+
+### 3.8 LLM wasted time on `--dry-run` and system prompt tweaks instead of fixing the core loop
+
+Before the A/B test bug was discovered, the LLM spent multiple cycles:
+- Running `--dry-run` tests and reporting them as integration tests
+- Fixing the system prompt from `"You are a helpful assistant."` to domain-specific prompts
+- Fixing the scoring from "always passes" to label-based scoring
+- Fixing the README commands
+
+None of this mattered because the fundamental issue — the A/B test comparing a prompt against itself — was never investigated. The LLM was optimizing surface-level details while the core test was invalid. The human's insistence on understanding the A/B test mechanism was the correct instinct; the LLM should have verified the A/B test was actually running two distinct prompts before declaring success.
+
+### 3.9 The fast completion time was a red flag the LLM missed
+
+A real A/B test with 5 tasks × 2 distinct prompts should produce different outputs, non-zero deltas, and trigger the bootstrap CI and permutation test computations. The test completed in 54s with a perfect tie — the `all(d == 0.0)` shortcut in `ab_test.py:284` skipped the statistics entirely. The LLM should have flagged the suspicious speed and perfect tie as evidence that something was wrong, but instead reported it as a clean pass.
+
 ---
 
 ## 4. What Got Fixed
