@@ -403,25 +403,46 @@ Document as DD-19.
 ## 8. Batch Analysis (#50)
 
 ```python
+@dataclass
+class AnalysisResult:
+    """Result of a batch analysis, including cost tracking."""
+
+    proposals: list[EditProposal] = field(default_factory=list)
+    tokens_used: int = 0
+    cost_usd: float = 0.0
+    cost_aborted: bool = False
+
 def analyze_batch(
     traces: list[Trace],
     current_prompt: str,
     frozen_sections: list[str] | None,
     llm_provider: LLMProvider,
     max_proposals: int = 3,
-) -> list[EditProposal]:
+    near_misses: list[EditProposal] | None = None,
+    config: Config | None = None,
+) -> AnalysisResult:
 ```
+
+> **Return type note (deviation from original ticket wording):** M7 #50
+> worded `analyze_batch() -> list[EditProposal]`, but the implementation
+> returns an **`AnalysisResult`** envelope. Cost tracking (#51) must be
+> observable by the caller — the M9 loop needs to distinguish "no
+> failures → no analysis" from "analysis ran but was cost-aborted", which
+> a bare list cannot express (both would be `[]`). The envelope carries
+> `proposals`, `tokens_used`, `cost_usd`, `cost_aborted`.
 
 ### 8.1 Flow
 
 1. Filter to **failed** traces only (`trace.success is False`).
-2. No failures → return `[]` (no LLM call, no cost).
+2. No failures → return `AnalysisResult()` with empty proposals (no LLM call, no cost).
 3. Build the prompt via `build_analyzer_prompt(current_prompt, failed, max_proposals)`.
-4. Call `analyze()` → get raw proposals.
-5. Truncate to `max_proposals` (don't re-call the LLM).
-6. Validate each proposal via `validate_proposal()` → drop invalid ones.
-7. Deduplicate against near-misses (if available) via `deduplicate_proposals()`.
-8. Return the final list.
+4. **Pre-call cost check** — if prompt cost exceeds ceiling → return `AnalysisResult(cost_aborted=True)` (abort before spending).
+5. Call the LLM (via `_analyze_with_response()`), capture raw response text + parsed proposals.
+6. Truncate to `max_proposals` (don't re-call the LLM).
+7. Validate each proposal via `validate_proposal()` → drop invalid ones.
+8. Deduplicate against near-misses (if available) via `deduplicate_proposals()`.
+9. **Post-call cost check** — if total cost exceeds ceiling → return partial proposals with `cost_aborted=True`.
+10. Return `AnalysisResult(proposals, tokens_used, cost_usd, cost_aborted)`.
 
 ### 8.2 Pattern Grouping
 
@@ -442,37 +463,57 @@ Why not cluster in code?
 `analyze_batch()` tracks token cost:
 
 ```python
-prompt_text = build_analyzer_prompt(current_prompt, failed, max_proposals)
-prompt_tokens = estimate_tokens(prompt_text)
+failed = [t for t in traces if not t.success]
+ceiling = config.analyzer.cost_ceiling_usd if config else 0.50
 
 # pre-call ceiling check
+prompt_text = build_analyzer_prompt(current_prompt, failed, max_proposals)
+prompt_tokens = estimate_tokens(prompt_text)
 pre_cost = estimate_cost(prompt_tokens)
-if pre_cost > config.analyzer.cost_ceiling_usd:
+if pre_cost > ceiling:
     logger.warning("Analyzer: pre-call cost %.4f exceeds ceiling %.4f", pre_cost, ceiling)
-    return []  # abort before spending
+    return AnalysisResult(cost_aborted=True, tokens_used=prompt_tokens, cost_usd=pre_cost)
 
-proposals = analyze(failed, current_prompt, frozen_sections, llm_provider)
-response_tokens = estimate_tokens(json_response)
-total_cost = estimate_cost(prompt_tokens + response_tokens)
+# LLM call — must capture the raw response for response-token estimation
+response, proposals = _analyze_with_response(failed, current_prompt, frozen_sections, llm_provider)
+total_tokens = prompt_tokens + estimate_tokens(response)
+total_cost = estimate_cost(total_tokens)
 
-if total_cost > ceiling:
+cost_aborted = total_cost > ceiling
+if cost_aborted:
     logger.warning("Analyzer: post-call cost %.4f exceeds ceiling %.4f", total_cost, ceiling)
-    # return partial results (don't discard work already done)
+    # partial results still returned (don't discard work already done)
 
-return proposals[:max_proposals]
+validated = [
+    p for p in proposals[:max_proposals]
+    if not validate_proposal(p, current_prompt, frozen_sections)
+]
+validated = deduplicate_proposals(validated, near_misses or [])
+
+return AnalysisResult(
+    proposals=validated, tokens_used=total_tokens, cost_usd=total_cost, cost_aborted=cost_aborted,
+)
 ```
+
+> **Why `_analyze_with_response()` instead of `analyze()`:** the caller
+> needs the raw LLM response text to compute `estimate_tokens(response)`.
+> `analyze()` returns only `list[EditProposal]`, so a private helper
+> mirrors the LLM-call + parse logic and returns `(response_text,
+> proposals)`. This keeps cost tracking accurate.
 
 ### 8.4 Relationship to `analyze()`
 
-`analyze_batch()` is a thin wrapper around `analyze()`:
+`analyze_batch()` is an orchestration layer over the same LLM-call +
+parse logic (via `_analyze_with_response()`):
 
 | `analyze()` | `analyze_batch()` |
 |---|---|
-| Raw: LLM call + parse | Orchestration: filter, call `analyze()`, validate, dedup, truncate |
-| No cost tracking | Cost tracking + ceiling |
+| Raw: LLM call + parse; returns `list[EditProposal]` | Orchestration: filter, LLM+parse (via helper), validate, dedup, truncate; returns `AnalysisResult` |
+| No cost tracking | Cost tracking + ceiling (pre + post) |
 | No validation | Runs `validate_proposal()` on each |
 | No dedup | Runs `deduplicate_proposals()` |
 | No max limit | Enforces `max_proposals` |
+| No near-misses | Accepts `near_misses` for dedup |
 
 The CLI loop (M9) calls `analyze_batch()`, not `analyze()` directly.
 
@@ -510,10 +551,22 @@ class MockAnalyzer:
         frozen_sections: list[str] | None,
         llm_provider: LLMProvider,
         max_proposals: int = 3,
-    ) -> list[EditProposal]:
+        near_misses: list[EditProposal] | None = None,
+        config: Config | None = None,
+    ) -> AnalysisResult:
         self.calls += 1
-        return list(self._proposals)[:max_proposals]
+        return AnalysisResult(
+            proposals=list(self._proposals)[:max_proposals],
+            tokens_used=0,
+            cost_usd=0.0,
+            cost_aborted=False,
+        )
 ```
+
+> **Mock signature matches the real `analyze_batch()`** — it mirrors the
+> `AnalysisResult` envelope and the `near_misses`/`config` params. The
+> mock ignores `llm_provider`, `near_misses`, and `config`; cost is
+> always zero (no LLM call).
 
 Design notes:
 - `MockAnalyzer` does **not** extend `LLMProvider` — it replaces the
@@ -538,23 +591,25 @@ prompt_cost = estimate_cost(prompt_tokens)
 
 if prompt_cost > ceiling:
     logger.warning("Analyzer cost ceiling exceeded before LLM call")
-    return []
+    return AnalysisResult(cost_aborted=True, tokens_used=prompt_tokens, cost_usd=prompt_cost)
 
-# ... LLM call ...
+# LLM call — capture the raw response for token estimation
+response, proposals = _analyze_with_response(failed, current_prompt, frozen_sections, llm_provider)
 response_tokens = estimate_tokens(response)
 total_cost = estimate_cost(prompt_tokens + response_tokens)
 
-if total_cost > ceiling:
+cost_aborted = total_cost > ceiling
+if cost_aborted:
     logger.warning(
         "Analyzer cost %.4f exceeds ceiling %.4f — returning partial results",
         total_cost, ceiling,
     )
 ```
 
-- Check **before** the LLM call (prompt tokens are known).
-- Check **after** the LLM call (response tokens added).
-- If ceiling exceeded post-call → log warning, return partial results
-  (don't discard work already done).
+- Check **before** the LLM call — abort with `AnalysisResult(cost_aborted=True)`
+  (prompt tokens are known).
+- Check **after** the LLM call — set `cost_aborted=True` but still return
+  partial proposals (don't discard work already done).
 - `MockAnalyzer` → cost is always 0 (no LLM call) → ceiling never trips.
 
 ### 9.3 Cost Ceiling Location
@@ -585,31 +640,31 @@ All tests use `MockProvider` with predetermined JSON responses.
 
 | Test | What it covers |
 |------|----------------|
-| `test_edit_proposal_fields` | #45 — verify `EditProposal` dataclass exists with all fields |
-| `test_analyze_empty_traces` | #47 — empty traces → `[]`, no LLM call |
+| `test_edit_proposal_dataclass_exists (in test_analyzer.py)` | #45 — verify `EditProposal` dataclass exists with all fields |
+| `test_analyze_empty_traces_no_call` | #47 — empty traces → `[]`, no LLM call |
 | `test_analyze_valid_json` | #47 — MockProvider returns JSON array → parses to `EditProposal` list |
-| `test_analyze_invalid_json` | #47 — MockProvider returns non-JSON → `AnalyzerError` |
-| `test_analyze_malformed_proposal` | #47 — JSON object missing `hypothesis` → skipped, rest kept |
+| `test_analyze_invalid_json_raises` | #47 — MockProvider returns non-JSON → `AnalyzerError` |
+| `test_analyze_malformed_proposal_skipped` | #47 — JSON object missing `hypothesis` → skipped, rest kept |
 | `test_analyze_markdown_fences` | #47 — response wrapped in ```` ```json ``` ```` → stripped, parsed |
-| `test_analyze_llm_failure` | #47 — `ProviderError` → `AnalyzerError` |
+| `test_analyze_llm_failure_raises` | #47 — `ProviderError` → `AnalyzerError` |
 | `test_annotate_prompt_no_frozen` | #46 — no frozen sections → no `[FROZEN]` markers |
 | `test_annotate_prompt_with_frozen` | #46 — frozen lines get `[FROZEN]` prefix |
-| `test_build_analyzer_prompt` | #46 — assembled prompt contains annotated prompt + traces + format instructions |
-| `test_validate_proposal_all_valid` | #48 — valid proposal → empty error list |
-| `test_validate_proposal_section_empty` | #48 — empty section → error |
-| `test_validate_proposal_old_text_not_found` | #48 — old_text not in prompt → error |
-| `test_validate_proposal_frozen_section` | #48 — section is frozen → error |
-| `test_validate_proposal_all_errors` | #48 — multiple errors returned at once |
-| `test_dedup_no_near_misses` | #49 — empty near-misses → all kept |
-| `test_dedup_identical_proposals` | #49 — same new_text → intra-dedup |
-| `test_dedup_similar_to_near_miss` | #49 — similarity > 0.85 → skipped |
+| `test_build_analyzer_prompt_contains_sections` | #46 — assembled prompt contains annotated prompt + traces + format instructions |
+| `test_validate_valid` | #48 — valid proposal → empty error list |
+| `test_validate_empty_section` | #48 — empty section → error |
+| `test_validate_old_text_not_found` | #48 — old_text not in prompt → error |
+| `test_validate_frozen_section` | #48 — section is frozen → error |
+| `test_validate_all_errors_together` | #48 — multiple errors returned at once |
+| `test_dedup_no_near_misses_keeps_all` | #49 — empty near-misses → all kept |
+| `test_dedup_identical_intra` | #49 — same new_text → intra-dedup |
+| `test_dedup_similar_to_near_miss_skipped` | #49 — similarity > 0.85 → skipped |
 | `test_dedup_different_kept` | #49 — low similarity → kept |
 | `test_analyze_batch_no_failures` | #50 — all traces succeed → `[]` |
 | `test_analyze_batch_max_proposals` | #50 — 5 proposals returned, max 3 → truncated to 3 |
 | `test_analyze_batch_validates` | #50 — invalid proposals dropped after analysis |
 | `test_mock_analyzer_no_llm` | #51 — MockAnalyzer.calls == 1, no LLM provider used |
 | `test_mock_analyzer_returns_predetermined` | #51 — returns the proposals it was given |
-| `test_cost_tracking_ceiling` | #51 — cost ceiling exceeded → abort / partial results |
+| `test_analyze_batch_cost_ceiling_aborts` | #51 — cost ceiling exceeded → abort / partial results |
 
 ### 11.2 LLM Tests (manual, CI-skipped)
 
@@ -627,15 +682,17 @@ Failed Traces (from TraceStore)
 │  1. filter failed     │
 │  2. build prompt      │── annotate_prompt() ── frozen_line_indexes()
 │  3. cost pre-check    │── estimate_tokens() / estimate_cost()
-│  4. call analyze()    │
-│  5. truncate max      │
-│  6. validate each     │── validate_proposal() ── parse_frozen_sections()
-│  7. deduplicate       │── deduplicate_proposals() ── compute_drift_tfidf()
-│  8. return            │
+│  4. call LLM + parse  │── _analyze_with_response() (captures raw text)
+│  5. cost post-check   │
+│  6. truncate max      │
+│  7. validate each     │── validate_proposal() ── parse_frozen_sections()
+│  8. deduplicate       │── deduplicate_proposals() ── compute_drift_tfidf()
+│  9. return            │
 └───────────┬───────────┘
             │
             ▼
-     list[EditProposal]
+      AnalysisResult
+      (proposals, tokens_used, cost_usd, cost_aborted)
             │
             ▼
    (A/B Test Engine → Promotion Gate → Registry)
