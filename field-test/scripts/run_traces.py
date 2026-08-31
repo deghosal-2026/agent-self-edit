@@ -14,7 +14,7 @@ Usage:
       --provider openai \
       --model gpt-4o-mini
 
-    # Override key via env: LLM_API_KEY, LLM_ENDPOINT, LLM_MODEL
+    # Override key via env: OPENROUTER_API_KEY, LLM_ENDPOINT, LLM_MODEL
 """
 
 import argparse
@@ -131,9 +131,9 @@ def main():
     parser.add_argument("--output", "-o", help="Output JSON file (default: auto-generated)")
     args = parser.parse_args()
 
-    api_key = os.environ.get("LLM_API_KEY")
+    api_key = os.environ.get("OPENROUTER_API_KEY")
     if not api_key:
-        print("ERROR: set LLM_API_KEY environment variable", file=sys.stderr)
+        print("ERROR: set OPENROUTER_API_KEY environment variable", file=sys.stderr)
         sys.exit(1)
 
     provider_slug = args.provider

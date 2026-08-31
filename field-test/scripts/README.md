@@ -10,12 +10,12 @@ All scripts run from the repo root. Results are stored under `field-test/v0.1.0/
 
 ### Required
 
-`LLM_API_KEY` must be set in the environment. No fallbacks, no defaults.
+`OPENROUTER_API_KEY` must be set in the environment. No defaults.
 
 ### Local OMLX
 
 ```bash
-export LLM_API_KEY=omlx-test
+export OPENROUTER_API_KEY=omlx-test
 
 # Real traces (all 5 files)
 for f in field-test/v0.1.0/corpus/real-life/real-traces/hf-*.jsonl; do
@@ -47,10 +47,10 @@ python field-test/scripts/run_traces.py /tmp/synth-classification.jsonl \
 
 ### Cloud LLM (OpenRouter)
 
-Uses the OpenRouter API. Set `LLM_API_KEY` to your OpenRouter key.
+Uses the OpenRouter API. Set `OPENROUTER_API_KEY` in your env.
 
 ```bash
-export LLM_API_KEY=sk-or-v1-...
+export OPENROUTER_API_KEY=sk-or-v1-...
 
 # Real traces — use a fast/cheap model
 for f in field-test/v0.1.0/corpus/real-life/real-traces/hf-*.jsonl; do
@@ -81,14 +81,14 @@ Supported models (set via `--model`): `google/gemini-2.0-flash-001`, `openai/gpt
 
 ```bash
 # Local OMLX
-export LLM_API_KEY=omlx-test
+export OPENROUTER_API_KEY=omlx-test
 export LLM_PROVIDER=omlx
 export LLM_MODEL=qwen3.5-9b-mlx-4bit
 export LLM_ENDPOINT=http://localhost:8000/v1
 python field-test/scripts/run_traces.py field-test/v0.1.0/corpus/real-life/real-traces/hf-customer-support-traces.jsonl
 
 # Cloud — just swap the env vars
-export LLM_API_KEY=sk-or-v1-...
+export OPENROUTER_API_KEY=sk-or-v1-...
 export LLM_PROVIDER=openai
 export LLM_MODEL=google/gemini-2.0-flash-001
 export LLM_ENDPOINT=https://openrouter.ai/api/v1
@@ -97,9 +97,7 @@ python field-test/scripts/run_traces.py field-test/v0.1.0/corpus/real-life/real-
 
 ### Output
 
-| Var | Purpose | Example |
-|-----|---------|--------|
-| `LLM_API_KEY` | API key (required, no fallback) | `omlx-test`, `sk-or-v1-...` |
+| `OPENROUTER_API_KEY` | API key (required, no fallback) | `omlx-test`, `sk-or-v1-...` |
 | `LLM_PROVIDER` | `omlx` or `openai` | `omlx` |
 | `LLM_MODEL` | Model name | `qwen3.5-9b-mlx-4bit`, `google/gemini-2.0-flash-001` |
 | `LLM_ENDPOINT` | API base URL | `http://localhost:8000/v1`, `https://openrouter.ai/api/v1` |
