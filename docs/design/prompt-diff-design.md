@@ -100,53 +100,73 @@ Section edit frequency (last 20 cycles):
 
 Every edit cycle produces a guardrail report showing what was checked and what passed. This proves the system didn't change randomly — it changed within constraints.
 
+The CLI render is an **aligned text table** (PRD M8.2, ticket #53) — not a
+box-draw card. Columns: check name, passed/failed, value, threshold. Summary
+line "All passed" or "N failed".
+
 ```
 Guardrail check — Edit #7:
-┌──────────────────────────────────────────────────────┐
-│  ✅ Frozen core sections   — 12 lines untouched      │
-│  ✅ Edit-distance limit    — 3 lines changed (max 5) │
-│  ✅ Drift threshold        — 0.12 (max 0.30)         │
-│  ✅ Sample floor           — 78 trials (min 50)      │
-│  ✅ Effect size            — +12.4% (min 5%)         │
-│  ✅ Confidence interval    — p<0.01                  │
-│                                                      │
-│  All guardrails passed. Edit promoted to v7.         │
-└──────────────────────────────────────────────────────┘
+  Check                 Result   Value       Threshold
+  --------------------  -------  ----------  ----------
+  Frozen core sections  ✅ pass  12 lines    0 (must not change)
+  Edit-distance limit   ✅ pass  3 lines     5 lines
+  Drift threshold       ✅ pass  0.12        0.30
+  Sample floor          ✅ pass  78 trials   50 trials
+  Effect size           ✅ pass  +12.4%      +5%
+  Confidence interval   ✅ pass  p<0.01      p<0.05
+  All guardrails passed. Edit promoted to v7.
 ```
 
 **Rejected edit guardrail report:**
 
 ```
 Guardrail check — Edit #8 (REJECTED):
-┌──────────────────────────────────────────────────────┐
-│  ✅ Frozen core sections   — 12 lines untouched      │
-│  ✅ Edit-distance limit    — 2 lines changed (max 5) │
-│  ❌ Drift threshold        — 0.35 (max 0.30)         │
-│  ✅ Sample floor           — 60 trials (min 50)      │
-│  ❌ Effect size            — +2.1% (min 5%)          │
-│  ❌ Confidence interval    — p<0.15 (min p<0.05)     │
-│                                                      │
-│  3 guardrails failed. Edit archived.                 │
-│  Near-miss: similar edit proposed 2 times before.    │
-└──────────────────────────────────────────────────────┘
+  Check                 Result   Value       Threshold
+  --------------------  -------  ----------  ----------
+  Frozen core sections  ✅ pass  12 lines    0 (must not change)
+  Edit-distance limit   ✅ pass  2 lines     5 lines
+  Drift threshold       ❌ fail  0.35        0.30
+  Sample floor          ✅ pass  60 trials   50 trials
+  Effect size           ❌ fail  +2.1%       +5%
+  Confidence interval   ❌ fail  p<0.15      p<0.05
+  3 guardrails failed. Edit archived.
+  Near-miss: similar edit proposed 2 times before.
 ```
+
+Table rules:
+- Value/threshold formatting is function-selected (ints shown as ints, floats to 3 dp, p-values to 2 dp, effect size as %).
+- The exact column widths are computed from content (left-aligned name, centered Result, right-aligned Value/Threshold).
+- Color: pass rows green, fail rows red (see §3.1 color modes).
 
 ## 3. Output Surfaces
 
 ### 3.1 CLI
 
+**Edit summary is a single line** (PRD M8.3, ticket #54):
+
+```
+Edit #7 — Promoted — +12.4% accuracy (p<0.01, n=78) — 3 lines
+```
+
+Template: `Edit #{N} — {decision} — {±X.X%} accuracy (p<{val}, n={trials}) — {N} line(s)`
+
+| Decision | Line renders |
+|----------|--------------|
+| `promote` | `Edit #7 — Promoted — +12.4% accuracy (p<0.01, n=78) — 3 lines` |
+| `reject` | `Edit #8 — Rejected — (drift, effect, CI) — 2 lines` |
+| `near_miss` | `Edit #9 — Near-miss — (drift) — 1 line` |
+| rollback event | `Edit #10 — Rollback — reverted to v6 — 0 lines` |
+
+- Promoted line includes the A/B result (`effect_size` %, `p_value`, `n_trials`).
+- Rejected/near-miss include the failed check names (from `GateResult.checks`).
+- Singular/plural handled (`1 line` vs `3 lines`).
+
 ```
 $ agent-self-edit diff v6 v7
 
-Edit #7 — Promoted ⭐
-+12.4% accuracy (p<0.01, n=78)
-
-  -When classifying tickets, check the subject line first.
-  +When classifying tickets, check the subject line + body first.
-
-  -For ambiguous cases, flag for human review.
-  +For ambiguous cases, check the user's history before flagging.
-
+Edit #7 — Promoted — +12.4% accuracy (p<0.01, n=78) — 3 lines
+  diff: -When classifying tickets, check the subject line first.
+        +When classifying tickets, check the subject line + body first.
   Frozen core: 12 lines unchanged.
   Rollback: agent-self-edit rollback --version 6
 ```
@@ -158,6 +178,34 @@ Edit #7  ✅ All passed    Promoted   3 lines changed
 Edit #8  ❌ 3 failed     Rejected   2 lines changed (drift, effect, CI)
 Edit #9  ✅ All passed    Promoted   1 line changed
 ```
+
+### 3.1.1 Color Modes (`--color auto|always|never`)
+
+| Mode | Behavior |
+|------|----------|
+| `auto` | Detect TTY (e.g. `click` context; if stdout is a TTY) → color, else plain |
+| `always` | Force color (ANSI codes) even when piped |
+| `never` | Plain text — **no ANSI characters emitted at all** |
+
+- Colors (per DD-02): added lines green, removed lines red, modified yellow,
+  unchanged white, **frozen sections gray**.
+- Use a small internal helper that wraps a string in ANSI only when the
+  active mode allows it. `click.style(text, fg=...)` is the renderer; the
+  mode gate decides whether to pass the color through or return plain text.
+
+### 3.1.2 Markdown Output (`--format markdown`)
+
+| Surface | Markdown form |
+|---------|---------------|
+| Inline diff | fenced code block ```` ```diff ````  with `-`/`+` lines |
+| Side-by-side | two-col table? — no; keep inline fenced block (side-by-side not representable cleanly) |
+| Guardrail report | markdown table (`\| Check \| Result \| Value \| Threshold \|`) |
+| Edit summary | plain line (no special markdown) |
+| Edit density | fenced code block with the bar chart |
+
+Edge cases:
+- Identical prompts → single line `no changes` (both plain + markdown).
+- Empty registry / no history → density chart is empty (zero-height bar block).
 
 ### 3.2 Dashboard (Web UI)
 
@@ -216,3 +264,82 @@ The user should see the edit and the evidence for its promotion or rejection in 
 
 - [PRD 05 — Features](../prd/05-features.md) — Feature set including F-08 (diff view), F-09 (edit density), F-10 (guardrail report)
 - [PRD 04 — Users and CUJs](../prd/04-users-and-cujs.md) — CUJ-01 (deploy, observe, improve), CUJ-04 (rollback), CUJ-08 (drift detection)
+
+## 6. M8 Implementation Contract
+
+> Signatures, consumed types, and test matrix for M8 (#52–#55). Mirrors the
+> D7 pattern so the build is unambiguous.
+
+### 6.1 Function Signatures
+
+```python
+# Module: src/agent_self_edit/diff.py
+
+def format_diff_inline(diff_result: DiffResult, color: str = "never") -> str: ...
+def format_diff_side_by_side(diff_result: DiffResult, color: str = "never") -> str: ...
+def format_guardrail_report(gate_result: GateResult, color: str = "never") -> str: ...
+def format_edit_summary(
+    edit_id: str | int,
+    gate_result: GateResult | None,
+    ab_result: ABResult | None,
+) -> str: ...
+def format_edit_density(registry: Registry, window: int = 20) -> str: ...
+def render_inline(diff_result: DiffResult, color: str = "never") -> str: ...
+def render_guardrail_table(gate_result: GateResult, color: str = "never") -> str: ...
+def render_density_bars(per_section: dict[str, int]) -> str: ...
+def _color(text: str, mode: str, fg: str | None) -> str: ...
+```
+
+### 6.2 Consumed Types
+
+| Type | Source | Used by |
+|------|--------|---------|
+| `DiffResult` (added/removed/modified/unchanged_count/frozen_unchanged_count) | `registry.py` (M5) | `format_diff_inline`, `format_diff_side_by_side` |
+| `GateResult` (decision, checks: tuple[CheckResult]) | `types.py` (M4) | `format_guardrail_report`, `format_edit_summary` |
+| `CheckResult` (name, passed, value, threshold, details) | `types.py` (M4) | `format_guardrail_report` |
+| `ABResult` (effect_size, p_value, n_trials) | `ab_test.py` (M3) | `format_edit_summary` |
+| `Registry.current_prompt` / `lineage()` for edit density | `registry.py` (M5) | `format_edit_density` |
+
+### 6.3 Edge Cases
+
+| Edge case | Output |
+|-----------|--------|
+| Identical prompts (`DiffResult` empty) | single line `no changes` (plain + markdown) |
+| Empty registry / no history | density chart empty (zero bars) |
+| `GateResult` with all pass | summary "All passed" |
+| `GateResult` with some fail | summary "N failed" + failed check names |
+| `decision == near_miss` | summary includes "(frozen/...) failed names" |
+| p_value / effect formatting | p to 2 dp, effect as signed % to 1 dp |
+
+### 6.4 Color Helper
+
+```python
+def _color(text: str, mode: str, fg: str | None) -> str:
+    if mode == "never" or fg is None:
+        return text
+    if mode == "auto" and not sys.stdout.isatty():
+        return text
+    return click.style(text, fg=fg)
+```
+
+### 6.5 Test Matrix
+
+| # | Test | Coverage |
+|---|------|----------|
+| T1 | `test_inline_identical_no_changes` | identical → `no changes` |
+| T2 | `test_inline_added_removed_prefixes` | `- ` / `+ ` lines |
+| T3 | `test_inline_frozen_annotation` | frozen → `(frozen)` / gray |
+| T4 | `test_inline_color_modes` | auto/always/never ANSI presence |
+| T5 | `test_side_by_side_two_column` | aligned columns |
+| T6 | `test_side_by_side_frozen_grayed` | frozen grayed in both cols |
+| T7 | `test_guardrail_table_format` | name/passed/value/threshold columns |
+| T8 | `test_guardrail_all_passed_summary` | "All passed" |
+| T9 | `test_guardrail_some_failed_summary` | "N failed" |
+| T10 | `test_edit_summary_promoted_one_line` | one-line promoted template |
+| T11 | `test_edit_summary_rejected_names` | rejected includes failed names |
+| T12 | `test_edit_summary_near_miss` | near-miss render |
+| T13 | `test_edit_density_empty` | empty registry → empty chart |
+| T14 | `test_edit_density_bars` | bar chart width from counts |
+| T15 | `test_markdown_diff_code_block` | `` ```diff `` block |
+| T16 | `test_markdown_guardrail_table` | markdown table |
+| T17 | `test_markdown_density_code_block` | fenced density |

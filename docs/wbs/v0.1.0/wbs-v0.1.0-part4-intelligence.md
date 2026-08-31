@@ -4,7 +4,7 @@
 > **PRD coverage:** [F-02](../../design/prd/05-features.md) (analyzer), [F-08](../../design/prd/05-features.md) (diff visualization)
 > **CUJs covered:** CUJ 1 (deploy, observe, improve — analyzer proposes), CUJ 2 (catch bad edit — analyzer proposes), CUJ 3 (trace lineage — diff)
 > **Dependency:** M7 (depends on M2 + M6; also GateAuditLog enhancement in M4 for #49 near-miss dedup) → M8 (depends on M5)
-> **Issue Range:** #45–#55 (+ #84 audit-source dependency)
+> **Issue Range:** #45–#55 (+ #84 audit-source dependency; + #85–#88 M8 design gaps)
 
 ---
 
@@ -66,16 +66,16 @@
 
 ### M8 Design Documents
 
-- **D8 — Diff visualization design** (`docs/design/prompt-diff-design.md`): inline diff format, side-by-side diff format, color coding, frozen section annotations, edit density computation, guardrail report formatting, markdown export.
+- **D8 — Diff visualization design** (`docs/design/prompt-diff-design.md`): inline diff format, side-by-side diff format, color coding, frozen section annotations, edit density computation, guardrail report formatting, markdown export. **+ §6 Implementation Contract (M8 gaps #85–#88).**
 
 ### M8 Task Checklist
 
 | # | Task | Build (files) | Behavior + edge cases | Feature | Design Ref | Verify | Status |
 |---|------|---------------|----------------------|---------|------------|--------|--------|
-| 1 | Inline diff output | `format_diff_inline(diff_result) -> str` | Removed lines `- `, added lines `+ `; frozen sections `(frozen)`; color-coded if terminal supports; identical prompts → single line "no changes" | F-08 | [D8](../../design/prompt-diff-design.md) | identical/different/frozen; color auto/always/never | [#52](https://github.com/deghosal-2026/agent-self-edit/issues/52) · ⬜ |
-| 2 | Side-by-side diff + guardrail report | `format_diff_side_by_side(diff_result) -> str`; `format_guardrail_report(gate_result) -> str` | Two-column alignment; frozen sections grayed out; guardrail report: table with check name, passed/failed, value, threshold; summary line | F-08 | [D8 §2.1](../../design/prompt-diff-design.md#22–prompt-diff--before-vs-after) | side-by-side alignment; guardrail all/some/none passed | [#53](https://github.com/deghosal-2026/agent-self-edit/issues/53) · ⬜ |
-| 3 | Edit summary + density | `format_edit_summary(edit_id, gate_result, ab_result) -> str`; `format_edit_density(registry, window=20) -> str` | Summary: "Edit #N — Promoted — +12.4% accuracy (p<0.01, n=78) — 3 lines"; density: text-based bar chart per-section; empty history → empty chart | F-08 | [D8 §2.2-2.3](../../design/prompt-diff-design.md#23–edit-density-over-time) | promoted/rejected/near-miss; empty/full history | [#54](https://github.com/deghosal-2026/agent-self-edit/issues/54) · ⬜ |
-| 4 | Markdown output + color support | `--format markdown` flag; `--color auto|always|never` | Markdown: code blocks for diffs, tables for reports; color: auto detects terminal, always forces color, never suppresses | F-08 | [D8 §3.1](../../design/prompt-diff-design.md#32–cli) | markdown valid; all 3 color modes | [#55](https://github.com/deghosal-2026/agent-self-edit/issues/55) · ⬜ |
+| 1 | Inline diff output | `format_diff_inline(diff_result) -> str` | Removed lines `- `, added lines `+ `; frozen sections `(frozen)`; color-coded if terminal supports; identical prompts → single line "no changes" | F-08 | [D8](../../design/prompt-diff-design.md) | identical/different/frozen; color auto/always/never | [#52](https://github.com/deghosal-2026/agent-self-edit/issues/52) · ✅ |
+| 2 | Side-by-side diff + guardrail report | `format_diff_side_by_side(diff_result) -> str`; `format_guardrail_report(gate_result) -> str` | Two-column alignment; frozen sections grayed out; guardrail report: table with check name, passed/failed, value, threshold; summary line | F-08 | [D8 §2.1](../../design/prompt-diff-design.md#22–prompt-diff--before-vs-after) | side-by-side alignment; guardrail all/some/none passed | [#53](https://github.com/deghosal-2026/agent-self-edit/issues/53) · ✅ |
+| 3 | Edit summary + density | `format_edit_summary(edit_id, gate_result, ab_result) -> str`; `format_edit_density(registry, window=20) -> str` | Summary: "Edit #N — Promoted — +12.4% accuracy (p<0.01, n=78) — 3 lines"; density: text-based bar chart per-section; empty history → empty chart | F-08 | [D8 §2.2-2.3](../../design/prompt-diff-design.md#23–edit-density-over-time) | promoted/rejected/near-miss; empty/full history | [#54](https://github.com/deghosal-2026/agent-self-edit/issues/54) · ✅ |
+| 4 | Markdown output + color support | `--format markdown` flag; `--color auto|always|never` | Markdown: code blocks for diffs, tables for reports; color: auto detects terminal, always forces color, never suppresses | F-08 | [D8 §3.1](../../design/prompt-diff-design.md#32–cli) | markdown valid; all 3 color modes | [#55](https://github.com/deghosal-2026/agent-self-edit/issues/55) · ✅ |
 
 ### M8 Success Metrics
 
@@ -93,13 +93,26 @@
 
 ### M8 Exit Gate
 
-- [ ] Inline and side-by-side diff work correctly
-- [ ] Guardrail report is clear and readable
-- [ ] Edit summary is one line
-- [ ] Edit density chart renders correctly
-- [ ] Color output works in all modes
-- [ ] Markdown output is valid
-- [ ] Ruff clean, mypy strict clean, all tests pass, coverage > 92%
-- [ ] **Design docs authored:** D8 (prompt-diff-design)
+- [x] Inline and side-by-side diff work correctly
+- [x] Guardrail report is clear and readable
+- [x] Edit summary is one line
+- [x] Edit density chart renders correctly
+- [x] Color output works in all modes
+- [x] Markdown output is valid
+- [x] Ruff clean, mypy strict clean, all tests pass, coverage > 92%
+- [x] **Design docs authored:** D8 (prompt-diff-design)
 
-**Dependency:** M5 (registry). **Produces for M9+:** `format_diff_inline()`, `format_diff_side_by_side()`, `format_guardrail_report()`, `format_edit_summary()`, `format_edit_density()`.
+### M8 Design Gaps Found (D8 vs PRD/Ticket Audit, 2026-08-30)
+
+> D8 (`prompt-diff-design.md`) is the visual/conceptual design but is missing
+> **implementation-level contracts** that the 4 tickets (#52–#55) require. Four
+> gap tickets logged under M8; **fix design first, then build**.
+
+| # | Gap | PRD/Ticket requirement | D8 state | Ticket | Fix |
+|---|-----|------------------------|----------|--------|-----|
+| G-1 | Guardrail report format | PRD M8.2/#53: CLI **text table** (name, passed/failed, value, threshold) + summary "All passed"/"N failed" | §2.3 shows box-draw card (`┌───┐`) | [#85](https://github.com/deghosal-2026/agent-self-edit/issues/85) · ✅ | Update D8 §2.3 to aligned text table |
+| G-2 | Edit summary format | PRD M8.3/#54: **one line** `Edit #N — Promoted — +X% accuracy (p<, n=) — N lines` | §3.1 shows multi-line block | [#86](https://github.com/deghosal-2026/agent-self-edit/issues/86) · ✅ | Update D8 §3.1 to one-line template |
+| G-3 | Color + markdown spec | #55: `--color auto\|always\|never`, markdown code blocks/tables | no markdown or color-mode spec | [#87](https://github.com/deghosal-2026/agent-self-edit/issues/87) · ✅ | Add §3.1 color/markdown contract; `click.style()` |
+| G-4 | Implementation contract | M7 pattern: exact signatures + consumed types + test matrix | signatures/types absent | [#88](https://github.com/deghosal-2026/agent-self-edit/issues/88) · ✅ | Add §6 "M8 Implementation Contract" |
+
+**Dependency:** M5 (registry). **Produces for M9+:** `format_diff_inline()`, `format_diff_side_by_side()`, `format_guardrail_report()`, `format_edit_summary()`, `format_edit_density()`. **Gap tickets:** #85–#88 (D8 design augmentation before build).
