@@ -21,13 +21,13 @@
 
 | # | Task | Build (files) | Behavior + edge cases | Feature | Design Ref | Verify | Status |
 |---|------|---------------|----------------------|---------|------------|--------|--------|
-| 1 | Registry store | `src/agent_self_edit/registry.py`: `Registry.__init__(path)`, `current_version`, `current_prompt` | Version `v{N}.md` + `v{N}.meta.json`; directory created on init; empty registry → version 0, empty prompt; path doesn't exist → created | F-05 | [D5](../../design/prompt-registry-design.md) | init with/without existing path; empty registry | [#32](https://github.com/deghosal-2026/agent-self-edit/issues/32) · ⬜ |
-| 2 | Version metadata | `Meta` dataclass: version, timestamp, sha256_hash, diff_from_previous, hypothesis, ab_results, gate_result, trigger_trace_ids, model_version, token_cost | SHA-256 computed on write; hash verified on read; all fields optional except version, timestamp, hash; JSON serialization round-trips | F-05 | [D5](../../design/prompt-registry-design.md) | JSON round-trip; hash verification; all fields optional | [#33](https://github.com/deghosal-2026/agent-self-edit/issues/33) · ⬜ |
-| 3 | Create version | `Registry.create(prompt_text, **metadata) -> int` | Writes prompt file + meta file; increments version; returns version number; concurrent writes blocked by lock; empty prompt text accepted | F-05 | [D5](../../design/prompt-registry-design.md) | create increments version; concurrent writes blocked; empty prompt | [#34](https://github.com/deghosal-2026/agent-self-edit/issues/34) · ⬜ |
-| 4 | Diff computation | `Registry.diff(v1, v2) -> DiffResult` | Line-level diff; output: added[], removed[], modified[], unchanged_count, frozen_unchanged_count; v1=v2 → empty diff; invalid versions → `RegistryError` | F-05 | [D5](../../design/prompt-registry-design.md) | identical/different; invalid versions; frozen sections | [#35](https://github.com/deghosal-2026/agent-self-edit/issues/35) · ⬜ |
-| 5 | Rollback | `Registry.rollback(version, reason) -> int` | Creates new version as copy of target; rollback reason + target version stored in metadata; invalid version → `RegistryError`; rollback to current → creates identical copy | F-12 | [D5](../../design/prompt-registry-design.md) | rollback to valid/invalid/current version; metadata preserved | [#36](https://github.com/deghosal-2026/agent-self-edit/issues/36) · ⬜ |
-| 6 | Lineage query | `Registry.lineage(from_version=None) -> list[Meta]`, `Registry.get(version) -> (str, Meta)` | Lineage returns ordered list; `get()` returns prompt + metadata; invalid version → `RegistryError`; lineage from version N returns N..current | F-05 | [D5](../../design/prompt-registry-design.md) | full lineage; partial lineage; invalid version | [#37](https://github.com/deghosal-2026/agent-self-edit/issues/37) · ⬜ |
-| 7 | Integrity check | `Registry.verify_integrity() -> list[str]` | Recomputes SHA-256 for each version; returns list of corrupted versions; all intact → empty list; file tampered → detected | F-05 | [D5](../../design/prompt-registry-design.md) | all intact; one corrupted; all corrupted; empty registry | [#38](https://github.com/deghosal-2026/agent-self-edit/issues/38) · ⬜ |
+| 1 | Registry store | `src/agent_self_edit/registry.py`: `Registry.__init__(path)`, `current_version`, `current_prompt` | Version `v{N}.md` + `v{N}.meta.json`; directory created on init; empty registry → version 0, empty prompt; path doesn't exist → created | F-05 | [D5](../../design/prompt-registry-design.md) | init with/without existing path; empty registry | [#32](https://github.com/deghosal-2026/agent-self-edit/issues/32) · ✅ |
+| 2 | Version metadata | `Meta` dataclass: version, timestamp, sha256_hash, diff_from_previous, hypothesis, ab_results, gate_result, trigger_trace_ids, model_version, token_cost | SHA-256 computed on write; hash verified on read; all fields optional except version, timestamp, hash; JSON serialization round-trips | F-05 | [D5](../../design/prompt-registry-design.md) | JSON round-trip; hash verification; all fields optional | [#33](https://github.com/deghosal-2026/agent-self-edit/issues/33) · ✅ |
+| 3 | Create version | `Registry.create(prompt_text, **metadata) -> int` | Writes prompt file + meta file; increments version; returns version number; concurrent writes blocked by lock; empty prompt text accepted | F-05 | [D5](../../design/prompt-registry-design.md) | create increments version; concurrent writes blocked; empty prompt | [#34](https://github.com/deghosal-2026/agent-self-edit/issues/34) · ✅ |
+| 4 | Diff computation | `Registry.diff(v1, v2) -> DiffResult` | Line-level diff; output: added[], removed[], modified[], unchanged_count, frozen_unchanged_count; v1=v2 → empty diff; invalid versions → `RegistryError` | F-05 | [D5](../../design/prompt-registry-design.md) | identical/different; invalid versions; frozen sections | [#35](https://github.com/deghosal-2026/agent-self-edit/issues/35) · ✅ |
+| 5 | Rollback | `Registry.rollback(version, reason) -> int` | Creates new version as copy of target; rollback reason + target version stored in metadata; invalid version → `RegistryError`; rollback to current → creates identical copy | F-12 | [D5](../../design/prompt-registry-design.md) | rollback to valid/invalid/current version; metadata preserved | [#36](https://github.com/deghosal-2026/agent-self-edit/issues/36) · ✅ |
+| 6 | Lineage query | `Registry.lineage(from_version=None) -> list[Meta]`, `Registry.get(version) -> (str, Meta)` | Lineage returns ordered list; `get()` returns prompt + metadata; invalid version → `RegistryError`; lineage from version N returns N..current | F-05 | [D5](../../design/prompt-registry-design.md) | full lineage; partial lineage; invalid version | [#37](https://github.com/deghosal-2026/agent-self-edit/issues/37) · ✅ |
+| 7 | Integrity check | `Registry.verify_integrity() -> list[str]` | Recomputes SHA-256 for each version; returns list of corrupted versions; all intact → empty list; file tampered → detected | F-05 | [D5](../../design/prompt-registry-design.md) | all intact; one corrupted; all corrupted; empty registry | [#38](https://github.com/deghosal-2026/agent-self-edit/issues/38) · ✅ |
 
 ### M5 Success Metrics
 
@@ -45,13 +45,13 @@
 
 ### M5 Exit Gate
 
-- [ ] Registry stores versions with metadata
-- [ ] Diff works between any two versions
-- [ ] Rollback creates a new version with rollback reason in lineage
-- [ ] Lineage is fully queryable
-- [ ] Integrity check detects corrupted versions
-- [ ] Ruff clean, mypy strict clean, all tests pass, coverage > 92%
-- [ ] **Design docs authored:** D5 (prompt-registry), D13 (DD-11/12)
+- [x] Registry stores versions with metadata
+- [x] Diff works between any two versions
+- [x] Rollback creates a new version with rollback reason in lineage
+- [x] Lineage is fully queryable
+- [x] Integrity check detects corrupted versions
+- [x] Ruff clean, mypy strict clean, all tests pass, coverage > 92%
+- [x] **Design docs authored:** D5 (prompt-registry), D13 (DD-11/12)
 
 **Dependency:** M4. **Produces for M6+:** `Registry`, `Meta`, `DiffResult`, `create()`, `diff()`, `rollback()`, `lineage()`, `verify_integrity()`.
 
