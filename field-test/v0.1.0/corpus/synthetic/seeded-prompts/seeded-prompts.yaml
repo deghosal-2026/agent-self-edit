@@ -1,0 +1,90 @@
+# Seeded failure prompts — 15 prompts with known failure modes
+# Each prompt intentionally fails on 3-5 specific tasks
+# Includes prompts with <!-- frozen --> annotations
+
+# --- Original 10 prompts ---
+
+# Prompt 1: over-simplified classifier — only checks "urgent" keyword
+- id: "seeded-001"
+  prompt: "You are a classifier. If the input contains 'urgent' or 'critical', classify as 'urgent'. Otherwise, classify as 'other'."
+  fails_on: ["classify-001", "classify-002", "classify-003", "classify-007", "classify-009"]
+
+# Prompt 2: billing-only classifier
+- id: "seeded-002"
+  prompt: "You are a classifier. If the user mentions money, payment, or charge, classify as 'billing'. Always classify as 'billing'."
+  fails_on: ["classify-006", "classify-008", "classify-010", "classify-011", "classify-012"]
+
+# Prompt 3: technical-only classifier
+- id: "seeded-003"
+  prompt: "You are a support ticket classifier. Most tickets are technical issues. Classify every ticket as 'technical'."
+  fails_on: ["classify-002", "classify-003", "classify-005", "classify-008", "classify-013"]
+
+# Prompt 4: extraction prompt that ignores email field
+- id: "seeded-004"
+  prompt: "Extract the name, phone number, and date from the text. Do not extract email addresses."
+  fails_on: ["extract-001", "extract-004", "extract-007", "extract-012"]
+
+# Prompt 5: deploy-only extraction
+- id: "seeded-005"
+  prompt: "Extract the deployment version and SHA hash from the text. Ignore other fields."
+  fails_on: ["extract-001", "extract-002", "extract-004", "extract-007", "extract-010"]
+
+# Prompt 6: single-line extraction
+- id: "seeded-006"
+  prompt: "Extract all fields from the text and output them as a single comma-separated line."
+  fails_on: ["extract-002", "extract-006", "extract-008", "extract-011", "extract-015"]
+
+# Prompt 7: overly verbose generation — never uses bullet points
+- id: "seeded-007"
+  prompt: "Write a detailed paragraph for every topic. Do not use bullet points or lists."
+  fails_on: ["gen-002", "gen-004", "gen-008", "gen-013"]
+
+# Prompt 8: one-sentence generator
+- id: "seeded-008"
+  prompt: "Keep all responses to exactly one sentence. Never write more than one sentence."
+  fails_on: ["gen-001", "gen-006", "gen-009", "gen-014", "gen-015"]
+
+# Prompt 9: casual-only tone
+- id: "seeded-009"
+  prompt: "Always use a casual, friendly tone. Never use formal or professional language."
+  fails_on: ["gen-003", "gen-006", "gen-010", "gen-012", "gen-014"]
+
+# Prompt 10: ignores constraints
+- id: "seeded-010"
+  prompt: "Write a brief summary of the topic. Do not include any sections, headings, or structured output."
+  fails_on: ["gen-001", "gen-005", "gen-009", "gen-011", "gen-012"]
+
+# --- New 5 prompts (mixed-domain + frozen annotations) ---
+
+# Prompt 11: single-domain classifier — can't handle multi-label
+- id: "seeded-011"
+  prompt: "You are a ticket classifier. Assign exactly ONE category to each ticket. Categories: urgent, billing, technical, feature, security, other. Never assign more than one category."
+  fails_on: ["classify-021", "classify-022", "classify-023", "classify-024", "classify-025"]
+
+# Prompt 12: flat extraction — can't handle nested fields
+- id: "seeded-012"
+  prompt: "Extract key-value pairs from the text. Output each field on its own line as 'key: value'. Do not use nested or hierarchical output."
+  fails_on: ["extract-016", "extract-017", "extract-018", "extract-019", "extract-020"]
+
+# Prompt 13: single-entity extraction — can't handle multiple entities
+- id: "seeded-013"
+  prompt: "Extract the primary contact from the text. If multiple people are mentioned, only extract the first one."
+  fails_on: ["extract-021", "extract-022", "extract-023"]
+
+# Prompt 14: with frozen section — tests frozen-section guardrails
+- id: "seeded-014"
+  prompt: |
+    <!-- frozen: role -->
+    You are a helpful support assistant. Always be polite and professional.
+    <!-- frozen -->
+
+    Classify support tickets into one of: urgent, billing, technical, feature, security, other.
+    If the ticket mentions multiple categories, pick the most urgent one.
+    For extraction tasks, output each field on a separate line.
+    For generation tasks, follow all constraints exactly.
+  fails_on: ["classify-021", "classify-022", "extract-016", "gen-024"]
+
+# Prompt 15: ops-only generation — can't handle non-ops topics
+- id: "seeded-015"
+  prompt: "You are an SRE assistant. Only write about infrastructure, incidents, deployments, and monitoring. If asked about non-technical topics, respond with 'I can only help with infrastructure topics.'"
+  fails_on: ["gen-016", "gen-017", "gen-018", "gen-020", "gen-022"]

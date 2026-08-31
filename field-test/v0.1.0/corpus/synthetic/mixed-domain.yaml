@@ -1,0 +1,43 @@
+# Mixed-domain task set — 10 cross-domain tasks
+# These tasks span classification + extraction + generation domains
+# They test whether the analyzer can propose edits that handle cross-domain cases
+- id: "mixed-001"
+  input: "Classify this ticket AND extract the affected service: 'The payment gateway is returning 502 errors for all enterprise customers. This started at 14:00 UTC.'"
+  expected_output: "classification: urgent, technical\naffected_service: payment gateway"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [classification, extraction, cross-domain]}
+- id: "mixed-002"
+  input: "Classify this ticket AND generate a one-line summary for the dashboard: 'User reports their API key was leaked on GitHub. They need it revoked immediately.'"
+  expected_output: "classification: security, urgent\nsummary: API key leaked on GitHub, revocation requested"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [classification, generation, cross-domain]}
+- id: "mixed-003"
+  input: "Extract the error code from this text AND classify the severity: 'Error E5001 occurred in the billing module. 3,400 customers affected. Estimated revenue impact: $12K/hour.'"
+  expected_output: "error_code: E5001\nseverity: urgent"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [extraction, classification, cross-domain]}
+- id: "mixed-004"
+  input: "Generate a customer-facing message about this outage AND extract the affected services: 'Database cluster db-prod-01 is down. API, dashboard, and webhooks are affected. ETA: 30 minutes.'"
+  expected_output: "message: We are experiencing a service disruption\naffected: API, dashboard, webhooks"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [generation, extraction, cross-domain]}
+- id: "mixed-005"
+  input: "Classify this as urgent or non-urgent AND extract the SLA deadline: 'A security researcher found an XSS vulnerability in our login form. They reported it via our bug bounty program. Our SLA for critical findings is 4 hours.'"
+  expected_output: "classification: urgent\nsla: 4 hours"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [classification, extraction, security, cross-domain]}
+- id: "mixed-006"
+  input: "Extract all mentioned services AND generate a rollback plan summary: 'Deploy v3.2.1 introduced a regression in the auth-service and user-service. The search-service is unaffected. We need to roll back both affected services to v3.2.0.'"
+  expected_output: "services: auth-service, user-service\nrollback: auth-service to v3.2.0, user-service to v3.2.0"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [extraction, generation, cross-domain]}
+- id: "mixed-007"
+  input: "Classify the priority of this incident AND extract the customer impact metrics: 'CDN outage affecting 45% of traffic in EU region. Error rate: 100%. P95 latency: timeout. Started: 09:15 UTC.'"
+  expected_output: "priority: urgent\naffected_traffic: 45%\nregion: EU\nerror_rate: 100%\nstarted: 09:15 UTC"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [classification, extraction, cross-domain]}
+- id: "mixed-008"
+  input: "Generate a postmortem outline for this incident AND extract the root cause category: 'Memory leak in the image-resize worker caused OOM kills. The leak was introduced in commit abc123. Fix deployed in v2.4.2.'"
+  expected_output: "postmortem: outline\nroot_cause: memory leak"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [generation, extraction, cross-domain]}
+- id: "mixed-009"
+  input: "Classify this as billing/technical/security AND extract the affected customer ID AND estimate severity (low/medium/high): 'Customer AC-7890 reports their data export has been failing for 3 days. They have an enterprise contract with a 99.9% SLA. Export volume: 2TB.'"
+  expected_output: "classification: technical\ncustomer: AC-7890\nseverity: high"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [classification, extraction, cross-domain]}
+- id: "mixed-010"
+  input: "Extract all error codes from this log AND classify the overall system health (healthy/degraded/down): 'E4031 on auth-service (3 retries), E5002 on user-service (1 retry), E4031 on billing-service (5 retries). All services responding but with elevated error rates.'"
+  expected_output: "errors: E4031, E5002\nhealth: degraded"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [extraction, classification, cross-domain]}

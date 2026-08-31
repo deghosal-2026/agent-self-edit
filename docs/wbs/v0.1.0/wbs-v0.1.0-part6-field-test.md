@@ -4,7 +4,7 @@
 > **PRD coverage:** [F-14](../../design/prd/05-features.md) (Docker), [07-success-metrics](../../design/prd/07-success-metrics.md) (reliability targets)
 > **CUJs covered:** CUJ 1 (deploy, observe, improve), CUJ 2 (catch bad edit), CUJ 4 (rollback)
 > **Dependency:** M10 depends on M9 (CLI) — needs the CLI to run the loop
-> **Issue Range:** #64–#69
+> **Issue Range:** #64–#69 (+ #93 D10 design doc, #94 field test report)
 
 ---
 
@@ -104,3 +104,10 @@
 - [ ] **Design docs authored:** D10 (field-test-plan)
 
 **Dependency:** M9 (CLI). **Produces for M11+:** field test results, synthetic corpus, validation scripts, Docker setup.
+
+### M10 Design Gaps Found (WBS vs Ticket Audit, 2026-08-30)
+
+| # | Gap | WBS requirement | Current state | Ticket | Fix |
+|---|-----|----------------|---------------|--------|-----|
+| G-1 | D10 field test plan design doc | "Design docs authored: D10 (field-test-plan)" | File does not exist | [#93](https://github.com/deghosal-2026/agent-self-edit/issues/93) · ⬜ | Author concise D10 with methodology, corpus structure, test strategy |
+| G-2 | Field test report deliverables | WBS §24–§27: report, improvement trend, FP/FN analysis, test matrix | No ticket for these post-test deliverables | [#94](https://github.com/deghosal-2026/agent-self-edit/issues/94) · ⬜ | Tracked as single ticket; authored after tests complete |

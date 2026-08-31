@@ -1,0 +1,126 @@
+# Classification task set — 30 tasks, ExactMatch scorer
+# Categories: urgent, billing, technical, feature, security, other
+# Edge cases: ambiguous boundary, multi-label, missing category, truly ambiguous
+- id: "classify-001"
+  input: "My billing page shows the wrong amount for my subscription."
+  expected_output: "technical"
+  metadata: {scorer: "exact", difficulty: "easy", tags: [billing, boundary]}
+- id: "classify-002"
+  input: "I was charged twice for the same plan."
+  expected_output: "billing"
+  metadata: {scorer: "exact", difficulty: "easy", tags: [billing]}
+- id: "classify-003"
+  input: "When will the new feature be available in production?"
+  expected_output: "feature"
+  metadata: {scorer: "exact", difficulty: "easy", tags: [feature]}
+- id: "classify-004"
+  input: "Our deployment pipeline failed on the staging environment."
+  expected_output: "technical"
+  metadata: {scorer: "exact", difficulty: "easy", tags: [technical, deployment]}
+- id: "classify-005"
+  input: "Can you add SSO support for our enterprise account?"
+  expected_output: "feature"
+  metadata: {scorer: "exact", difficulty: "easy", tags: [feature, enterprise]}
+- id: "classify-006"
+  input: "I think my account was compromised — someone logged in from an unknown IP."
+  expected_output: "security"
+  metadata: {scorer: "exact", difficulty: "medium", tags: [security]}
+- id: "classify-007"
+  input: "The checkout button is grayed out and I can't complete my purchase."
+  expected_output: "technical"
+  metadata: {scorer: "exact", difficulty: "medium", tags: [technical, billing]}
+- id: "classify-008"
+  input: "I need to downgrade my plan before the next billing cycle."
+  expected_output: "billing"
+  metadata: {scorer: "exact", difficulty: "medium", tags: [billing]}
+- id: "classify-009"
+  input: "The API returns a 500 error on the /v2/users endpoint."
+  expected_output: "technical"
+  metadata: {scorer: "exact", difficulty: "easy", tags: [technical, api]}
+- id: "classify-010"
+  input: "This is a critical security vulnerability that needs immediate attention."
+  expected_output: "urgent"
+  metadata: {scorer: "exact", difficulty: "easy", tags: [security, urgent]}
+- id: "classify-011"
+  input: "I'm paying for a service I can't use because the login page is down."
+  expected_output: "urgent"
+  metadata: {scorer: "exact", difficulty: "medium", tags: [billing, technical, boundary]}
+- id: "classify-012"
+  input: "Can you help me reset my password?"
+  expected_output: "technical"
+  metadata: {scorer: "exact", difficulty: "easy", tags: [technical]}
+- id: "classify-013"
+  input: "The refund for order #12345 hasn't appeared in my account."
+  expected_output: "billing"
+  metadata: {scorer: "exact", difficulty: "easy", tags: [billing]}
+- id: "classify-014"
+  input: "I found a bug in the search functionality — it ignores filters."
+  expected_output: "technical"
+  metadata: {scorer: "exact", difficulty: "easy", tags: [technical, bug]}
+- id: "classify-015"
+  input: "When will the maintenance window end? Our team is blocked."
+  expected_output: "urgent"
+  metadata: {scorer: "exact", difficulty: "medium", tags: [urgent, technical]}
+- id: "classify-016"
+  input: "I want to report a phishing email that appears to be from your company."
+  expected_output: "security"
+  metadata: {scorer: "exact", difficulty: "medium", tags: [security]}
+- id: "classify-017"
+  input: "The new dashboard feature is confusing — can you add a tutorial?"
+  expected_output: "feature"
+  metadata: {scorer: "exact", difficulty: "medium", tags: [feature, feedback]}
+- id: "classify-018"
+  input: "Our team needs a higher rate limit for the API."
+  expected_output: "feature"
+  metadata: {scorer: "exact", difficulty: "easy", tags: [feature, api]}
+- id: "classify-019"
+  input: "I'm getting a 403 Forbidden error on endpoints I used to access."
+  expected_output: "security"
+  metadata: {scorer: "exact", difficulty: "medium", tags: [security, technical]}
+- id: "classify-020"
+  input: "The invoice shows a different amount than what I agreed to in the contract."
+  expected_output: "billing"
+  metadata: {scorer: "exact", difficulty: "medium", tags: [billing, boundary]}
+# --- Multi-label tasks (5) ---
+- id: "classify-021"
+  input: "My account was hacked and they changed my billing address — I need a refund AND a password reset."
+  expected_output: "security, billing"
+  metadata: {scorer: "exact", difficulty: "hard", tags: [multi-label, security, billing]}
+- id: "classify-022"
+  input: "The API is down AND I'm being charged for premium tier that I can't use."
+  expected_output: "technical, billing"
+  metadata: {scorer: "exact", difficulty: "hard", tags: [multi-label, technical, billing]}
+- id: "classify-023"
+  input: "Someone is using my stolen credit card on your platform and I need urgent help."
+  expected_output: "urgent, security"
+  metadata: {scorer: "exact", difficulty: "hard", tags: [multi-label, urgent, security]}
+- id: "classify-024"
+  input: "I want to request a new integration feature and also report that the billing page is broken."
+  expected_output: "feature, billing"
+  metadata: {scorer: "exact", difficulty: "hard", tags: [multi-label, feature, billing]}
+- id: "classify-025"
+  input: "The deployment failed and it exposed a security vulnerability in the auth module."
+  expected_output: "technical, security"
+  metadata: {scorer: "exact", difficulty: "hard", tags: [multi-label, technical, security]}
+# --- Truly ambiguous tasks (3) — multiple valid answers ---
+- id: "classify-026"
+  input: "I can't log in and I think my payment failed. Which team should handle this?"
+  expected_output: "other"
+  metadata: {scorer: "exact", difficulty: "hard", tags: [ambiguous, boundary]}
+- id: "classify-027"
+  input: "The system is slow after the last update. Is this a bug or a feature regression?"
+  expected_output: "other"
+  metadata: {scorer: "exact", difficulty: "hard", tags: [ambiguous, boundary]}
+- id: "classify-028"
+  input: "I'm not sure if this is a billing issue or a technical one — the invoice is wrong AND the portal crashes when I try to view it."
+  expected_output: "other"
+  metadata: {scorer: "exact", difficulty: "hard", tags: [ambiguous, boundary]}
+# --- Missing category tasks (2) — correct answer is "other" ---
+- id: "classify-029"
+  input: "Hi, I just wanted to say the new UI looks great! Keep up the good work."
+  expected_output: "other"
+  metadata: {scorer: "exact", difficulty: "easy", tags: [other, feedback]}
+- id: "classify-030"
+  input: "Can you tell me about your company's sustainability initiatives?"
+  expected_output: "other"
+  metadata: {scorer: "exact", difficulty: "easy", tags: [other, general]}
