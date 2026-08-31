@@ -167,9 +167,31 @@ The biggest mistake was building a generic LLM eval runner (`run_traces.py`) ins
 
 A row marked ✅ must satisfy every condition in its acceptance criteria. "A/B test, promotion gate" was listed as acceptance criteria but never tested. This was a false completion claim that propagated through the project tracking.
 
-### 5.4 Small models are sufficient for field testing
+### 5.4 Local MLX Qwen models are not suitable for A/B testing on real traces
 
-Qwen3.5-4B-4bit at ~2-4s per call is 6x faster than the 9B model and produces valid proposals. For iterative field testing, use the fastest model that produces valid output. Reserve the larger model for final validation.
+Both Qwen3.5-4B-4bit and Qwen3.5-9B-MLX-4bit produce conversational, multi-sentence responses to classification tasks. The A/B test engine uses ExactMatch scoring which expects the output to be exactly the category label (e.g. `"technical"`). The models write things like `"I can help you troubleshoot this! To get to the bottom of it, I'll need..."` instead of `"technical"`.
+
+This means:
+- Both prompt A and prompt B score 0 on every task
+- All deltas = 0 → the A/B test always returns a tie (p=1.0)
+- The gate always rejects → no edit ever promotes → the loop cannot improve
+
+**Why local MLX Qwen models fail for A/B testing:**
+1. **Output format mismatch** — the models don't follow "output only the label" instructions. They produce full conversational responses with reasoning, apologies, and follow-up questions. ExactMatch can never match these.
+2. **No instruction-following discipline** — smaller models (4B, 9B) don't adhere to format constraints in the system prompt. Even with "Classify the input. Output only the category." the models still write paragraphs.
+3. **Both prompts score identically** — since the model ignores the prompt's formatting instructions anyway, changing the prompt doesn't change the output format. Both prompts produce the same conversational style → same scores → tie.
+4. **The A/B test can never show improvement** — if the scorer can't distinguish a correct from incorrect classification, no prompt edit can produce a measurable delta. The loop is stuck.
+
+**What would work:**
+- A cloud model (e.g. `openai/gpt-4o-mini`) that follows format instructions and outputs just the label
+- A Contains scorer instead of ExactMatch (checks if the label appears anywhere in the response)
+- An LLM-as-judge scorer that evaluates whether the response correctly classifies the input
+
+| Model | Output format | ExactMatch score | A/B test result | Can promote? |
+|-------|--------------|-----------------|-----------------|--------------|
+| Qwen3.5-4B-4bit | Full sentences | 0 for both | tie (p=1.0) | No |
+| Qwen3.5-9B-MLX-4bit | Full sentences | 0 for both | tie (p=1.0) | No |
+| openai/gpt-4o-mini (expected) | Label only | 0 or 1 | real deltas | Yes |
 
 ### 5.5 LLM I/O capture is non-negotiable for debuggability
 
