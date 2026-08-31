@@ -26,14 +26,15 @@ Additional:
 - **Seeded failure prompts**: 15 prompts with known failure modes (including `<!-- frozen -->` annotations)
 - **Adversarial edits**: 8 intentionally bad edits (each improves one task type but degrades another)
 
-### 2.2 Real-Life Corpus (370+ traces)
+### 2.2 Real-Life Corpus (770 traces)
 
 | Source | Traces | Description |
 |--------|--------|-------------|
 | agent-exec-trace (AgentObservatory) | 336 | Real LLM telemetry from Qwen 4B/9B models — detector results, latency, tokens, cache hits |
 | agent-eval-forge (EvalForge) | 34 | Real agent scenario failures across 12 frameworks (LangGraph, CrewAI, PydanticAI, etc.) |
-| HuggingFace (open-agent-traces) | ~150 | 10-domain multi-agent traces (customer support, code review, incident response, etc.) |
-| HuggingFace (customer-support) | ~100 | Customer support agent traces with tool calls, reasoning steps, deviations |
+| HuggingFace (open-agent-traces) | 150 | 10-domain multi-agent traces (customer support, code review, incident response, etc.) |
+| HuggingFace (customer-support) | 50 | Customer support agent traces with tool calls, reasoning steps, deviations |
+| HuggingFace (pi coding agent) | 200 | Real human-AI coding agent sessions (TypeScript, Java, Python) — real prompts, real tool calls, real errors |
 
 All real traces are validated against the Trace schema (`validate_trace()`). Each has `steps` populated with per-step metadata (latency, tokens, model, tool calls).
 

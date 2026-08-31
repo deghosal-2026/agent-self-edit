@@ -17,6 +17,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "src"))
 OUTPUT_DIR = Path(__file__).resolve().parent.parent / "v0.1.0" / "corpus" / "real-life" / "real-traces"
 
 
+def _skip_if_exists(path: Path) -> bool:
+    """Return True if the file exists and has content — skip re-download."""
+    if path.exists() and path.stat().st_size > 0:
+        print(f"  Skipping {path.name} (already exists, {path.stat().st_size} bytes)")
+        return True
+    return False
+
+
 def convert_events_to_trace(events: list[dict]) -> dict | None:
     """Convert a list of OCEL events (one agent run) into a single Trace."""
     if not events:
@@ -85,37 +93,50 @@ def convert_events_to_trace(events: list[dict]) -> dict | None:
 
 
 def download_open_agent_traces(max_runs: int = 150) -> int:
-    """Download and convert juliensimon/open-agent-traces."""
+    """Download and convert juliensimon/open-agent-traces (10 configs)."""
     try:
-        from datasets import load_dataset
+        from datasets import get_dataset_config_names, load_dataset
     except ImportError:
         print("pip install datasets first")
         return 0
 
     output_path = OUTPUT_DIR / "hf-open-agent-traces.jsonl"
+    if _skip_if_exists(output_path):
+        return 0
+
     print("Loading juliensimon/open-agent-traces...")
-    dataset = load_dataset("juliensimon/open-agent-traces", split="train")
 
-    # Group events by run_id
-    runs: dict[str, list[dict]] = {}
-    for row in dataset:
-        rid = row.get("run_id", "unknown")
-        if rid not in runs:
-            runs[rid] = []
-        runs[rid].append(dict(row))
+    configs = get_dataset_config_names("juliensimon/open-agent-traces")
+    total_count = 0
+    runs_per_config = max(1, max_runs // len(configs))
 
-    print(f"  Found {len(runs)} runs. Converting up to {max_runs}...")
-
-    count = 0
     with open(output_path, "w") as f:
-        for run_id, events in sorted(runs.keys())[:max_runs]:
-            trace = convert_events_to_trace(runs[run_id])
-            if trace:
-                f.write(json.dumps(trace) + "\n")
-                count += 1
+        for config in configs:
+            try:
+                dataset = load_dataset("juliensimon/open-agent-traces", config, split="train")
+            except Exception as e:
+                print(f"  Skipping config {config}: {e}")
+                continue
 
-    print(f"  Wrote {count} traces to {output_path}")
-    return count
+            runs: dict[str, list[dict]] = {}
+            for row in dataset:
+                d = dict(row)
+                rid = d.get("run_id", "unknown")
+                if rid not in runs:
+                    runs[rid] = []
+                runs[rid].append(d)
+
+            count = 0
+            for run_id in list(runs.keys())[:runs_per_config]:
+                trace = convert_events_to_trace(runs[run_id])
+                if trace:
+                    f.write(json.dumps(trace) + "\n")
+                    count += 1
+            total_count += count
+            print(f"  {config}: {len(runs)} runs, wrote {count}")
+
+    print(f"  Total: {total_count} traces to {output_path}")
+    return total_count
 
 
 def download_customer_support_traces(max_runs: int = 100) -> int:
@@ -127,15 +148,20 @@ def download_customer_support_traces(max_runs: int = 100) -> int:
         return 0
 
     output_path = OUTPUT_DIR / "hf-customer-support-traces.jsonl"
+    if _skip_if_exists(output_path):
+        return 0
+
     print("Loading juliensimon/agent-traces-customer-support-triage...")
+
     dataset = load_dataset("juliensimon/agent-traces-customer-support-triage", split="train")
 
     runs: dict[str, list[dict]] = {}
     for row in dataset:
-        rid = row.get("run_id", "unknown")
+        d = dict(row)
+        rid = d.get("run_id", "unknown")
         if rid not in runs:
             runs[rid] = []
-        runs[rid].append(dict(row))
+        runs[rid].append(d)
 
     print(f"  Found {len(runs)} runs. Converting up to {max_runs}...")
 
