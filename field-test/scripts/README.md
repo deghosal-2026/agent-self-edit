@@ -23,21 +23,22 @@ Scoring adapts to the trace type:
 ```bash
 export OPENROUTER_API_KEY=omlx-test
 
-# Real traces — all files
+# Real traces — all 5 files
 for f in field-test/v0.1.0/corpus/real-life/real-traces/*.jsonl; do
   python field-test/scripts/run_traces.py "$f" \
     --provider omlx --model qwen3.5-9b-mlx-4bit \
     --endpoint http://localhost:8000/v1
 done
 
-# Synthetic traces (generate first, then run)
-python field-test/scripts/generate_traces.py \
-  field-test/v0.1.0/corpus/synthetic/classification.yaml \
-  --output /tmp/synth-classification.jsonl --failure-rate 0.3
-
-python field-test/scripts/run_traces.py /tmp/synth-classification.jsonl \
-  --provider omlx --model qwen3.5-9b-mlx-4bit \
-  --endpoint http://localhost:8000/v1
+# Synthetic traces — generate all 4 task sets, then run each
+for yaml in field-test/v0.1.0/corpus/synthetic/*.yaml; do
+  name=$(basename "$yaml" .yaml)
+  python field-test/scripts/generate_traces.py "$yaml" \
+    --output "/tmp/synth-${name}.jsonl" --failure-rate 0.3
+  python field-test/scripts/run_traces.py "/tmp/synth-${name}.jsonl" \
+    --provider omlx --model qwen3.5-9b-mlx-4bit \
+    --endpoint http://localhost:8000/v1
+done
 ```
 
 ### Cloud LLM (OpenRouter)
@@ -47,17 +48,19 @@ Uses the OpenRouter API. Set `OPENROUTER_API_KEY` in your env.
 ```bash
 export OPENROUTER_API_KEY=sk-or-v1-...
 
-# Real traces — all files
+# Real traces — all 5 files
 for f in field-test/v0.1.0/corpus/real-life/real-traces/*.jsonl; do
   python field-test/scripts/run_traces.py "$f" \
     --provider openai --model openai/gpt-4o-mini \
     --endpoint https://openrouter.ai/api/v1
 done
 
-# Synthetic traces
-python field-test/scripts/run_traces.py /tmp/synth-classification.jsonl \
-  --provider openai --model openai/gpt-4o-mini \
-  --endpoint https://openrouter.ai/api/v1
+# Synthetic traces — all 4 task sets
+for jsonl in /tmp/synth-*.jsonl; do
+  python field-test/scripts/run_traces.py "$jsonl" \
+    --provider openai --model openai/gpt-4o-mini \
+    --endpoint https://openrouter.ai/api/v1
+done
 ```
 
 Supported models (set via `--model`): `openai/gpt-4o-mini`, `anthropic/claude-3-5-sonnet`, `openai/gpt-4o`, `meta-llama/llama-3.1-70b`, and hundreds more. Full list at [openrouter.ai/models](https://openrouter.ai/models). Use `openai/gpt-4o-mini` for fastest/cheapest results.
