@@ -14,6 +14,23 @@ Two common answers are not enough:
 
 AgentSelfEdit turns prompt optimization into a **self-sustaining, evidence-driven loop** with provenance, rollback, and guardrails — and it is designed as a **sidecar**. It does not modify the agent's runtime. It observes execution traces and proposes prompt edits.
 
+## Quick Start
+
+```bash
+# Install
+pip install agent-self-edit
+
+# Scaffold a project
+agent-self-edit init
+
+# Run the self-improvement loop
+agent-self-edit run --once
+
+# Or in Docker (requires local OMLX or OpenRouter key)
+docker build -t agent-self-edit .
+docker run --rm --network=host agent-self-edit run --once
+```
+
 ## How It Works
 
 ```
@@ -96,7 +113,7 @@ Any agent that repeats a similar task type and sees execution feedback beats its
 
 | Version | Focus |
 |---|---|
-| **v0.1.0** | Prove the loop — core loop, statistical gate, CLI, guardrails (in progress) |
+| **v0.1.0** | Prove the loop — core loop, statistical gate, CLI, guardrails, Docker, field test (in progress — M10) |
 | **v0.2.0** | Trust + visibility — web dashboard, drift detection, near-miss feedback, REST API, shadow mode |
 | **v0.3.0** | Scale + adapters — framework adapters, multi-failure clustering, adaptive sample floors, evals integration |
 | **v0.4.0** | Fleet — fleet-wide shared-rules learning, cost-aware improvement, promotion analytics |
@@ -104,7 +121,22 @@ Any agent that repeats a similar task type and sees execution feedback beats its
 
 ## Status
 
-🚧 **Pre-release.** M1 (Scaffold + Config) complete: package scaffold, config system with validation, held-out task set management, CI, community files. Guarded by ruff, mypy strict, 46 tests, 97% coverage.
+🚧 **Pre-release v0.1.0.** Core loop complete: trace ingestion, feedback analyzer, A/B test engine, promotion gate, prompt registry, CLI (10 commands), Docker support, diff visualization, rollback, guardrails. **434 hermetic tests + 9 Docker tests pass.** Docker full-loop integration test runs against OMLX real LLM (9/9 tests pass in 112s). Field test in progress (M10): 3-model comparison (4B/9B/cloud) completed, 10-iteration improvement run pending.
+
+## Field Test Status
+
+| Component | Status |
+|-----------|--------|
+| F-01 Trace ingestion | ✅ works |
+| F-02 Feedback analyzer | ✅ works (proposes edits against OMLX) |
+| F-03 A/B test engine | ✅ works (2 distinct prompts, real statistics) |
+| F-04 Promotion gate | ✅ works (6 checks, deterministic) |
+| F-05 Prompt registry | ✅ works (versioned, lineage, rollback) |
+| F-09 CLI | ✅ works (10 commands) |
+| F-14 Docker support | ✅ works (9/9 tests, full loop against OMLX) |
+| M10 Field test | ⬜ 10-iteration improvement run pending (#100) |
+
+See [mini field test report](docs/field-test/v0.1.0/mini-field-test-report.md) for 3-model (4B, 9B, cloud) comparison results.
 
 ## License
 
