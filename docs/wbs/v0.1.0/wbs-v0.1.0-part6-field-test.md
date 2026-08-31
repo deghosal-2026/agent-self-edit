@@ -65,8 +65,8 @@
 
 | # | Task | Build (files) | Behavior + edge cases | Feature | Design Ref | Verify | Status |
 |---|------|---------------|----------------------|---------|------------|--------|--------|
-| 23a | Fix A/B test candidate prompt construction | `src/agent_self_edit/cli/run.py` | `run.py:60` passes `proposal.new_text` (fragment) as `prompt_b`. Must construct full candidate prompt: `registry.current_prompt.replace(proposal.old_text, proposal.new_text)` | F-03 | [ab-test-engine-design.md §2.1](../../design/ab-test-engine-design.md#21-inputs) | A/B test produces non-zero deltas, bootstrap CI runs, real winner determined | [#104](https://github.com/deghosal-2026/agent-self-edit/issues/104) · ⬜ |
-| 23b | Verify A/B test with real distinct prompts | `tests/test_docker.py` | After #104 fix, re-run docker full loop. Verify LLM traffic shows two distinct prompts, non-zero deltas, real statistics | F-03 | [ab-test-engine-design.md §3](../../design/ab-test-engine-design.md#3-the-task-runner) | traffic log shows prompt A ≠ prompt B, deltas ≠ 0 | [#104](https://github.com/deghosal-2026/agent-self-edit/issues/104) · ⬜ |
+| 23a | Fix A/B test candidate prompt construction | `src/agent_self_edit/cli/run.py` | `run.py:60` passes `proposal.new_text` (fragment) as `prompt_b`. Must construct full candidate prompt: `registry.current_prompt.replace(proposal.old_text, proposal.new_text)` | F-03 | [ab-test-engine-design.md §2.1](../../design/ab-test-engine-design.md#21-inputs) | A/B test produces non-zero deltas, bootstrap CI runs, real winner determined | [#104](https://github.com/deghosal-2026/agent-self-edit/issues/104) · ✅ |
+| 23b | Verify A/B test with real distinct prompts | `tests/test_docker.py` | After #104 fix, re-run docker full loop. Verify LLM traffic shows two distinct prompts, non-zero deltas, real statistics | F-03 | [ab-test-engine-design.md §3](../../design/ab-test-engine-design.md#3-the-task-runner) | traffic log shows prompt A ≠ prompt B, deltas ≠ 0 | [#104](https://github.com/deghosal-2026/agent-self-edit/issues/104) · ✅ |
 
 #### Analysis & Report
 
@@ -129,3 +129,6 @@
 | G-8 | Ruff lint errors | 13 errors in test_docker.py | Exit gate requires clean | [#105](https://github.com/deghosal-2026/agent-self-edit/issues/105) · ⬜ | ruff check --fix + manual |
 | G-9 | Mypy type errors | 5 errors in propose.py, run.py | Exit gate requires clean | [#106](https://github.com/deghosal-2026/agent-self-edit/issues/106) · ⬜ | Add type annotations |
 | G-10 | Guardrail FP/FN + cost not measured vs real LLM | Exit gate: 100% caught, <\$0.50/iter | Only mock-tested | [#107](https://github.com/deghosal-2026/agent-self-edit/issues/107) · ⬜ | Part of #100 LLM field tests |
+| G-11 | Docker test: no per-trace latency/token assertions | Silent failures not caught | Only checks ≥2 distinct prompts | [#108](https://github.com/deghosal-2026/agent-self-edit/issues/108) · ⬜ | Add latency > 0 and tokens > 0 assertions |
+| G-12 | Docker test: all 10 seeded traces identical | Non-tie A/B unlikely with same input | All use same task_input | [#109](https://github.com/deghosal-2026/agent-self-edit/issues/109) · ⬜ | Use varied inputs from classification task set |
+| G-13 | Docker test: accepts tie without delta check | A/B tie silently accepted | No delta assertion | [#110](https://github.com/deghosal-2026/agent-self-edit/issues/110) · ⬜ | Assert non-zero deltas OR document tie as expected |
