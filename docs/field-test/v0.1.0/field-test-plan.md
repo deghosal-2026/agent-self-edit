@@ -28,15 +28,27 @@ Additional:
 
 ### 2.2 Real-Life Corpus (770 traces)
 
-| Source | Traces | Description |
-|--------|--------|-------------|
-| agent-exec-trace (AgentObservatory) | 336 | Real LLM telemetry from Qwen 4B/9B models — detector results, latency, tokens, cache hits |
-| agent-eval-forge (EvalForge) | 34 | Real agent scenario failures across 12 frameworks (LangGraph, CrewAI, PydanticAI, etc.) |
-| HuggingFace (open-agent-traces) | 150 | 10-domain multi-agent traces (customer support, code review, incident response, etc.) |
-| HuggingFace (customer-support) | 50 | Customer support agent traces with tool calls, reasoning steps, deviations |
-| HuggingFace (pi coding agent) | 200 | Real human-AI coding agent sessions (TypeScript, Java, Python) — real prompts, real tool calls, real errors |
+| Source | Traces | Description | Variety added |
+|--------|--------|-------------|---------------|
+| agent-exec-trace (AgentObservatory) | 336 | Real LLM telemetry from Qwen 4B/9B models — detector results, latency, tokens, cache hits | Multi-step LLM telemetry, detector-level failures (hallucination, semantic loop, degradation), cache-hit traces |
+| agent-eval-forge (EvalForge) | 34 | Real agent scenario failures across 12 frameworks (LangGraph, CrewAI, PydanticAI, OpenAI Agents, LlamaIndex, etc.) | Cross-framework agent failures, tool-call errors, multi-step scenario traces |
+| HuggingFace (open-agent-traces) | 150 | 10-domain multi-agent traces (customer support, code review, incident response, market research, legal, financial, content generation, e-commerce, academic review, data pipeline) | 10 distinct domains, multi-agent orchestration (planner → worker → aggregate patterns), tool calls (web_search, calculator, file_reader, code_interpreter, text_splitter, database_query) |
+| HuggingFace (customer-support) | 50 | Customer support agent traces with tool calls, reasoning steps, deviations | Sequential agent patterns, deviation tracking, customer-facing tone |
+| HuggingFace (pi coding agent) | 200 | Real human-AI coding agent sessions (TypeScript, Java, Python) — real prompts, real tool calls, real errors, real backtracking | Real human prompts (typos, vague, context-dependent), real tool calls (bash, read, edit, write), real error recovery, multi-file refactors, varied programming languages |
 
-All real traces are validated against the Trace schema (`validate_trace()`). Each has `steps` populated with per-step metadata (latency, tokens, model, tool calls).
+All real traces are validated against the Trace schema (`validate_trace()`). Each has `steps` populated with per-step metadata (latency, tokens, model, tool calls, agent roles).
+
+### 2.3 Variety Coverage
+
+| Dimension | Synthetic | Real-life |
+|-----------|-----------|-----------|
+| Languages | English only | English + TypeScript, Java, Python, Lua |
+| Task types | 4 domains (classification, extraction, generation, mixed) | 14 domains (support, code review, incident, research, legal, financial, content, e-commerce, academic, pipeline, coding, monitoring, deployment, security) |
+| Failure modes | Expected output mismatch | Hallucination, semantic loop, quality degradation, tool errors, deviation, backtracking |
+| Trace complexity | Single-step | Multi-step (2-2,500 events per trace) |
+| Tool calls | None | bash, read, edit, write, web_search, calculator, code_interpreter, file_reader, database_query, text_splitter |
+| Agent patterns | Single-agent | Single-agent, multi-agent (planner → workers → aggregate), sequential pipeline |
+| Model diversity | Mock only | Qwen 4B, Qwen 9B, Claude Opus, Claude Sonnet, GPT-4o, DeepSeek, Gemini, Kimi |
 
 ### 2.3 Directory Layout
 
@@ -56,13 +68,16 @@ field-test/v0.1.0/
 │       └── real-traces/
 │           ├── agent-observatory-traces.jsonl  (336)
 │           ├── evalforge-failures.jsonl         (34)
-│           ├── hf-open-agent-traces.jsonl       (~150, optional)
-│           └── hf-customer-support-traces.jsonl (~100, optional)
+│           ├── hf-open-agent-traces.jsonl       (150)
+│           ├── hf-customer-support-traces.jsonl  (50)
+│           ├── hf-pi-coding-agent-traces.jsonl  (200)
+│           └── README.md
 ├── scripts/
 │   ├── generate_traces.py          (synthetic trace generator)
 │   ├── import_real_traces.py       (portfolio trace importer)
-│   ├── download_hf_traces.py       (HuggingFace dataset downloader)
-│   └── README.md                    (script usage guide)
+│   ├── download_hf_traces.py       (HuggingFace open-agent-traces + customer-support)
+│   ├── download_pi_traces.py       (HuggingFace pi coding agent traces)
+│   └── README.md                   (script usage guide)
 ├── results/
 │   └── (field test results go here — FIELD_TEST_REPORT.md, charts, etc.)
 └── field-test-plan.md              (this file)
@@ -107,7 +122,8 @@ field-test/v0.1.0/
 | Concurrency | Hermetic | ✅ | mock | 100 traces, no data loss |
 | Registry integrity | Hermetic | ✅ | mock | 20 versions, 0 corruption |
 | Guardrail stress | Hermetic | ✅ | mock | 100 random edits, 0 crashes |
-| Real trace replay | Hermetic | ✅ | mock | 50 real traces validate + ingest |
+| Real trace replay | Hermetic | ✅ | mock | 50 real traces validate + ingest across all 5 sources |
+| Full loop with real traces | Hermetic | ✅ | mock | loop processes 770 real traces without crash |
 | Full loop integration | LLM | ❌ | real | all stages produce valid output |
 | 10-iteration improvement | LLM | ❌ | real | 10%+ improvement |
 | Multi-domain | LLM | ❌ | real | improvement in all 3 domains |
