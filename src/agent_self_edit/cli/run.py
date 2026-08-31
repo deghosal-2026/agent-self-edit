@@ -32,9 +32,9 @@ def _run_once(config_path: str, batch_size: int | None, dry_run: bool) -> None:
         return
 
     from ..analyzer import analyze_batch
-    from ..llm.mock import MockProvider
+    from .propose import _build_llm
 
-    llm = MockProvider(responses="[]")
+    llm = _build_llm(config)
     result = analyze_batch(
         failed, registry.current_prompt, None, llm,
         max_proposals=config.analyzer.max_proposals_per_batch,

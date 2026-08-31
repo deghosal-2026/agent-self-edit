@@ -35,6 +35,7 @@ class LLMConfig:
     provider: str = "openai"
     model: str = "gpt-4o-mini"
     api_key: str = ""
+    base_url: str = ""
     temperature: float = 0.0
     max_tokens: int = 4096
     timeout: int = 30

@@ -1,5 +1,36 @@
 # Field Test Scripts
 
+All scripts run from the repo root. Results are stored under `field-test/v0.1.0/results/<provider>/<model>/`.
+
+---
+
+## Docker Tests
+
+### Run full pytest suite (9 tests: build, OMLX connectivity, smoke, integration)
+
+```bash
+python field-test/scripts/run_docker_tests.py
+```
+
+Requires: Docker daemon running, OMLX server at `http://localhost:8000/v1`.
+
+### Run standalone field test (one-shot end-to-end with LLM traffic capture)
+
+```bash
+python field-test/scripts/run_docker_field_test.py
+```
+
+Outputs go to `field-test/v0.1.0/results/docker/omlx/qwen3.5-9b-mlx-4bit/`.
+
+### Override OMLX connection (for cloud LLM or different local model)
+
+```bash
+OMLX_URL=http://localhost:8000/v1 OMLX_MODEL=Qwen3.5-9B-MLX-4bit OMLX_KEY=omlx-test \
+  python field-test/scripts/run_docker_tests.py
+```
+
+---
+
 ## Download Real Traces from HuggingFace
 
 The `download_hf_traces.py` script downloads the `juliensimon/open-agent-traces` and `juliensimon/agent-traces-customer-support-triage` datasets from HuggingFace and converts them to the AgentSelfEdit Trace schema.
