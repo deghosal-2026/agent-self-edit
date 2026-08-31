@@ -45,40 +45,53 @@ python field-test/scripts/run_traces.py /tmp/synth-classification.jsonl \
   --endpoint http://localhost:8000/v1 --system-prompt "You are a classifier."
 ```
 
-### Cloud LLM (OpenAI-compatible)
+### Cloud LLM (OpenRouter)
+
+Uses the OpenRouter API. Set `LLM_API_KEY` to your OpenRouter key.
 
 ```bash
-export LLM_API_KEY=sk-...
+export LLM_API_KEY=sk-or-v1-...
 
-# Same commands, different provider/model/endpoint
+# Real traces — use a fast/cheap model
 for f in field-test/v0.1.0/corpus/real-life/real-traces/hf-*.jsonl; do
   python field-test/scripts/run_traces.py "$f" \
-    --provider openai --model gpt-4o-mini \
-    --endpoint https://api.openai.com/v1 --system-prompt "You are a helpful assistant."
+    --provider openai --model google/gemini-2.0-flash-001 \
+    --endpoint https://openrouter.ai/api/v1 --system-prompt "You are a helpful assistant."
 done
 
 python field-test/scripts/run_traces.py \
   field-test/v0.1.0/corpus/real-life/real-traces/agent-observatory-traces.jsonl \
-  --provider openai --model gpt-4o-mini \
-  --endpoint https://api.openai.com/v1 --system-prompt "You are a helpful assistant."
+  --provider openai --model google/gemini-2.0-flash-001 \
+  --endpoint https://openrouter.ai/api/v1 --system-prompt "You are a helpful assistant."
 
 python field-test/scripts/run_traces.py \
   field-test/v0.1.0/corpus/real-life/real-traces/evalforge-failures.jsonl \
-  --provider openai --model gpt-4o-mini \
-  --endpoint https://api.openai.com/v1 --system-prompt "You are a helpful assistant."
+  --provider openai --model google/gemini-2.0-flash-001 \
+  --endpoint https://openrouter.ai/api/v1 --system-prompt "You are a helpful assistant."
 
+# Synthetic traces
 python field-test/scripts/run_traces.py /tmp/synth-classification.jsonl \
-  --provider openai --model gpt-4o-mini \
-  --endpoint https://api.openai.com/v1 --system-prompt "You are a classifier."
+  --provider openai --model google/gemini-2.0-flash-001 \
+  --endpoint https://openrouter.ai/api/v1 --system-prompt "You are a classifier."
 ```
+
+Supported models (set via `--model`): `google/gemini-2.0-flash-001`, `openai/gpt-4o-mini`, `anthropic/claude-3-5-sonnet`, `meta-llama/llama-3.1-70b`, etc. Full list at [openrouter.ai/models](https://openrouter.ai/models).
 
 ### All env vars are overridable
 
 ```bash
-export LLM_API_KEY=...
+# Local OMLX
+export LLM_API_KEY=omlx-test
 export LLM_PROVIDER=omlx
 export LLM_MODEL=qwen3.5-9b-mlx-4bit
 export LLM_ENDPOINT=http://localhost:8000/v1
+python field-test/scripts/run_traces.py field-test/v0.1.0/corpus/real-life/real-traces/hf-customer-support-traces.jsonl
+
+# Cloud — just swap the env vars
+export LLM_API_KEY=sk-or-v1-...
+export LLM_PROVIDER=openai
+export LLM_MODEL=google/gemini-2.0-flash-001
+export LLM_ENDPOINT=https://openrouter.ai/api/v1
 python field-test/scripts/run_traces.py field-test/v0.1.0/corpus/real-life/real-traces/hf-customer-support-traces.jsonl
 ```
 
@@ -86,10 +99,10 @@ python field-test/scripts/run_traces.py field-test/v0.1.0/corpus/real-life/real-
 
 | Var | Purpose | Example |
 |-----|---------|--------|
-| `LLM_API_KEY` | API key (required, no fallback) | `omlx-test`, `sk-...` |
+| `LLM_API_KEY` | API key (required, no fallback) | `omlx-test`, `sk-or-v1-...` |
 | `LLM_PROVIDER` | `omlx` or `openai` | `omlx` |
-| `LLM_MODEL` | Model name | `qwen3.5-9b-mlx-4bit`, `gpt-4o-mini` |
-| `LLM_ENDPOINT` | API base URL | `http://localhost:8000/v1`, `https://api.openai.com/v1` |
+| `LLM_MODEL` | Model name | `qwen3.5-9b-mlx-4bit`, `google/gemini-2.0-flash-001` |
+| `LLM_ENDPOINT` | API base URL | `http://localhost:8000/v1`, `https://openrouter.ai/api/v1` |
 
 Results are written to `field-test/v0.1.0/results/<provider>/<model>/`:
 
