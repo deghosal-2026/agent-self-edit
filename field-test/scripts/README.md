@@ -6,7 +6,13 @@ All scripts run from the repo root. Results are stored under `field-test/v0.1.0/
 
 ## Run Traces Through an LLM (synthetic or real)
 
-`run_traces.py` takes any trace file (synthetic or real JSONL), runs each trace's `task_input` through an LLM, scores the output against `expected_output`, and records the full LLM request/response, latency, and token usage for debuggability.
+`run_traces.py` takes any trace file (synthetic or real JSONL), runs each trace's `task_input` through an LLM, scores the output, and records the full LLM request/response, latency, and token usage for debuggability.
+
+The system prompt is **auto-detected** from the trace file domain (customer support, coding, classification, etc.). Pass `--system-prompt` only to override.
+
+Scoring adapts to the trace type:
+- **Real traces** (label-based `expected_output` like `"Successful customer-support-triage task"`): pass = LLM produced a non-empty, non-error response.
+- **Synthetic traces** (real answer in `expected_output`): pass = exact match against LLM output.
 
 ### Required
 
@@ -17,32 +23,21 @@ All scripts run from the repo root. Results are stored under `field-test/v0.1.0/
 ```bash
 export OPENROUTER_API_KEY=omlx-test
 
-# Real traces (all 5 files)
-for f in field-test/v0.1.0/corpus/real-life/real-traces/hf-*.jsonl; do
+# Real traces — all files
+for f in field-test/v0.1.0/corpus/real-life/real-traces/*.jsonl; do
   python field-test/scripts/run_traces.py "$f" \
     --provider omlx --model qwen3.5-9b-mlx-4bit \
-    --endpoint http://localhost:8000/v1 --system-prompt "You are a helpful assistant."
+    --endpoint http://localhost:8000/v1
 done
 
-# Real traces (observatory + evalforge)
-python field-test/scripts/run_traces.py \
-  field-test/v0.1.0/corpus/real-life/real-traces/agent-observatory-traces.jsonl \
-  --provider omlx --model qwen3.5-9b-mlx-4bit \
-  --endpoint http://localhost:8000/v1 --system-prompt "You are a helpful assistant."
-
-python field-test/scripts/run_traces.py \
-  field-test/v0.1.0/corpus/real-life/real-traces/evalforge-failures.jsonl \
-  --provider omlx --model qwen3.5-9b-mlx-4bit \
-  --endpoint http://localhost:8000/v1 --system-prompt "You are a helpful assistant."
-
-# Synthetic traces (generate them first, then run)
+# Synthetic traces (generate first, then run)
 python field-test/scripts/generate_traces.py \
   field-test/v0.1.0/corpus/synthetic/classification.yaml \
   --output /tmp/synth-classification.jsonl --failure-rate 0.3
 
 python field-test/scripts/run_traces.py /tmp/synth-classification.jsonl \
   --provider omlx --model qwen3.5-9b-mlx-4bit \
-  --endpoint http://localhost:8000/v1 --system-prompt "You are a classifier."
+  --endpoint http://localhost:8000/v1
 ```
 
 ### Cloud LLM (OpenRouter)
@@ -52,30 +47,20 @@ Uses the OpenRouter API. Set `OPENROUTER_API_KEY` in your env.
 ```bash
 export OPENROUTER_API_KEY=sk-or-v1-...
 
-# Real traces — use a fast/cheap model
-for f in field-test/v0.1.0/corpus/real-life/real-traces/hf-*.jsonl; do
+# Real traces — all files
+for f in field-test/v0.1.0/corpus/real-life/real-traces/*.jsonl; do
   python field-test/scripts/run_traces.py "$f" \
     --provider openai --model openai/gpt-4o-mini \
-    --endpoint https://openrouter.ai/api/v1 --system-prompt "You are a helpful assistant."
+    --endpoint https://openrouter.ai/api/v1
 done
-
-python field-test/scripts/run_traces.py \
-  field-test/v0.1.0/corpus/real-life/real-traces/agent-observatory-traces.jsonl \
-  --provider openai --model openai/gpt-4o-mini \
-  --endpoint https://openrouter.ai/api/v1 --system-prompt "You are a helpful assistant."
-
-python field-test/scripts/run_traces.py \
-  field-test/v0.1.0/corpus/real-life/real-traces/evalforge-failures.jsonl \
-  --provider openai --model openai/gpt-4o-mini \
-  --endpoint https://openrouter.ai/api/v1 --system-prompt "You are a helpful assistant."
 
 # Synthetic traces
 python field-test/scripts/run_traces.py /tmp/synth-classification.jsonl \
   --provider openai --model openai/gpt-4o-mini \
-  --endpoint https://openrouter.ai/api/v1 --system-prompt "You are a classifier."
+  --endpoint https://openrouter.ai/api/v1
 ```
 
-Supported models (set via `--model`): `openai/gpt-4o-mini`, `openai/gpt-4o-mini`, `anthropic/claude-3-5-sonnet`, `meta-llama/llama-3.1-70b`, etc. Full list at [openrouter.ai/models](https://openrouter.ai/models).
+Supported models (set via `--model`): `openai/gpt-4o-mini`, `anthropic/claude-3-5-sonnet`, `openai/gpt-4o`, `meta-llama/llama-3.1-70b`, and hundreds more. Full list at [openrouter.ai/models](https://openrouter.ai/models). Use `openai/gpt-4o-mini` for fastest/cheapest results.
 
 ### All env vars are overridable
 
@@ -95,12 +80,16 @@ export LLM_ENDPOINT=https://openrouter.ai/api/v1
 python field-test/scripts/run_traces.py field-test/v0.1.0/corpus/real-life/real-traces/hf-customer-support-traces.jsonl
 ```
 
-### Output
+### Environment variables
 
+| Var | Purpose | Example |
+|-----|---------|---------|
 | `OPENROUTER_API_KEY` | API key (required, no fallback) | `omlx-test`, `sk-or-v1-...` |
 | `LLM_PROVIDER` | `omlx` or `openai` | `omlx` |
 | `LLM_MODEL` | Model name | `qwen3.5-9b-mlx-4bit`, `openai/gpt-4o-mini` |
 | `LLM_ENDPOINT` | API base URL | `http://localhost:8000/v1`, `https://openrouter.ai/api/v1` |
+
+### Output
 
 Results are written to `field-test/v0.1.0/results/<provider>/<model>/`:
 

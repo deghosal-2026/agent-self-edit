@@ -101,19 +101,89 @@ def load_traces(path: str) -> list[dict]:
     return traces
 
 
-def score_response(trace: dict, response: str) -> dict:
+_LABEL_PATTERNS = [
+    "successful", "should pass", "no hallucination", "session",
+    "task", "scenario", "detector", "agent task",
+]
+
+_DOMAIN_PROMPTS = {
+    "customer-support": "You are a customer support agent. Respond helpfully and professionally to the customer's issue.",
+    "open-agent": "You are a customer support agent. Respond helpfully and professionally to the customer's issue.",
+    "pi-coding": "You are a coding assistant. Help the user complete the coding task.",
+    "observatory": "You are an agent observability analyst. Describe what the agent did and whether it succeeded.",
+    "evalforge": "You are a test scenario runner. Determine whether the agent passed or failed the scenario and explain why.",
+    "classification": "You are a classifier. Classify the input into one of the provided categories. Output only the category label.",
+    "extraction": "You are an information extraction assistant. Extract the requested fields from the input. Output only the extracted fields.",
+    "generation": "You are a text generation assistant. Generate the requested text following all constraints.",
+    "mixed": "You are a helpful assistant. Complete the task as instructed.",
+}
+
+
+def detect_domain(trace_file: str, first_trace: dict) -> str:
+    name = Path(trace_file).stem.lower()
+    metadata = first_trace.get("metadata") or {}
+    domain = metadata.get("domain", "")
+    source = metadata.get("source", "")
+    task_input = first_trace.get("task_input", "")
+
+    if "customer-support" in name or "triage" in domain:
+        return "customer-support"
+    if "open-agent" in name:
+        return "open-agent"
+    if "pi-coding" in name:
+        return "pi-coding"
+    if "observatory" in name or "detector" in task_input.lower():
+        return "observatory"
+    if "evalforge" in name or "scenario" in task_input.lower():
+        return "evalforge"
+    if "classification" in name:
+        return "classification"
+    if "extraction" in name:
+        return "extraction"
+    if "generation" in name:
+        return "generation"
+    if "mixed" in name:
+        return "mixed"
+    return "mixed"
+
+
+def _is_label(expected: str) -> bool:
+    """True if expected_output is a success label, not an actual answer."""
+    low = expected.strip().lower()
+    if not low:
+        return True
+    return any(p in low for p in _LABEL_PATTERNS) and len(low) < 80
+
+
+def score_response(trace: dict, response: str, llm_error: str | None) -> dict:
     expected = trace.get("expected_output", "")
     actual = trace.get("final_output", "")
     llm_output = response or ""
+    trace_success = trace.get("success", False)
 
-    exact_match = expected.strip().lower() == actual.strip().lower()
-    llm_exact_match = expected.strip().lower() == llm_output.strip().lower()
+    if _is_label(expected):
+        # Real trace: expected_output is a label ("Successful ...", "no hallucination").
+        # Pass = LLM produced a non-empty, non-error response.
+        passed = bool(llm_output.strip()) and not llm_error
+        return {
+            "scoring_mode": "label",
+            "expected_output": expected,
+            "original_output": actual,
+            "original_success": trace_success,
+            "llm_output": llm_output,
+            "passed": passed,
+        }
+
+    # Synthetic trace: expected_output is the actual answer.
+    exact = expected.strip().lower() == llm_output.strip().lower()
     return {
+        "scoring_mode": "exact_match",
         "expected_output": expected,
         "original_output": actual,
+        "original_success": trace_success,
         "llm_output": llm_output,
-        "exact_match": exact_match,
-        "llm_exact_match": llm_exact_match,
+        "passed": exact,
+        "exact_match": exact,
     }
 
 
@@ -126,8 +196,8 @@ def main():
                         help="Model name")
     parser.add_argument("--endpoint", default=os.environ.get("LLM_ENDPOINT"),
                         help="API base URL")
-    parser.add_argument("--system-prompt", default="You are a helpful assistant.",
-                        help="System prompt for the LLM")
+    parser.add_argument("--system-prompt", default=None,
+                        help="System prompt for the LLM (auto-detected if not provided)")
     parser.add_argument("--output", "-o", help="Output JSON file (default: auto-generated)")
     args = parser.parse_args()
 
@@ -141,6 +211,14 @@ def main():
     trace_path = Path(args.trace_file)
     trace_name = trace_path.stem.replace(".jsonl", "").replace("_", "-").strip("-")
 
+    traces = load_traces(args.trace_file)
+    if not traces:
+        print("ERROR: no traces found in file", file=sys.stderr)
+        sys.exit(1)
+
+    domain = detect_domain(args.trace_file, traces[0])
+    system_prompt = args.system_prompt or _DOMAIN_PROMPTS[domain]
+
     result_dir = RESULTS_BASE / provider_slug / model_slug
     result_dir.mkdir(parents=True, exist_ok=True)
 
@@ -153,28 +231,28 @@ def main():
     else:
         output_path = result_dir / f"{trace_name}-results.json"
 
-    print(f"  Provider: {args.provider}")
-    print(f"  Model:    {args.model}")
-    print(f"  Endpoint: {args.endpoint or 'default'}")
+    print(f"  Provider:      {args.provider}")
+    print(f"  Model:         {args.model}")
+    print(f"  Endpoint:      {args.endpoint or 'default'}")
+    print(f"  Domain:        {domain}")
+    print(f"  System prompt: {system_prompt[:80]}")
     print(f"  Traces:   {args.trace_file}")
     print(f"  Traffic:  {traffic_log}")
     print(f"  Output:   {output_path}")
     print()
 
     client, model = build_llm(args.provider, args.model, args.endpoint, api_key)
-    traces = load_traces(args.trace_file)
 
     results = []
     for i, trace in enumerate(traces):
         task_input = trace.get("task_input", "")
-        system_prompt = args.system_prompt
 
         if (i + 1) % 10 == 0 or i == 0:
             print(f"  [{i+1}/{len(traces)}] {trace.get('task_id', '')[:40]}...")
 
         llm_result = call_llm(client, model, task_input, system_prompt)
 
-        scoring = score_response(trace, llm_result.get("response", ""))
+        scoring = score_response(trace, llm_result.get("response", ""), llm_result.get("error"))
 
         results.append({
             "task_id": trace.get("task_id", f"trace-{i}"),
@@ -183,7 +261,7 @@ def main():
             "scoring": scoring,
         })
 
-    passed = sum(1 for r in results if r["scoring"]["llm_exact_match"])
+    passed = sum(1 for r in results if r["scoring"]["passed"])
     failed = len(results) - passed
 
     total_tokens = sum(
