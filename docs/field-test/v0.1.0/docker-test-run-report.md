@@ -276,81 +276,27 @@ The 9B model is too slow for iterative field testing. The 4B model produces vali
 
 ---
 
-## 8. A/B Test Analysis — What's Wrong
+## 8. A/B Test Analysis — Bug Found and Fixed (#104)
 
-### 8.1 The A/B test didn't actually run both prompts
+### 8.1 The original bug: A/B test didn't run two distinct prompts
 
-The stdout says `A/B test: tie (p=1.0000, n=5)`. On inspection of the LLM traffic, **all 10 A/B test calls used prompt A (the current prompt)**. Prompt B (the proposed edit) was never sent to the LLM. The traffic log shows:
+The stdout said `A/B test: tie (p=1.0000, n=5)`. On inspection of the LLM traffic, **all 10 A/B test calls used prompt A (the current prompt)**. Prompt B (the proposed edit) was never sent to the LLM.
 
-```
-call  2: PROMPT_A (current)   ← task 1, prompt A
-call  3: PROMPT_A (current)   ← task 1, prompt B ← WRONG: same prompt A
-call  4: PROMPT_A (current)   ← task 2, prompt A
-call  5: PROMPT_A (current)   ← task 2, prompt B ← WRONG
-...
-call 10: PROMPT_A (current)   ← task 5, prompt A
-call 11: PROMPT_A (current)   ← task 5, prompt B ← WRONG
-```
-
-Every "prompt B" call contains the same system prompt as prompt A: `"You are a helpful classification assistant."` — not the proposed edit `"You are a technical support ticket classifier. Prioritize the root cause..."`.
-
-### 8.2 Why the result was a "tie"
-
-Since both A and B calls used the same prompt, both scored identically on every task. All deltas = 0. The A/B test engine correctly computed:
+The root cause was in `run.py:60`:
 
 ```python
-if all(d == 0.0 for d in deltas):
-    winner = "tie"
-    p_value = 1.0
-```
-
-A tie with p=1.0 is the mathematically correct result when you compare a prompt against itself. The A/B test engine isn't broken — **the prompt being passed as `prompt_b` was identical to `prompt_a`**.
-
-### 8.3 Where the bug is
-
-In `run.py:60-61`:
-
-```python
+# BUG: passes proposal.new_text (fragment) as prompt_b
 ab_result = run_ab_test(
     registry.current_prompt, proposal.new_text, task_set, llm, scorer, config
 )
 ```
 
-`proposal.new_text` should be the proposed new prompt. But the analyzer's proposal has `old_text` and `new_text` as **fragments** (e.g. "You are a helpful classification assistant." → "You are a technical support ticket classifier..."). The `run_ab_test` expects `prompt_b` to be the **full new prompt** (old prompt with the edit applied), not just the fragment.
+`proposal.new_text` is the edited **fragment** (e.g. "You are a technical support ticket classifier..."), not the full candidate prompt. The `run_ab_test` expects the full prompt with the edit applied.
 
-The code passes `proposal.new_text` (the fragment) directly as `prompt_b`. The LLM receives the fragment as the system prompt, not the full prompt with the edit applied. Since the fragment is just a role description, both prompt A and "prompt B" end up being similar enough that the LLM produces the same output.
-
-### 8.4 What should happen
-
-The A/B test should:
-1. Take the current full prompt (`registry.current_prompt`)
-2. Apply the edit: replace `proposal.old_text` with `proposal.new_text` in the current prompt
-3. Run both the original and the modified full prompt against the task set
-4. Compare scores
-
-The missing step is **applying the edit** to produce the full candidate prompt. This is a bug in `run.py` — it should construct the full candidate prompt before passing it to `run_ab_test`.
-
-### 8.5 The human caught this late
-
-The human insisted on understanding how the A/B test would work during the field test design. The LLM (the agent writing this code) explained the A/B test engine and the human accepted it. The field tests appeared to run very fast — 54 seconds for 11 calls — which should have been a red flag. A proper A/B test with 5 tasks × 2 distinct prompts should produce **different outputs** for at least some tasks, leading to non-zero deltas and actual statistical computation. Instead, all deltas were zero (tie), the bootstrap and permutation tests were skipped (the `all(d == 0)` shortcut), and the test completed instantly.
-
-The speed was suspicious. A real A/B test that runs both prompts should take roughly 2× the time of a single-prompt run. The fact that it completed in the same time as a single-prompt run, with a perfect tie, indicates that **prompt B was never actually different from prompt A**.
-
-### 8.6 Impact on the test verdict
-
-The test still **passes** in the sense that:
-- The loop ran end-to-end without crashing
-- Every stage executed (ingest, analyze, A/B test, gate)
-- LLM I/O was captured
-- The gate made a correct deterministic decision based on the A/B result
-
-But the A/B test itself is **invalid** — it compared a prompt against itself. The "tie" result is real but meaningless. This must be fixed before the A/B test can be trusted.
-
-### 8.7 Fix required
-
-In `run.py`, before calling `run_ab_test`, construct the full candidate prompt:
+### 8.2 The fix
 
 ```python
+# FIXED: construct full candidate prompt by applying the edit
 candidate_prompt = registry.current_prompt.replace(
     proposal.old_text, proposal.new_text
 )
@@ -359,4 +305,53 @@ ab_result = run_ab_test(
 )
 ```
 
-This ensures prompt B is the current prompt with the proposed edit applied, not just the edited fragment. The A/B test will then produce real differences in output, non-zero deltas, and meaningful statistics.
+Same fix applied to both `run.py` and `propose.py`.
+
+### 8.3 Post-fix verification
+
+After the fix, the docker test asserts ≥2 distinct prompts in the A/B traffic:
+
+```python
+prompt_contents = set()
+for e in ab_calls:
+    content = e["messages"][0]["content"]
+    prompt_part = content.split("\n---\n")[0]
+    prompt_contents.add(prompt_part[:200])
+assert len(prompt_contents) >= 2, "A/B test used only 1 prompt — see #104"
+```
+
+The post-fix traffic log confirms 2 distinct prompts:
+
+```
+Prompt A: "You are a helpful classification assistant."
+Prompt B: "You are a helpful classification assistant. Classify tickets based on the core intent..."
+```
+
+The A/B test now produces a **real** tie — both prompts performed the same on 5 tasks. The gate correctly rejects. This is valid behavior.
+
+### 8.4 The human caught this late
+
+The human insisted on understanding how the A/B test would work during the field test design. The LLM (the agent writing this code) explained the A/B test engine and the human accepted it. The field tests appeared to run very fast — 54 seconds for 11 calls — which should have been a red flag. A proper A/B test with 5 tasks × 2 distinct prompts should produce **different outputs** for at least some tasks, leading to non-zero deltas and actual statistical computation. Instead, all deltas were zero (tie), the bootstrap and permutation tests were skipped (the `all(d == 0)` shortcut), and the test completed instantly.
+
+The speed was suspicious. A real A/B test that runs both prompts should take roughly 2× the time of a single-prompt run. The fact that it completed in the same time as a single-prompt run, with a perfect tie, indicates that **prompt B was never actually different from prompt A**.
+
+### 8.5 Test assertions strengthened
+
+The original test only checked that stage names appeared in stdout:
+
+```python
+assert "A/B test" in stdout    # weak: just checks the string exists
+assert "Gate:" in stdout      # weak: just checks the string exists
+```
+
+The test now also verifies the A/B test used ≥2 distinct prompts by inspecting the LLM traffic log. This catches #104 if it regresses.
+
+### 8.6 Final verdict
+
+| Component | Before fix | After fix |
+|-----------|-----------|-----------|
+| A/B test prompts | 1 (prompt A only) | 2 (prompt A + candidate) |
+| A/B test result | tie (meaningless — same prompt) | tie (real — both perform same) |
+| Gate decision | reject (correct, but on invalid input) | reject (correct, on valid input) |
+| Test assertion | checks stdout strings | checks ≥2 distinct prompts in traffic |
+| PRD F-03 | ❌ broken | ✅ works |

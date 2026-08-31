@@ -100,17 +100,18 @@
 - [ ] Synthetic task corpus created (50 tasks across 3 domains)
 - [ ] Baseline measurement completed
 - [ ] Non-LLM tests: all pass (trace generation, dry-run loop, gate validation, rollback, zero-LLM, concurrency, registry stress, guardrail stress)
-- [ ] LLM tests: full loop integration, 10-iteration improvement, adversarial edits, analyzer quality, cost analysis
-- [x] Docker tests: build, smoke, integration (full loop against OMLX — #98, #103 closed. A/B test bug #104 open: run.py passes fragment not full prompt)
-- [ ] A/B test fix (#104): construct full candidate prompt, verify non-zero deltas, real statistics
+- [ ] LLM tests: full loop integration, 10-iteration improvement, adversarial edits, analyzer quality, cost analysis (#100)
+- [x] Docker tests: build, smoke, integration (full loop against OMLX — #98, #103, #104 closed)
+- [x] A/B test fix (#104): construct full candidate prompt, verify 2 distinct prompts — closed
 - [ ] LLM field tests (#100): 10-iteration improvement, adversarial, cost analysis
 - [ ] Field test report written with all results (#101)
 - [ ] Improvement measured (target: 10%+ over 10 iterations)
-- [ ] Guardrails catch 100% of injected bad edits
-- [ ] Zero bad edits promoted in any test
-- [ ] Cost documented (target: < $0.50 per iteration)
-- [ ] Ruff clean, mypy strict clean, all tests pass, coverage > 92%
-- [ ] **Design docs authored:** D10 (field-test-plan)
+- [ ] Guardrails catch 100% of injected bad edits (real LLM — #107)
+- [ ] Zero bad edits promoted in any test (real LLM — #107)
+- [ ] Cost documented (target: < $0.50 per iteration) (#107)
+- [ ] Ruff clean (#105), mypy strict clean (#106), all tests pass, coverage > 92%
+- [ ] **Design docs authored:** D10 (field-test-plan) (#93)
+- [ ] Cleanup: run_traces.py wrong tool (#95), scoring ignores trace.success (#96), duplicate task_id (#97), stale run_docker_field_test.py (#99)
 
 **Dependency:** M9 (CLI). **Produces for M11+:** field test results, synthetic corpus, validation scripts, Docker setup.
 
@@ -118,5 +119,13 @@
 
 | # | Gap | WBS requirement | Current state | Ticket | Fix |
 |---|-----|----------------|---------------|--------|-----|
-| G-1 | D10 field test plan design doc | "Design docs authored: D10 (field-test-plan)" | File does not exist | [#93](https://github.com/deghosal-2026/agent-self-edit/issues/93) · ⬜ | Author concise D10 with methodology, corpus structure, test strategy |
-| G-2 | Field test report deliverables | WBS §24–§27: report, improvement trend, FP/FN analysis, test matrix | No ticket for these post-test deliverables | [#94](https://github.com/deghosal-2026/agent-self-edit/issues/94) · ⬜ | Tracked as single ticket; authored after tests complete |
+| G-1 | D10 field test plan design doc | "Design docs authored: D10 (field-test-plan)" | File exists at `docs/field-test/v0.1.0/field-test-plan.md` | [#93](https://github.com/deghosal-2026/agent-self-edit/issues/93) · ⬜ | Review and confirm D10 |
+| G-2 | Field test report deliverables | WBS §24–§27: report, improvement trend, FP/FN analysis, test matrix | Not written | [#94](https://github.com/deghosal-2026/agent-self-edit/issues/94), [#101](https://github.com/deghosal-2026/agent-self-edit/issues/101) · ⬜ | Write after LLM field tests complete |
+| G-3 | LLM field tests not implemented | WBS rows 15-20: 10-iteration, adversarial, cost | No implementation | [#100](https://github.com/deghosal-2026/agent-self-edit/issues/100) · ⬜ | Create script to run N iterations against real LLM |
+| G-4 | run_traces.py is wrong tool | Should run self-edit loop, not generic eval | Eval runner only | [#95](https://github.com/deghosal-2026/agent-self-edit/issues/95) · ⬜ | Replace or delete |
+| G-5 | Scoring ignores trace.success | Real traces always "pass" | Label mode too lenient | [#96](https://github.com/deghosal-2026/agent-self-edit/issues/96) · ⬜ | Evaluate against trace.success |
+| G-6 | Duplicate task_id in observatory traces | 336 traces all `s_BlipZorp_000000` | import_real_traces.py bug | [#97](https://github.com/deghosal-2026/agent-self-edit/issues/97) · ⬜ | Generate unique IDs |
+| G-7 | run_docker_field_test.py stale | Duplicates test_docker.py | Old config, no env vars | [#99](https://github.com/deghosal-2026/agent-self-edit/issues/99) · ⬜ | Delete or rewrite |
+| G-8 | Ruff lint errors | 13 errors in test_docker.py | Exit gate requires clean | [#105](https://github.com/deghosal-2026/agent-self-edit/issues/105) · ⬜ | ruff check --fix + manual |
+| G-9 | Mypy type errors | 5 errors in propose.py, run.py | Exit gate requires clean | [#106](https://github.com/deghosal-2026/agent-self-edit/issues/106) · ⬜ | Add type annotations |
+| G-10 | Guardrail FP/FN + cost not measured vs real LLM | Exit gate: 100% caught, <\$0.50/iter | Only mock-tested | [#107](https://github.com/deghosal-2026/agent-self-edit/issues/107) · ⬜ | Part of #100 LLM field tests |

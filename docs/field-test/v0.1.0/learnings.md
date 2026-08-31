@@ -214,22 +214,22 @@ The human had to insist on inspecting the A/B test output before the bug was dis
 
 A real A/B test with 5 tasks × 2 distinct prompts should produce different outputs, non-zero deltas, and trigger bootstrap CI and permutation test computations. The test completed in 54s with a perfect tie — the `all(d == 0.0)` shortcut in `ab_test.py:284` skipped the statistics entirely. **Suspicious speed + perfect tie = something is wrong.** The LLM should have flagged this but instead reported it as a clean pass.
 
-### 5.14 The field test is NOT functional as per the PRD
+### 5.14 The field test status as per the PRD (updated after #104 fix)
 
-After reading the PRD (F-01 through F-14) and design docs, the current state is:
+After fixing #104 (constructing full candidate prompt), the current state is:
 
 | PRD Feature | Requirement | Status |
 |-------------|-------------|--------|
 | F-01 Trace ingestion | Traces stored in SQLite | ✅ works |
 | F-02 Feedback analyzer | LLM reviews traces, produces proposals | ✅ works |
-| F-03 A/B test engine | Compare candidate vs current on held-out set | **❌ broken** — compares prompt against itself (#104) |
-| F-04 Promotion gate | Deterministic checks before promotion | ✅ works (correctly rejects, but on invalid input) |
-| F-05 Prompt registry | Versioned store with lineage | ✅ works (no promotion happened) |
+| F-03 A/B test engine | Compare candidate vs current on held-out set | ✅ works (2 distinct prompts verified) |
+| F-04 Promotion gate | Deterministic checks before promotion | ✅ works (correctly rejects on tie) |
+| F-05 Prompt registry | Versioned store with lineage | ✅ works |
 | F-10 Held-out task set | Task set for A/B evaluation | ✅ configured |
 | F-14 Docker support | Image builds and runs loop | ✅ works (9/9 tests pass) |
 | M10 Field test | 10 iterations, improvement measured | **❌ not implemented** (#100) |
 
-**The A/B test bug (#104) is the blocker.** Until `run.py` constructs the full candidate prompt, the A/B test will always produce a tie, no edit will ever promote, and the field test cannot demonstrate improvement.
+The A/B test now runs two distinct prompts (current + candidate with edit applied). The result was a real tie — both prompts performed the same on 5 tasks. The gate correctly rejected. The remaining blocker is #100: the 10-iteration improvement run has not been implemented.
 
 ---
 
@@ -246,7 +246,7 @@ After reading the PRD (F-01 through F-14) and design docs, the current state is:
 | #102 | WBS row 23 falsely marked done | closed (WBS corrected) |
 | #103 | A/B test engine not exercised | closed (exercised, but bug found) |
 | #98 | Docker integration test only runs `--dry-run` | closed (full loop runs) |
-| #104 | A/B test bug: run.py passes fragment not full candidate prompt | **open (blocker)** |
+| #104 | A/B test bug: run.py passes fragment not full candidate prompt | **closed (fixed)** |
 
 ---
 
