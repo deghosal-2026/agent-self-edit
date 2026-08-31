@@ -139,7 +139,7 @@ def main():
     provider_slug = args.provider
     model_slug = args.model.lower().replace("/", "-").replace(":", "-")
     trace_path = Path(args.trace_file)
-    trace_name = trace_path.stem.replace(".jsonl", "").replace("_", "-")
+    trace_name = trace_path.stem.replace(".jsonl", "").replace("_", "-").strip("-")
 
     result_dir = RESULTS_BASE / provider_slug / model_slug
     result_dir.mkdir(parents=True, exist_ok=True)
