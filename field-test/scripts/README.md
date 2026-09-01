@@ -9,30 +9,39 @@ All scripts run from the repo root. Results are stored under `field-test/v0.1.0/
 `run_improvement_loop.py` runs the actual self-edit loop (`agent-self-edit run --once`) for N iterations, measuring accuracy on a held-out set after each iteration. This is the core field test for #100.
 
 ```bash
-# Local OMLX (defaults — no flags needed)
+# Local OMLX
+export OMLX_KEY=omlx-test
+export OMLX_MODEL=Qwen3.5-4B-4bit
+export OMLX_URL=http://localhost:8000/v1
 python3 field-test/scripts/run_improvement_loop.py --iterations 10
 
 # Cloud (OpenRouter)
+export OMLX_KEY=sk-or-v1-...
 export OMLX_MODEL=openai/gpt-4o-mini
 export OMLX_URL=https://openrouter.ai/api/v1
-export OMLX_KEY=sk-or-v1-...
 python3 field-test/scripts/run_improvement_loop.py --iterations 10
 ```
 
+### Environment variables
+
+| Var | Required | Description |
+|-----|----------|-------------|
+| `OMLX_KEY` | yes | API key (`omlx-test` for local, `sk-or-v1-...` for cloud) |
+| `OMLX_MODEL` | yes | Model name |
+| `OMLX_URL` | yes | API base URL |
+
 ### Options
 
-| Flag | Default | Env var |
-|------|---------|---------|
-| `--iterations` | 10 | — |
-| `--traces-per-iteration` | 10 | — |
-| `--model` | `Qwen3.5-4B-4bit` | `OMLX_MODEL` |
-| `--endpoint` | `http://localhost:8000/v1` | `OMLX_URL` |
-| — | `omlx-test` | `OMLX_KEY` (env only) |
+| Flag | Description |
+|------|-------------|
+| `--iterations` | Number of self-edit iterations (default: 10) |
+| `--traces-per-iteration` | Traces to seed each iteration (default: 10) |
+| `--model` | Override model name |
+| `--endpoint` | Override API base URL |
 
 ### Output
 
-Results go to `field-test/v0.1.0/results/improvement-loop/`:
-- `improvement-loop-report.json` — per-iteration accuracy, gate outcomes, cost, LLM traffic
+Results go to `field-test/v0.1.0/results/improvement-loop/improvement-loop-report.json` — per-iteration accuracy, gate outcomes, cost, and LLM traffic.
 
 ---
 
