@@ -3,11 +3,11 @@
     "provider": "omlx",
     "model": "Qwen3.5-4B-4bit",
     "endpoint": "http://localhost:8000/v1",
-    "n_iterations": 2,
+    "n_iterations": 10,
     "baseline_accuracy": 20.0,
-    "final_accuracy": 40.0,
-    "improvement": 20.0,
-    "date": "2026-09-01T01:32:29Z"
+    "final_accuracy": 20.0,
+    "improvement": 0.0,
+    "date": "2026-09-01T01:54:22Z"
   },
   "iterations": [
     {
@@ -18,64 +18,222 @@
     {
       "iteration": 1,
       "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
-      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. \n\nPriority Rules:\n1. If the input contains 'urgent' keywords (",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
       "n_proposals": 1,
       "results": [
         {
           "proposal_index": 0,
           "section": "Classification Logic / Priority Handling",
-          "gate": "promote",
+          "gate": "reject",
           "winner": "inconclusive",
-          "p_value": 0.1,
-          "mean_delta": 0.3,
-          "n_trials": 10
+          "p_value": 0.23,
+          "mean_delta": 0.11538461538461531,
+          "n_trials": 26
         }
       ],
       "analysis_cost": 0.004356,
-      "accuracy": 40.0,
-      "accuracy_correct": 2,
+      "accuracy": 20.0,
+      "accuracy_correct": 1,
       "accuracy_total": 5,
-      "duration_s": 31.2
+      "duration_s": 42.1
     },
     {
       "iteration": 2,
-      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. \n\nPriority Rules:\n1. If the input contains 'urgent' keywords (",
-      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. \n\nPriority Rules:\n1. If the input contains 'urgent' keywords (",
-      "n_proposals": 3,
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "n_proposals": 1,
       "results": [
         {
           "proposal_index": 0,
-          "section": "Priority Rules: 2",
+          "section": "Classification Logic / Priority Handling",
           "gate": "reject",
-          "winner": "tie",
-          "p_value": 1.0,
-          "mean_delta": 0.0,
-          "n_trials": 10
-        },
-        {
-          "proposal_index": 1,
-          "section": "Priority Rules: 4",
-          "gate": "reject",
-          "winner": "tie",
-          "p_value": 1.0,
-          "mean_delta": 0.0,
-          "n_trials": 10
-        },
-        {
-          "proposal_index": 2,
-          "section": "Priority Rules: 3",
-          "gate": "reject",
-          "winner": "tie",
-          "p_value": 1.0,
-          "mean_delta": 0.0,
-          "n_trials": 10
+          "winner": "inconclusive",
+          "p_value": 0.23,
+          "mean_delta": 0.11538461538461531,
+          "n_trials": 26
         }
       ],
-      "analysis_cost": 0.0056859,
-      "accuracy": 40.0,
-      "accuracy_correct": 2,
+      "analysis_cost": 0.004356,
+      "accuracy": 20.0,
+      "accuracy_correct": 1,
       "accuracy_total": 5,
-      "duration_s": 59.7
+      "duration_s": 42.0
+    },
+    {
+      "iteration": 3,
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "n_proposals": 1,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "Classification Logic / Priority Handling",
+          "gate": "reject",
+          "winner": "inconclusive",
+          "p_value": 0.23,
+          "mean_delta": 0.11538461538461531,
+          "n_trials": 26
+        }
+      ],
+      "analysis_cost": 0.004356,
+      "accuracy": 20.0,
+      "accuracy_correct": 1,
+      "accuracy_total": 5,
+      "duration_s": 42.0
+    },
+    {
+      "iteration": 4,
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "n_proposals": 1,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "Classification Logic / Priority Handling",
+          "gate": "reject",
+          "winner": "inconclusive",
+          "p_value": 0.23,
+          "mean_delta": 0.11538461538461531,
+          "n_trials": 26
+        }
+      ],
+      "analysis_cost": 0.004356,
+      "accuracy": 20.0,
+      "accuracy_correct": 1,
+      "accuracy_total": 5,
+      "duration_s": 42.3
+    },
+    {
+      "iteration": 5,
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "n_proposals": 1,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "Classification Logic / Priority Handling",
+          "gate": "reject",
+          "winner": "inconclusive",
+          "p_value": 0.23,
+          "mean_delta": 0.11538461538461531,
+          "n_trials": 26
+        }
+      ],
+      "analysis_cost": 0.004356,
+      "accuracy": 20.0,
+      "accuracy_correct": 1,
+      "accuracy_total": 5,
+      "duration_s": 42.2
+    },
+    {
+      "iteration": 6,
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "n_proposals": 1,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "Classification Logic / Priority Handling",
+          "gate": "reject",
+          "winner": "inconclusive",
+          "p_value": 0.23,
+          "mean_delta": 0.11538461538461531,
+          "n_trials": 26
+        }
+      ],
+      "analysis_cost": 0.004356,
+      "accuracy": 20.0,
+      "accuracy_correct": 1,
+      "accuracy_total": 5,
+      "duration_s": 42.5
+    },
+    {
+      "iteration": 7,
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "n_proposals": 1,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "Classification Logic / Priority Handling",
+          "gate": "reject",
+          "winner": "inconclusive",
+          "p_value": 0.23,
+          "mean_delta": 0.11538461538461531,
+          "n_trials": 26
+        }
+      ],
+      "analysis_cost": 0.004356,
+      "accuracy": 20.0,
+      "accuracy_correct": 1,
+      "accuracy_total": 5,
+      "duration_s": 41.9
+    },
+    {
+      "iteration": 8,
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "n_proposals": 1,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "Classification Logic / Priority Handling",
+          "gate": "reject",
+          "winner": "inconclusive",
+          "p_value": 0.23,
+          "mean_delta": 0.11538461538461531,
+          "n_trials": 26
+        }
+      ],
+      "analysis_cost": 0.004356,
+      "accuracy": 20.0,
+      "accuracy_correct": 1,
+      "accuracy_total": 5,
+      "duration_s": 42.0
+    },
+    {
+      "iteration": 9,
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "n_proposals": 1,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "Classification Logic / Priority Handling",
+          "gate": "reject",
+          "winner": "inconclusive",
+          "p_value": 0.23,
+          "mean_delta": 0.11538461538461531,
+          "n_trials": 26
+        }
+      ],
+      "analysis_cost": 0.004356,
+      "accuracy": 20.0,
+      "accuracy_correct": 1,
+      "accuracy_total": 5,
+      "duration_s": 42.3
+    },
+    {
+      "iteration": 10,
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "n_proposals": 1,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "Classification Logic / Priority Handling",
+          "gate": "reject",
+          "winner": "inconclusive",
+          "p_value": 0.23,
+          "mean_delta": 0.11538461538461531,
+          "n_trials": 26
+        }
+      ],
+      "analysis_cost": 0.004356,
+      "accuracy": 20.0,
+      "accuracy_correct": 1,
+      "accuracy_total": 5,
+      "duration_s": 42.2
     }
   ]
 }

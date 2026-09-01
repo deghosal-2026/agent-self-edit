@@ -5,9 +5,9 @@
   "ci_high": 0.0,
   "p_value": 1.0,
   "effect_size": 0.0,
-  "n_trials": 5,
-  "cost_usd": 0.0026135999999999998,
-  "token_count": 792,
+  "n_trials": 10,
+  "cost_usd": 0.0053394,
+  "token_count": 1618,
   "per_task": [
     {
       "task_id": "classify-001",
@@ -18,36 +18,76 @@
       "output_b": "billing"
     },
     {
-      "task_id": "classify-002",
+      "task_id": "classify-010",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "security",
+      "output_b": "security"
+    },
+    {
+      "task_id": "classify-011",
       "score_a": 1.0,
       "score_b": 1.0,
       "delta": 0.0,
-      "output_a": "billing",
-      "output_b": "billing"
+      "output_a": "urgent",
+      "output_b": "urgent"
     },
     {
-      "task_id": "classify-003",
+      "task_id": "classify-015",
       "score_a": 1.0,
       "score_b": 1.0,
       "delta": 0.0,
-      "output_a": "feature",
-      "output_b": "feature"
+      "output_a": "urgent",
+      "output_b": "urgent"
     },
     {
-      "task_id": "classify-004",
-      "score_a": 1.0,
-      "score_b": 1.0,
+      "task_id": "classify-019",
+      "score_a": 0.0,
+      "score_b": 0.0,
       "delta": 0.0,
       "output_a": "technical",
       "output_b": "technical"
     },
     {
-      "task_id": "classify-005",
-      "score_a": 1.0,
-      "score_b": 1.0,
+      "task_id": "classify-021",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "security",
+      "output_b": "security"
+    },
+    {
+      "task_id": "classify-022",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "urgent",
+      "output_b": "urgent"
+    },
+    {
+      "task_id": "classify-023",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "urgent",
+      "output_b": "urgent"
+    },
+    {
+      "task_id": "classify-024",
+      "score_a": 0.0,
+      "score_b": 0.0,
       "delta": 0.0,
       "output_a": "feature",
       "output_b": "feature"
+    },
+    {
+      "task_id": "classify-025",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "security",
+      "output_b": "security"
     }
   ],
   "gate": {
@@ -57,9 +97,9 @@
       {
         "name": "sample_floor",
         "passed": true,
-        "value": 5.0,
+        "value": 10.0,
         "threshold": 5.0,
-        "details": "n_trials (5) >= sample floor (5)"
+        "details": "n_trials (10) >= sample floor (5)"
       },
       {
         "name": "effect_size",

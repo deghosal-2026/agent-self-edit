@@ -1,14 +1,14 @@
 {
   "n_proposals": 3,
-  "cost_usd": 0.0042074999999999994,
-  "tokens_used": 1275,
+  "cost_usd": 0.0041613,
+  "tokens_used": 1261,
   "proposals": [
     {
-      "section": "system prompt",
+      "section": "classification criteria",
       "old_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other.",
-      "new_text": "Classify the input into exactly one or more of: urgent, billing, technical, feature, security, other.",
-      "hypothesis": "Allowing for multiple categories will help the model correctly classify inputs that fit into more than one category, as seen in several traces where the expected output included multiple categories.",
-      "expected_improvement": "This change should reduce the number of classification errors where multiple categories are appropriate.",
+      "new_text": "Classify the input into one or more of: urgent, billing, technical, feature, security, other.",
+      "hypothesis": "Allowing for multiple classifications will help the model capture cases where inputs can belong to more than one category, as seen in several traces.",
+      "expected_improvement": "The model will be able to classify inputs that require multiple categories, reducing misclassifications.",
       "evidence_traces": [
         4,
         5,
@@ -18,11 +18,11 @@
       ]
     },
     {
-      "section": "system prompt",
+      "section": "classification criteria",
       "old_text": "Output ONLY the category name.",
-      "new_text": "Output ONLY the category name(s).",
-      "hypothesis": "Changing 'category name' to 'category name(s)' aligns with the need for multiple outputs in certain cases, as indicated by the expected outputs in the failed traces.",
-      "expected_improvement": "This change should clarify that multiple outputs are acceptable, reducing misclassifications.",
+      "new_text": "Output the category name(s) as a comma-separated list.",
+      "hypothesis": "Changing the output format to allow for multiple categories will help the model provide the expected classifications in cases where more than one category is relevant.",
+      "expected_improvement": "The model will correctly output multiple categories when necessary, aligning with expected outputs.",
       "evidence_traces": [
         4,
         5,
@@ -32,11 +32,11 @@
       ]
     },
     {
-      "section": "system prompt",
+      "section": "classification criteria",
       "old_text": "No explanation. No reasoning.",
       "new_text": "No explanation. No reasoning. If multiple categories apply, list them all.",
-      "hypothesis": "Clarifying that multiple categories can be listed will guide the model to provide all relevant classifications, addressing the failures where multiple categories were expected.",
-      "expected_improvement": "This change should help the model understand that it can output multiple relevant categories, improving accuracy.",
+      "hypothesis": "Clarifying that multiple categories can be listed will guide the model to provide all relevant classifications without additional text.",
+      "expected_improvement": "The model will adhere to the instruction of listing all applicable categories, improving accuracy.",
       "evidence_traces": [
         4,
         5,

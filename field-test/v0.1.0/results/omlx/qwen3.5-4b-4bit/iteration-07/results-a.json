@@ -5,8 +5,48 @@
     "expected": "technical",
     "llm_output": "billing",
     "score": 0.0,
-    "latency_ms": 294.8851660003129,
+    "latency_ms": 339.17174999987765,
     "tokens": 72,
+    "error": null
+  },
+  {
+    "task_id": "classify-006",
+    "input": "I think my account was compromised \u2014 someone logged in from an unknown IP.",
+    "expected": "security",
+    "llm_output": "security",
+    "score": 1.0,
+    "latency_ms": 321.89170899982855,
+    "tokens": 76,
+    "error": null
+  },
+  {
+    "task_id": "classify-007",
+    "input": "The checkout button is grayed out and I can't complete my purchase.",
+    "expected": "technical",
+    "llm_output": "technical",
+    "score": 1.0,
+    "latency_ms": 325.18337500005146,
+    "tokens": 75,
+    "error": null
+  },
+  {
+    "task_id": "classify-008",
+    "input": "I need to downgrade my plan before the next billing cycle.",
+    "expected": "billing",
+    "llm_output": "billing",
+    "score": 1.0,
+    "latency_ms": 320.7974169999943,
+    "tokens": 71,
+    "error": null
+  },
+  {
+    "task_id": "classify-009",
+    "input": "The API returns a 500 error on the /v2/users endpoint.",
+    "expected": "technical",
+    "llm_output": "technical",
+    "score": 1.0,
+    "latency_ms": 329.0645420001965,
+    "tokens": 71,
     "error": null
   },
   {
@@ -15,7 +55,7 @@
     "expected": "urgent",
     "llm_output": "security",
     "score": 0.0,
-    "latency_ms": 297.0698329991137,
+    "latency_ms": 323.31675000023097,
     "tokens": 76,
     "error": null
   },
@@ -25,8 +65,38 @@
     "expected": "urgent",
     "llm_output": "technical",
     "score": 0.0,
-    "latency_ms": 292.09575000095356,
+    "latency_ms": 322.7454999996553,
     "tokens": 75,
+    "error": null
+  },
+  {
+    "task_id": "classify-012",
+    "input": "Can you help me reset my password?",
+    "expected": "technical",
+    "llm_output": "technical",
+    "score": 1.0,
+    "latency_ms": 323.4410419991036,
+    "tokens": 66,
+    "error": null
+  },
+  {
+    "task_id": "classify-013",
+    "input": "The refund for order #12345 hasn't appeared in my account.",
+    "expected": "billing",
+    "llm_output": "billing",
+    "score": 1.0,
+    "latency_ms": 327.79295799991814,
+    "tokens": 71,
+    "error": null
+  },
+  {
+    "task_id": "classify-014",
+    "input": "I found a bug in the search functionality \u2014 it ignores filters.",
+    "expected": "technical",
+    "llm_output": "technical",
+    "score": 1.0,
+    "latency_ms": 314.72724999912316,
+    "tokens": 74,
     "error": null
   },
   {
@@ -35,8 +105,38 @@
     "expected": "urgent",
     "llm_output": "technical",
     "score": 0.0,
-    "latency_ms": 290.80504100056714,
+    "latency_ms": 318.3052080003108,
     "tokens": 72,
+    "error": null
+  },
+  {
+    "task_id": "classify-016",
+    "input": "I want to report a phishing email that appears to be from your company.",
+    "expected": "security",
+    "llm_output": "security",
+    "score": 1.0,
+    "latency_ms": 330.8132090005529,
+    "tokens": 76,
+    "error": null
+  },
+  {
+    "task_id": "classify-017",
+    "input": "The new dashboard feature is confusing \u2014 can you add a tutorial?",
+    "expected": "feature",
+    "llm_output": "feature",
+    "score": 1.0,
+    "latency_ms": 323.617625001134,
+    "tokens": 73,
+    "error": null
+  },
+  {
+    "task_id": "classify-018",
+    "input": "Our team needs a higher rate limit for the API.",
+    "expected": "feature",
+    "llm_output": "feature",
+    "score": 1.0,
+    "latency_ms": 319.85762499971315,
+    "tokens": 69,
     "error": null
   },
   {
@@ -45,8 +145,18 @@
     "expected": "security",
     "llm_output": "technical",
     "score": 0.0,
-    "latency_ms": 294.4662090012571,
+    "latency_ms": 324.0955839992239,
     "tokens": 74,
+    "error": null
+  },
+  {
+    "task_id": "classify-020",
+    "input": "The invoice shows a different amount than what I agreed to in the contract.",
+    "expected": "billing",
+    "llm_output": "billing",
+    "score": 1.0,
+    "latency_ms": 330.16991700060316,
+    "tokens": 76,
     "error": null
   },
   {
@@ -55,7 +165,7 @@
     "expected": "security, billing",
     "llm_output": "security",
     "score": 0.0,
-    "latency_ms": 298.5795420008799,
+    "latency_ms": 325.2604589997645,
     "tokens": 82,
     "error": null
   },
@@ -65,7 +175,7 @@
     "expected": "technical, billing",
     "llm_output": "billing",
     "score": 0.0,
-    "latency_ms": 306.6910410016135,
+    "latency_ms": 324.9236249994283,
     "tokens": 75,
     "error": null
   },
@@ -75,7 +185,7 @@
     "expected": "urgent, security",
     "llm_output": "security",
     "score": 0.0,
-    "latency_ms": 295.18983400157595,
+    "latency_ms": 327.4183749999793,
     "tokens": 78,
     "error": null
   },
@@ -85,7 +195,7 @@
     "expected": "feature, billing",
     "llm_output": "feature",
     "score": 0.0,
-    "latency_ms": 291.29250000005413,
+    "latency_ms": 327.78795800004445,
     "tokens": 80,
     "error": null
   },
@@ -95,8 +205,58 @@
     "expected": "technical, security",
     "llm_output": "security",
     "score": 0.0,
-    "latency_ms": 327.15683299829834,
+    "latency_ms": 320.96212500073307,
     "tokens": 78,
+    "error": null
+  },
+  {
+    "task_id": "classify-026",
+    "input": "I can't log in and I think my payment failed. Which team should handle this?",
+    "expected": "other",
+    "llm_output": "billing",
+    "score": 0.0,
+    "latency_ms": 336.46679100093024,
+    "tokens": 76,
+    "error": null
+  },
+  {
+    "task_id": "classify-027",
+    "input": "The system is slow after the last update. Is this a bug or a feature regression?",
+    "expected": "other",
+    "llm_output": "technical",
+    "score": 0.0,
+    "latency_ms": 324.02225000078033,
+    "tokens": 78,
+    "error": null
+  },
+  {
+    "task_id": "classify-028",
+    "input": "I'm not sure if this is a billing issue or a technical one \u2014 the invoice is wrong AND the portal crashes when I try to view it.",
+    "expected": "other",
+    "llm_output": "billing",
+    "score": 0.0,
+    "latency_ms": 332.6041249983973,
+    "tokens": 89,
+    "error": null
+  },
+  {
+    "task_id": "classify-029",
+    "input": "Hi, I just wanted to say the new UI looks great! Keep up the good work.",
+    "expected": "other",
+    "llm_output": "feature",
+    "score": 0.0,
+    "latency_ms": 316.62158299877774,
+    "tokens": 75,
+    "error": null
+  },
+  {
+    "task_id": "classify-030",
+    "input": "Can you tell me about your company's sustainability initiatives?",
+    "expected": "other",
+    "llm_output": "other",
+    "score": 1.0,
+    "latency_ms": 312.4351669994212,
+    "tokens": 73,
     "error": null
   }
 ]

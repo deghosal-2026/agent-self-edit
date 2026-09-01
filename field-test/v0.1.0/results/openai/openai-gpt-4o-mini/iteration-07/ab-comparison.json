@@ -1,13 +1,13 @@
 {
-  "winner": "tie",
-  "mean_delta": 0.0,
+  "winner": "inconclusive",
+  "mean_delta": 0.09999999999999998,
   "ci_low": 0.0,
-  "ci_high": 0.0,
-  "p_value": 1.0,
-  "effect_size": 0.0,
-  "n_trials": 5,
-  "cost_usd": 0.0026301000000000002,
-  "token_count": 797,
+  "ci_high": 0.3,
+  "p_value": 0.45,
+  "effect_size": 0.4999999999999999,
+  "n_trials": 10,
+  "cost_usd": 0.0056595,
+  "token_count": 1715,
   "per_task": [
     {
       "task_id": "classify-001",
@@ -18,55 +18,123 @@
       "output_b": "billing"
     },
     {
-      "task_id": "classify-002",
+      "task_id": "classify-010",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "security",
+      "output_b": "security"
+    },
+    {
+      "task_id": "classify-011",
       "score_a": 1.0,
       "score_b": 1.0,
       "delta": 0.0,
-      "output_a": "billing",
-      "output_b": "billing"
+      "output_a": "urgent",
+      "output_b": "urgent"
     },
     {
-      "task_id": "classify-003",
+      "task_id": "classify-015",
       "score_a": 1.0,
       "score_b": 1.0,
       "delta": 0.0,
-      "output_a": "feature",
-      "output_b": "feature"
+      "output_a": "urgent",
+      "output_b": "urgent"
     },
     {
-      "task_id": "classify-004",
-      "score_a": 1.0,
-      "score_b": 1.0,
+      "task_id": "classify-019",
+      "score_a": 0.0,
+      "score_b": 0.0,
       "delta": 0.0,
       "output_a": "technical",
       "output_b": "technical"
     },
     {
-      "task_id": "classify-005",
-      "score_a": 1.0,
-      "score_b": 1.0,
+      "task_id": "classify-021",
+      "score_a": 0.0,
+      "score_b": 0.0,
       "delta": 0.0,
+      "output_a": "security",
+      "output_b": "urgent, billing, security"
+    },
+    {
+      "task_id": "classify-022",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "urgent",
+      "output_b": "urgent, billing, technical"
+    },
+    {
+      "task_id": "classify-023",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "urgent",
+      "output_b": "urgent, billing, security"
+    },
+    {
+      "task_id": "classify-024",
+      "score_a": 0.0,
+      "score_b": 1.0,
+      "delta": 1.0,
       "output_a": "feature",
-      "output_b": "feature"
+      "output_b": "feature, billing"
+    },
+    {
+      "task_id": "classify-025",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "security",
+      "output_b": "security"
     }
   ],
   "gate": {
-    "decision": "reject",
-    "reason": "1/6 checks passed; below near-miss threshold (50%)",
+    "decision": "near_miss",
+    "reason": "5/6 checks passed; near-miss (>= 83%)",
     "checks": [
       {
         "name": "sample_floor",
         "passed": true,
-        "value": 5.0,
+        "value": 10.0,
         "threshold": 5.0,
-        "details": "n_trials (5) >= sample floor (5)"
+        "details": "n_trials (10) >= sample floor (5)"
       },
       {
         "name": "effect_size",
-        "passed": false,
-        "value": 0.0,
+        "passed": true,
+        "value": 0.4999999999999999,
         "threshold": 0.05,
-        "details": "effect size (0.0%) < min (5.0%)"
+        "details": "effect size (50.0%) >= min (5.0%)"
+      },
+      {
+        "name": "confidence",
+        "passed": true,
+        "value": 0.45,
+        "threshold": 0.95,
+        "details": "p-value (0.4500) < confidence level (0.9500)"
+      },
+      {
+        "name": "frozen_sections",
+        "passed": true,
+        "value": 0.0,
+        "threshold": 0.0,
+        "details": "no frozen lines modified"
+      },
+      {
+        "name": "edit_distance",
+        "passed": true,
+        "value": 1.0,
+        "threshold": 20.0,
+        "details": "1 changed lines <= max (20)"
+      },
+      {
+        "name": "drift",
+        "passed": false,
+        "value": 0.776601913578598,
+        "threshold": 0.5,
+        "details": "drift (0.777) > threshold (0.500)"
       }
     ]
   }

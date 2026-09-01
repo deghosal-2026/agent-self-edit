@@ -133,8 +133,8 @@
         "name": "drift",
         "passed": false,
         "value": 0.7801512742302883,
-        "threshold": 0.3,
-        "details": "drift (0.780) > threshold (0.300)"
+        "threshold": 0.5,
+        "details": "drift (0.780) > threshold (0.500)"
       }
     ]
   }

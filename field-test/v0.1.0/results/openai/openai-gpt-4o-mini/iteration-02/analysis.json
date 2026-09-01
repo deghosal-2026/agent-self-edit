@@ -1,14 +1,14 @@
 {
   "n_proposals": 3,
-  "cost_usd": 0.0041844000000000004,
-  "tokens_used": 1268,
+  "cost_usd": 0.0041613,
+  "tokens_used": 1261,
   "proposals": [
     {
       "section": "classification criteria",
       "old_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other.",
       "new_text": "Classify the input into one or more of: urgent, billing, technical, feature, security, other.",
-      "hypothesis": "Allowing for multiple classifications will help the model capture cases where inputs can belong to more than one category, as seen in several traces.",
-      "expected_improvement": "The model will be able to classify inputs that require multiple categories, reducing misclassifications.",
+      "hypothesis": "Changing 'exactly one of' to 'one or more of' allows for multiple classifications, which is necessary for inputs that can belong to more than one category.",
+      "expected_improvement": "This change should reduce the number of classification failures where multiple categories are expected.",
       "evidence_traces": [
         4,
         5,
@@ -20,9 +20,9 @@
     {
       "section": "classification criteria",
       "old_text": "Output ONLY the category name.",
-      "new_text": "Output the category name(s) as a comma-separated list.",
-      "hypothesis": "Specifying a comma-separated list will clarify that multiple categories can be returned, addressing the failures where multiple classifications were expected.",
-      "expected_improvement": "The model will provide the expected multiple classifications instead of a single category.",
+      "new_text": "Output the category name(s).",
+      "hypothesis": "Changing 'ONLY the category name' to 'the category name(s)' clarifies that multiple categories can be outputted, aligning with the expected outputs in several traces.",
+      "expected_improvement": "This change should help the model understand that it can output multiple categories when necessary.",
       "evidence_traces": [
         4,
         5,
@@ -34,9 +34,9 @@
     {
       "section": "classification criteria",
       "old_text": "No explanation. No reasoning.",
-      "new_text": "No explanation. No reasoning. If multiple categories apply, include all relevant categories.",
-      "hypothesis": "Clarifying that multiple categories should be included will guide the model to provide all applicable classifications, addressing the failures related to multiple expected outputs.",
-      "expected_improvement": "The model will be more likely to output all relevant categories when applicable.",
+      "new_text": "No explanation. No reasoning unless multiple categories are provided.",
+      "hypothesis": "Allowing for reasoning only when multiple categories are provided may help the model justify its classification when it outputs more than one category.",
+      "expected_improvement": "This change should help the model provide more accurate classifications when multiple outputs are expected.",
       "evidence_traces": [
         4,
         5,

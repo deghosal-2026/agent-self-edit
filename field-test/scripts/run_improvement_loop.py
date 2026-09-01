@@ -396,7 +396,11 @@ def main() -> None:
     # classify-019 (->security), classify-021 through 025 (multi-label)
     ab_task_ids = {"classify-001", "classify-010", "classify-011", "classify-015",
                    "classify-019", "classify-021", "classify-022", "classify-023",
-                   "classify-024", "classify-025"}
+                   "classify-024", "classify-025",
+                   "classify-006", "classify-007", "classify-008", "classify-009",
+                   "classify-012", "classify-013", "classify-014", "classify-016",
+                   "classify-017", "classify-018", "classify-020",
+                   "classify-026", "classify-027", "classify-028", "classify-029", "classify-030"}
     for task in task_set.list_tasks():
         if task.id in ab_task_ids:
             ab_task_set.add_task(task)

@@ -1,24 +1,18 @@
 # Field Test Scripts
 
-All scripts run from the repo root. Results are stored under `field-test/v0.1.0/results/`.
+All scripts run from the repo root. Results are stored under `field-test/v0.1.0/results/<provider>/<model>/`.
 
 ---
 
 ## 10-Iteration Improvement Loop
 
-`run_improvement_loop.py` runs the actual self-edit loop (`agent-self-edit run --once`) for N iterations, measuring accuracy on a held-out set after each iteration. This is the core field test for #100.
+`run_improvement_loop.py` calls the internal API directly (not the CLI) to run the full self-edit loop for N iterations. Per iteration it writes inspectable A/B artifacts.
 
 ```bash
-# Local OMLX
+# Local OMLX (4B — recommended, fastest)
 export OMLX_KEY=omlx-test
 export OMLX_MODEL=Qwen3.5-4B-4bit
 export OMLX_URL=http://localhost:8000/v1
-python3 field-test/scripts/run_improvement_loop.py --iterations 10
-
-# Cloud (OpenRouter)
-export OMLX_KEY=sk-or-v1-...
-export OMLX_MODEL=openai/gpt-4o-mini
-export OMLX_URL=https://openrouter.ai/api/v1
 python3 field-test/scripts/run_improvement_loop.py --iterations 10
 ```
 
@@ -26,7 +20,7 @@ python3 field-test/scripts/run_improvement_loop.py --iterations 10
 
 | Var | Required | Description |
 |-----|----------|-------------|
-| `OMLX_KEY` | yes | API key (`omlx-test` for local, `sk-or-v1-...` for cloud) |
+| `OMLX_KEY` | yes | API key (`omlx-test` for local) |
 | `OMLX_MODEL` | yes | Model name |
 | `OMLX_URL` | yes | API base URL |
 
@@ -36,12 +30,25 @@ python3 field-test/scripts/run_improvement_loop.py --iterations 10
 |------|-------------|
 | `--iterations` | Number of self-edit iterations (default: 10) |
 | `--traces-per-iteration` | Traces to seed each iteration (default: 10) |
-| `--model` | Override model name |
-| `--endpoint` | Override API base URL |
 
 ### Output
 
-Results go to `field-test/v0.1.0/results/improvement-loop/improvement-loop-report.json` — per-iteration accuracy, gate outcomes, cost, and LLM traffic.
+```
+field-test/v0.1.0/results/omlx/qwen3.5-4b-4bit/
+  improvement-loop-report.json    ← aggregate: per-iteration accuracy, gate, cost
+  llm-traffic.jsonl                ← all LLM request/response pairs
+  iteration-01/
+    prompt-a.md                    ← current prompt
+    prompt-b.md                    ← candidate prompt (edit applied)
+    results-a.json                 ← per-task: input, expected, llm_output, score, latency, tokens
+    results-b.json                 ← same for prompt B
+    ab-comparison.json             ← per-task deltas, winner, p-value, CI, effect size, gate decision
+    analysis.json                  ← analyzer proposals (section, old_text, new_text, hypothesis)
+    accuracy.json                  ← held-out set results
+    prompt-after.md                ← prompt after gate decision
+  iteration-02/
+    ...
+```
 
 ---
 

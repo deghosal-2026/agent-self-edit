@@ -215,6 +215,161 @@ The default drift threshold (0.3) was too strict for the 4B model's edit style �
 
 **Result: 20% → 40% accuracy in 1 iteration.** The self-edit loop works end-to-end.
 
+### Sixth Finding: Cloud LLM adds no value for classification tasks
+
+From the mini field test, all 3 models produce identical classification outputs:
+
+| Model | Accuracy | Latency/call | Cost |
+|-------|----------|-------------|------|
+| Qwen3.5-4B-4bit (local) | 80% | 304ms | Free |
+| Qwen3.5-9B-MLX-4bit (local) | 80% | 441ms | Free |
+| openai/gpt-4o-mini (cloud) | 80% | 2,794ms | $/call |
+
+All 3 make the exact same 2 errors (classify-001, classify-010). The errors are prompt-driven, not model-driven. The cloud model adds:
+- **9x more latency** (2,794ms vs 304ms)
+- **Network jitter** (522ms–6.1s range vs 251–538ms)
+- **Cost per call**
+- **Zero accuracy benefit**
+
+### Lesson: Match the model to the task
+
+For classification (single-label ExactMatch), the 4B local model is sufficient. Cloud adds no value — the errors come from the prompt, not the model. Cloud testing should be deferred to tasks where model capability actually matters (generation, extraction, multi-step reasoning). For v0.1.0 field testing, run only local OMLX models:
+- **4B** for fast iteration (fastest — 304ms/call, 9x faster than cloud)
+- **9B** for validation (same accuracy, 2x slower than 4B, confirms results)
+
+### Critical Review of First Promotion
+
+**What's real:**
+- The 4B model is genuinely classifying — real LLM calls, real latency (300-475ms), real token usage
+- Prompt B (with priority rules) actually changed behavior on 7 of 10 A/B tasks
+- 3 tasks genuinely fixed: classify-015 (urgent), classify-023 (urgent, security), classify-024 (feature, billing) — prompt B got the right answer where A got it wrong
+- 0 tasks broken — B didn't regress on anything A got right
+- The gate correctly promotes based on 6 deterministic checks
+- 1,907 LLM traffic entries captured — all real calls to Qwen3.5-4B-4bit
+
+**Concerns:**
+
+1. **Confidence threshold is too weak.** The gate passes because `p_value < confidence_level` (0.1 < 0.95). But that's a 10% chance the improvement is noise. Standard statistical significance requires p < 0.05. The gate config uses `confidence_level: 0.95` which means it checks `p < 0.95` — this should be `p < 0.05` (i.e., `confidence_level` should be interpreted differently or the check should be `p < (1 - confidence_level)`).
+
+2. **Only 3 of 10 A/B tasks fixed.** B still gets 7 wrong. The improvement is from 0/10 to 3/10 — 30% relative but the absolute accuracy is still terrible.
+
+3. **Held-out accuracy only went 20% → 40%.** That's 1 extra correct task (classify-024). The held-out set measures real impact — and it's modest.
+
+4. **Iteration 2 hit a wall.** 3 proposals, all rejected. The analyzer can't find further improvements on top of the already-promoted prompt.
+
+5. **B over-generates labels on multi-label tasks.** classify-021: B says "urgent, security, billing" (expected "security, billing"). classify-025: B says "security, technical, urgent" (expected "technical, security"). The edit made the model add "urgent" everywhere — it over-corrected.
+
+### Lesson: The confidence check semantics may be inverted
+
+The gate checks `p_value < confidence_level` where `confidence_level = 0.95`. This means any p < 0.95 passes — including p = 0.9. Standard hypothesis testing requires p < 0.05 (i.e., p < 1 - confidence_level). This needs investigation — the gate may be letting through edits that aren't statistically significant.
+
+### Seventh Finding: Confidence check fixed — previous promotion was too weak
+
+Fixed `check_confidence` in `gate.py`:
+- **Before:** `passed = p < confidence_level` (p < 0.95 — almost everything passes)
+- **After:** `passed = p < alpha` where `alpha = 1 - confidence_level` (p < 0.05 — real significance)
+
+Re-ran 1 iteration on 4B with the fix:
+
+```
+sample_floor: PASS — n_trials (26) >= sample floor (5)
+effect_size:  PASS — effect size (25.0%) >= min (5.0%)
+confidence:   FAIL — p-value (0.2300) >= alpha (0.0500)
+```
+
+The previous "promotion" (p=0.1) would now be correctly rejected. The improvement was real (25% effect size, 3 tasks fixed) but not statistically significant (p=0.23 with n=26 tasks).
+
+### Lesson: A weak confidence threshold lets noise through
+
+The original gate config (`confidence_level=0.95`) was checking `p < 0.95`, which passes almost any result. This means the gate was promoting edits based on noise, not signal. The fix to `p < (1 - confidence_level)` = `p < 0.05` ensures only statistically significant improvements are promoted. The previous promotion at p=0.1 was a false positive — there was a 10% chance the improvement was random.
+
+### Eighth Finding: With correct confidence (p<0.05), no promotion in 10 iterations
+
+After fixing the confidence check, the loop ran 10 iterations on 4B — all rejected:
+
+| Iteration | Gate | Checks passed | p-value |
+|-----------|------|---------------|---------|
+| 1-10 | reject | 2/6 | ~0.23 |
+
+The same edit that previously "promoted" (p=0.1 with old threshold) now correctly fails (p=0.23 >= 0.05). The improvement is real (25% effect size, 3 tasks fixed) but not statistically significant — even with 26 A/B tasks.
+
+### Why No Promotion
+
+1. **The 4B model proposes the same edit every iteration.** It sees the same 10 real failures, proposes the same priority rules edit. p stays at ~0.23 because the A/B result doesn't change.
+
+2. **p=0.23 means 23% chance the improvement is noise.** With 3 of 26 tasks fixed, the permutation test can't distinguish signal from noise at p<0.05.
+
+### Ninth Finding: We chased the wrong goal for a while
+
+For part of this session, the work drifted toward "getting a promotion" or "making the loop pass" instead of validating the actual milestone goal.
+
+That was the wrong target.
+
+The real field-test objective for v0.1.0 is to prove that the system behaves honestly:
+- the loop runs end-to-end
+- the A/B test is real and inspectable
+- the gate makes deterministic decisions from actual evidence
+- weak or noisy improvements are rejected
+
+Once the fake traces, easy A/B set, gate argument bug, and confidence bug were fixed, the results became trustworthy. At that point, continuing to tweak until something promoted would have optimized for a green outcome instead of an honest conclusion.
+
+### Course Correction
+
+The right course is:
+
+1. Treat the current 4B run as the canonical result
+2. Conclude that the gate is working correctly
+3. Conclude that the current analyzer/prompt strategy does **not yet** produce statistically significant improvement on this classification set
+4. Capture follow-up work for the next version instead of forcing a pass now
+
+### Why This Is the Right Direction
+
+This course preserves the value of the field test:
+- it avoids shipping a false positive based on weak significance
+- it shows that the gate can reject noisy edits, which is the core safety property
+- it gives a trustworthy baseline for v0.2.0 improvements
+- it separates "system correctness" from "model/prompt quality"
+
+In other words: **the goal is not to make the loop pass; the goal is to see the gate working.**
+
+That goal has been met. The gate now rejects edits that do not clear the corrected evidence bar. That is the right place to stop and wrap this milestone.
+
+### Next Steps
+
+For the next version, the follow-up work should focus on improving evidence quality rather than weakening the gate:
+
+1. **Increase A/B task count further**
+   - Move from 26 hard tasks to a larger curated set so the permutation test has more power.
+
+2. **Make the analyzer rejection-aware**
+   - Feed back prior rejected edits and require a meaningfully different proposal on the next iteration.
+
+3. **Support cumulative evidence across iterations**
+   - If the same candidate repeatedly improves the same tasks, aggregate that evidence instead of treating each run as isolated.
+
+4. **Constrain over-broad multi-label edits**
+   - Reduce the tendency to over-add `urgent` on multi-label tasks.
+
+5. **Write the final field test report around the honest result**
+   - Document that the loop works mechanically, A/B artifacts are inspectable, and the corrected gate rejects underpowered improvements.
+
+6. **Do not add cloud or 9B back into the final v0.1.0 run**
+   - 4B local is the canonical arm for this milestone: fastest, cheapest, and sufficient to validate gate behavior.
+
+3. **No learning between iterations.** The analyzer doesn't remember previous rejections — it proposes the same edit again. The loop is stuck in a loop.
+
+### What's Next
+
+Three paths to get a real promotion:
+
+1. **More A/B tasks (30-50).** More statistical power. If the edit genuinely fixes 30% of tasks, p will drop below 0.05 with enough trials.
+
+2. **Analyzer must propose different edits after rejection.** Currently it proposes the same edit every time. Need to either:
+   - Feed rejection feedback to the analyzer ("your previous edit was rejected, try a different approach")
+   - Or track rejected proposals and deduplicate
+
+3. **Cumulative evidence across iterations.** If the same edit fixes the same 3 tasks every iteration, that's stronger evidence than a single A/B test. Could accumulate evidence across iterations.
+
 ---
 
 ## Part 2: Mini Field Test Learnings (Aug 31, from mini-field-test-report.md)

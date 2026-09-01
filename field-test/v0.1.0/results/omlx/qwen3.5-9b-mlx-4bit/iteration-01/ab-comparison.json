@@ -92,7 +92,7 @@
   ],
   "gate": {
     "decision": "near_miss",
-    "reason": "3/6 checks passed; near-miss (>= 50%)",
+    "reason": "5/6 checks passed; near-miss (>= 83%)",
     "checks": [
       {
         "name": "sample_floor",
@@ -117,10 +117,24 @@
       },
       {
         "name": "frozen_sections",
-        "passed": false,
+        "passed": true,
         "value": 0.0,
         "threshold": 0.0,
-        "details": "edit.old_text not found in current_prompt"
+        "details": "no frozen lines modified"
+      },
+      {
+        "name": "edit_distance",
+        "passed": true,
+        "value": 11.0,
+        "threshold": 20.0,
+        "details": "11 changed lines <= max (20)"
+      },
+      {
+        "name": "drift",
+        "passed": false,
+        "value": 0.6143882945576455,
+        "threshold": 0.5,
+        "details": "drift (0.614) > threshold (0.500)"
       }
     ]
   }

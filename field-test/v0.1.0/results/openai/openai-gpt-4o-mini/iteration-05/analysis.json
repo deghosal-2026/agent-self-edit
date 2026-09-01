@@ -1,41 +1,48 @@
 {
   "n_proposals": 3,
-  "cost_usd": 0.0040095,
-  "tokens_used": 1215,
+  "cost_usd": 0.004293300000000001,
+  "tokens_used": 1301,
   "proposals": [
     {
-      "section": "classification instructions",
+      "section": "classification criteria",
       "old_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other.",
-      "new_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, urgent, other.",
-      "hypothesis": "Adding 'urgent' to the classification options may help the model recognize critical security issues as urgent, which it failed to classify correctly in Trace 10.",
-      "expected_improvement": "This change should help the model correctly classify urgent issues, reducing misclassifications related to urgency.",
+      "new_text": "Classify the input into one or more of: urgent, billing, technical, feature, security, other.",
+      "hypothesis": "Changing 'exactly one of' to 'one or more of' allows the model to classify inputs that may belong to multiple categories, which is evident in several traces where multiple categories were expected.",
+      "expected_improvement": "This change should help the model recognize and output multiple relevant categories for inputs that clearly fit more than one classification.",
       "evidence_traces": [
-        10
-      ]
-    },
-    {
-      "section": "classification instructions",
-      "old_text": "Output ONLY the category name.",
-      "new_text": "Output ONLY the category name. If the input relates to billing or technical issues, prioritize those categories.",
-      "hypothesis": "Emphasizing the prioritization of billing and technical categories may help the model focus on these common issues, which were misclassified in several traces.",
-      "expected_improvement": "This change should help the model better classify billing and technical issues, reducing the number of misclassifications in these areas.",
-      "evidence_traces": [
-        1,
-        2,
         4,
+        5,
+        6,
         7,
-        9
+        8
       ]
     },
     {
-      "section": "classification instructions",
-      "old_text": "Nothing else. No explanation. No reasoning.",
-      "new_text": "Nothing else. No explanation. No reasoning. If the input mentions a feature request, classify it as feature.",
-      "hypothesis": "Specifying that feature requests should be classified as 'feature' may help the model correctly identify and classify inputs related to feature inquiries, which were misclassified in several traces.",
-      "expected_improvement": "This change should help the model correctly classify feature-related inquiries, reducing misclassifications in this category.",
+      "section": "classification criteria",
+      "old_text": "Output ONLY the category name.",
+      "new_text": "Output the category name(s) as a comma-separated list.",
+      "hypothesis": "Allowing the output to be a comma-separated list will enable the model to provide multiple classifications when necessary, addressing the failures where multiple categories were expected.",
+      "expected_improvement": "This change should improve the model's ability to classify inputs that fit into more than one category.",
       "evidence_traces": [
-        3,
-        5
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    },
+    {
+      "section": "classification criteria",
+      "old_text": "No explanation. No reasoning.",
+      "new_text": "No explanation. No reasoning. If multiple categories apply, list them all.",
+      "hypothesis": "Clarifying that multiple categories can be listed will guide the model to provide all relevant classifications without additional explanations.",
+      "expected_improvement": "This change should help the model understand that it can output multiple categories without violating the instruction to avoid explanations.",
+      "evidence_traces": [
+        4,
+        5,
+        6,
+        7,
+        8
       ]
     }
   ]

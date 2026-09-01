@@ -1,52 +1,48 @@
 {
   "n_proposals": 3,
-  "cost_usd": 0.0041349,
-  "tokens_used": 1253,
+  "cost_usd": 0.0043460999999999994,
+  "tokens_used": 1317,
   "proposals": [
     {
       "section": "classification instructions",
       "old_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other.",
-      "new_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other. If the input relates to a billing issue, classify it as billing; if it relates to a technical issue, classify it as technical; if it relates to a feature request, classify it as feature; if it relates to a security concern, classify it as security; if it is urgent, classify it as urgent.",
-      "hypothesis": "Providing explicit guidance on how to classify inputs based on their context will help the agent make more accurate classifications.",
-      "expected_improvement": "This change should reduce misclassifications by clarifying the context for each category.",
+      "new_text": "Classify the input into one or more of: urgent, billing, technical, feature, security, other.",
+      "hypothesis": "Changing 'exactly one of' to 'one or more of' allows the model to classify inputs that may belong to multiple categories, which is evident in several traces where multiple categories were expected.",
+      "expected_improvement": "This change should help the model recognize and output multiple relevant categories for inputs that clearly fit more than one classification.",
       "evidence_traces": [
-        1,
-        2,
-        3,
         4,
         5,
         6,
         7,
-        9,
-        10
+        8
       ]
     },
     {
       "section": "classification instructions",
       "old_text": "Output ONLY the category name.",
-      "new_text": "Output ONLY the category name. Ensure that the category reflects the primary concern of the input.",
-      "hypothesis": "Emphasizing that the output should reflect the primary concern may help the agent prioritize the most relevant classification.",
-      "expected_improvement": "This change should help the agent focus on the main issue presented in the input, leading to fewer misclassifications.",
+      "new_text": "Output the category name(s) as a comma-separated list.",
+      "hypothesis": "Allowing the output to be a comma-separated list will enable the model to provide multiple classifications when necessary, addressing the failures where multiple categories were expected.",
+      "expected_improvement": "This change should improve the model's ability to output multiple relevant categories, aligning with the expected outputs in the failed traces.",
       "evidence_traces": [
-        1,
-        2,
-        3,
         4,
         5,
         6,
         7,
-        9,
-        10
+        8
       ]
     },
     {
       "section": "classification instructions",
-      "old_text": "Nothing else. No explanation. No reasoning.",
-      "new_text": "Nothing else. No explanation. No reasoning. If the input contains multiple issues, prioritize the most urgent or relevant one.",
-      "hypothesis": "Instructing the agent to prioritize the most urgent or relevant issue may help it classify inputs that contain multiple concerns more accurately.",
-      "expected_improvement": "This change should improve the classification of inputs that may have overlapping categories, particularly urgent cases.",
+      "old_text": "No explanation. No reasoning.",
+      "new_text": "No explanation. No reasoning unless multiple categories are provided.",
+      "hypothesis": "Allowing for reasoning when multiple categories are provided may help the model better understand the context of the input and improve classification accuracy.",
+      "expected_improvement": "This change could enhance the model's performance in cases where multiple classifications are appropriate, leading to more accurate outputs.",
       "evidence_traces": [
-        10
+        4,
+        5,
+        6,
+        7,
+        8
       ]
     }
   ]

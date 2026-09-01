@@ -5,8 +5,8 @@
     "expected": "technical",
     "llm_output": "billing",
     "score": 0.0,
-    "latency_ms": 612.9467079990718,
-    "tokens": 83,
+    "latency_ms": 912.4670410001272,
+    "tokens": 82,
     "error": null
   },
   {
@@ -15,8 +15,8 @@
     "expected": "urgent",
     "llm_output": "security",
     "score": 0.0,
-    "latency_ms": 503.55362499976764,
-    "tokens": 87,
+    "latency_ms": 1935.4704589986795,
+    "tokens": 86,
     "error": null
   },
   {
@@ -25,8 +25,8 @@
     "expected": "urgent",
     "llm_output": "urgent",
     "score": 1.0,
-    "latency_ms": 698.9839580000989,
-    "tokens": 85,
+    "latency_ms": 619.4866249988991,
+    "tokens": 84,
     "error": null
   },
   {
@@ -35,8 +35,8 @@
     "expected": "urgent",
     "llm_output": "urgent",
     "score": 1.0,
-    "latency_ms": 467.169333000129,
-    "tokens": 83,
+    "latency_ms": 675.159917000201,
+    "tokens": 81,
     "error": null
   },
   {
@@ -45,8 +45,8 @@
     "expected": "security",
     "llm_output": "technical",
     "score": 0.0,
-    "latency_ms": 593.6899170010292,
-    "tokens": 85,
+    "latency_ms": 842.4957499992161,
+    "tokens": 84,
     "error": null
   },
   {
@@ -55,8 +55,8 @@
     "expected": "security, billing",
     "llm_output": "security",
     "score": 0.0,
-    "latency_ms": 1040.3009579986247,
-    "tokens": 93,
+    "latency_ms": 532.8037090002908,
+    "tokens": 92,
     "error": null
   },
   {
@@ -65,8 +65,8 @@
     "expected": "technical, billing",
     "llm_output": "urgent",
     "score": 0.0,
-    "latency_ms": 538.0004590006138,
-    "tokens": 86,
+    "latency_ms": 1038.6025829993741,
+    "tokens": 85,
     "error": null
   },
   {
@@ -75,18 +75,18 @@
     "expected": "urgent, security",
     "llm_output": "urgent",
     "score": 0.0,
-    "latency_ms": 931.495625000025,
-    "tokens": 88,
+    "latency_ms": 804.0657919991645,
+    "tokens": 87,
     "error": null
   },
   {
     "task_id": "classify-024",
     "input": "I want to request a new integration feature and also report that the billing page is broken.",
     "expected": "feature, billing",
-    "llm_output": "feature, billing",
-    "score": 1.0,
-    "latency_ms": 1345.4359170009411,
-    "tokens": 94,
+    "llm_output": "feature",
+    "score": 0.0,
+    "latency_ms": 1084.8182499994437,
+    "tokens": 90,
     "error": null
   },
   {
@@ -95,8 +95,8 @@
     "expected": "technical, security",
     "llm_output": "security",
     "score": 0.0,
-    "latency_ms": 833.2959580002353,
-    "tokens": 89,
+    "latency_ms": 586.5761249988282,
+    "tokens": 88,
     "error": null
   }
 ]

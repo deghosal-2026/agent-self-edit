@@ -1,42 +1,48 @@
 {
   "n_proposals": 3,
-  "cost_usd": 0.0038643,
-  "tokens_used": 1171,
+  "cost_usd": 0.004138200000000001,
+  "tokens_used": 1254,
   "proposals": [
     {
-      "section": "classification instructions",
+      "section": "system prompt",
       "old_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other.",
-      "new_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, urgent, other.",
-      "hypothesis": "Adding 'urgent' to the classification options may help the model recognize critical security issues as urgent, which were misclassified in Trace 10.",
-      "expected_improvement": "This change should help the model correctly classify urgent security issues.",
+      "new_text": "Classify the input into one or more of: urgent, billing, technical, feature, security, other.",
+      "hypothesis": "Allowing for multiple classifications will help the model capture cases where inputs can belong to more than one category, as seen in several traces.",
+      "expected_improvement": "The model will be able to classify inputs that fit into multiple categories, reducing misclassifications.",
       "evidence_traces": [
-        10
-      ]
-    },
-    {
-      "section": "classification instructions",
-      "old_text": "Output ONLY the category name.",
-      "new_text": "Output ONLY the category name. If the input relates to billing or technical issues, prioritize those categories.",
-      "hypothesis": "Emphasizing the prioritization of billing and technical categories may help the model correctly classify inputs related to billing and technical issues, as seen in Traces 1, 2, 4, 7, and 9.",
-      "expected_improvement": "This change should help the model better classify billing and technical issues.",
-      "evidence_traces": [
-        1,
-        2,
         4,
+        5,
+        6,
         7,
-        9
+        8
       ]
     },
     {
-      "section": "classification instructions",
+      "section": "system prompt",
       "old_text": "Output ONLY the category name.",
-      "new_text": "Output ONLY the category name. Ensure to consider context clues in the input.",
-      "hypothesis": "Encouraging the model to consider context clues may help it better understand the nature of the input, leading to more accurate classifications, as seen in Traces 3, 5, and 6.",
-      "expected_improvement": "This change should help the model classify feature and security-related inputs more accurately.",
+      "new_text": "Output the category name(s) as a comma-separated list.",
+      "hypothesis": "Changing the output format to allow for multiple categories will help the model provide the expected classifications for inputs that require it.",
+      "expected_improvement": "The model will correctly output multiple categories when necessary, aligning with expected outputs.",
       "evidence_traces": [
-        3,
+        4,
         5,
-        6
+        6,
+        7,
+        8
+      ]
+    },
+    {
+      "section": "system prompt",
+      "old_text": "No explanation. No reasoning.",
+      "new_text": "No explanation. No reasoning. If multiple categories are applicable, list them all.",
+      "hypothesis": "Clarifying that multiple categories can be listed will guide the model to provide all relevant classifications without additional text.",
+      "expected_improvement": "The model will adhere to the instruction to list all applicable categories, improving accuracy in classification.",
+      "evidence_traces": [
+        4,
+        5,
+        6,
+        7,
+        8
       ]
     }
   ]

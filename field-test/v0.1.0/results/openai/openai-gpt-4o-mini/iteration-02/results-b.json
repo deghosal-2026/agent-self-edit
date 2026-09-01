@@ -5,8 +5,8 @@
     "expected": "technical",
     "llm_output": "billing",
     "score": 0.0,
-    "latency_ms": 581.1581250000017,
-    "tokens": 87,
+    "latency_ms": 1315.908833001231,
+    "tokens": 82,
     "error": null
   },
   {
@@ -15,8 +15,8 @@
     "expected": "urgent",
     "llm_output": "security",
     "score": 0.0,
-    "latency_ms": 597.4881250003818,
-    "tokens": 92,
+    "latency_ms": 1467.695208000805,
+    "tokens": 86,
     "error": null
   },
   {
@@ -25,8 +25,8 @@
     "expected": "urgent",
     "llm_output": "urgent",
     "score": 1.0,
-    "latency_ms": 1063.7064579987054,
-    "tokens": 90,
+    "latency_ms": 1030.5872500011901,
+    "tokens": 84,
     "error": null
   },
   {
@@ -35,8 +35,8 @@
     "expected": "urgent",
     "llm_output": "urgent",
     "score": 1.0,
-    "latency_ms": 1367.8651249992981,
-    "tokens": 87,
+    "latency_ms": 1228.1634169994504,
+    "tokens": 81,
     "error": null
   },
   {
@@ -45,28 +45,28 @@
     "expected": "security",
     "llm_output": "technical",
     "score": 0.0,
-    "latency_ms": 1417.045208001582,
-    "tokens": 90,
+    "latency_ms": 1090.0426249991142,
+    "tokens": 84,
     "error": null
   },
   {
     "task_id": "classify-021",
     "input": "My account was hacked and they changed my billing address \u2014 I need a refund AND a password reset.",
     "expected": "security, billing",
-    "llm_output": "urgent, billing, security",
+    "llm_output": "security",
     "score": 0.0,
-    "latency_ms": 1328.467790999639,
-    "tokens": 102,
+    "latency_ms": 1114.343708000888,
+    "tokens": 92,
     "error": null
   },
   {
     "task_id": "classify-022",
     "input": "The API is down AND I'm being charged for premium tier that I can't use.",
     "expected": "technical, billing",
-    "llm_output": "urgent, billing, technical",
+    "llm_output": "urgent",
     "score": 0.0,
-    "latency_ms": 679.44400000124,
-    "tokens": 96,
+    "latency_ms": 574.5328749999317,
+    "tokens": 85,
     "error": null
   },
   {
@@ -75,18 +75,18 @@
     "expected": "urgent, security",
     "llm_output": "urgent",
     "score": 0.0,
-    "latency_ms": 635.1631249999627,
-    "tokens": 92,
+    "latency_ms": 570.5859579993557,
+    "tokens": 87,
     "error": null
   },
   {
     "task_id": "classify-024",
     "input": "I want to request a new integration feature and also report that the billing page is broken.",
     "expected": "feature, billing",
-    "llm_output": "feature, billing",
-    "score": 1.0,
-    "latency_ms": 613.6323330010782,
-    "tokens": 99,
+    "llm_output": "feature",
+    "score": 0.0,
+    "latency_ms": 1000.6069589999242,
+    "tokens": 90,
     "error": null
   },
   {
@@ -95,8 +95,8 @@
     "expected": "technical, security",
     "llm_output": "security",
     "score": 0.0,
-    "latency_ms": 1215.1150000008784,
-    "tokens": 94,
+    "latency_ms": 1378.6121670000284,
+    "tokens": 88,
     "error": null
   }
 ]

@@ -5,8 +5,8 @@
     "expected": "technical",
     "llm_output": "billing",
     "score": 0.0,
-    "latency_ms": 716.0112500005198,
-    "tokens": 71,
+    "latency_ms": 974.2334580005263,
+    "tokens": 83,
     "error": null
   },
   {
@@ -15,8 +15,8 @@
     "expected": "urgent",
     "llm_output": "security",
     "score": 0.0,
-    "latency_ms": 1177.2213330004888,
-    "tokens": 76,
+    "latency_ms": 756.663166999715,
+    "tokens": 87,
     "error": null
   },
   {
@@ -25,8 +25,8 @@
     "expected": "urgent",
     "llm_output": "urgent",
     "score": 1.0,
-    "latency_ms": 549.1517499995098,
-    "tokens": 73,
+    "latency_ms": 554.8238330011372,
+    "tokens": 85,
     "error": null
   },
   {
@@ -35,8 +35,8 @@
     "expected": "urgent",
     "llm_output": "urgent",
     "score": 1.0,
-    "latency_ms": 1012.1566249999887,
-    "tokens": 71,
+    "latency_ms": 493.3424170012586,
+    "tokens": 83,
     "error": null
   },
   {
@@ -45,18 +45,18 @@
     "expected": "security",
     "llm_output": "technical",
     "score": 0.0,
-    "latency_ms": 1718.358915999488,
-    "tokens": 73,
+    "latency_ms": 1347.1932920001564,
+    "tokens": 85,
     "error": null
   },
   {
     "task_id": "classify-021",
     "input": "My account was hacked and they changed my billing address \u2014 I need a refund AND a password reset.",
     "expected": "security, billing",
-    "llm_output": "security",
+    "llm_output": "urgent",
     "score": 0.0,
-    "latency_ms": 999.1115830016497,
-    "tokens": 82,
+    "latency_ms": 1092.8526249990682,
+    "tokens": 92,
     "error": null
   },
   {
@@ -65,8 +65,8 @@
     "expected": "technical, billing",
     "llm_output": "urgent",
     "score": 0.0,
-    "latency_ms": 1049.23054199935,
-    "tokens": 74,
+    "latency_ms": 1177.38350000036,
+    "tokens": 86,
     "error": null
   },
   {
@@ -75,18 +75,18 @@
     "expected": "urgent, security",
     "llm_output": "urgent",
     "score": 0.0,
-    "latency_ms": 539.7561669997231,
-    "tokens": 76,
+    "latency_ms": 621.9203330001619,
+    "tokens": 88,
     "error": null
   },
   {
     "task_id": "classify-024",
     "input": "I want to request a new integration feature and also report that the billing page is broken.",
     "expected": "feature, billing",
-    "llm_output": "other",
-    "score": 0.0,
-    "latency_ms": 1228.0347919986525,
-    "tokens": 79,
+    "llm_output": "feature, billing",
+    "score": 1.0,
+    "latency_ms": 695.5119159993046,
+    "tokens": 94,
     "error": null
   },
   {
@@ -95,8 +95,8 @@
     "expected": "technical, security",
     "llm_output": "security",
     "score": 0.0,
-    "latency_ms": 979.5679580001888,
-    "tokens": 78,
+    "latency_ms": 1090.8747920002497,
+    "tokens": 89,
     "error": null
   }
 ]

@@ -1,6 +1,6 @@
 {
-  "accuracy": 40.0,
-  "correct": 2,
+  "accuracy": 60.0,
+  "correct": 3,
   "total": 5,
   "results": [
     {
@@ -16,7 +16,7 @@
       "task_id": "classify-011",
       "input": "I'm paying for a service I can't use because the login page is down.",
       "expected": "urgent",
-      "actual": "technical",
+      "actual": "billing, technical",
       "passed": false,
       "score": 0.0,
       "error": null
@@ -34,7 +34,7 @@
       "task_id": "classify-019",
       "input": "I'm getting a 403 Forbidden error on endpoints I used to access.",
       "expected": "security",
-      "actual": "technical",
+      "actual": "technical, security",
       "passed": false,
       "score": 0.0,
       "error": null
@@ -43,9 +43,9 @@
       "task_id": "classify-024",
       "input": "I want to request a new integration feature and also report that the billing page is broken.",
       "expected": "feature, billing",
-      "actual": "other",
-      "passed": false,
-      "score": 0.0,
+      "actual": "feature, billing",
+      "passed": true,
+      "score": 1.0,
       "error": null
     }
   ]

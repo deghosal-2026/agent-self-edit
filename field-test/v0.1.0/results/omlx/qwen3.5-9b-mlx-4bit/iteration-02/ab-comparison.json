@@ -1,13 +1,13 @@
 {
-  "winner": "tie",
+  "winner": "inconclusive",
   "mean_delta": 0.0,
-  "ci_low": 0.0,
-  "ci_high": 0.0,
-  "p_value": 1.0,
+  "ci_low": -0.4,
+  "ci_high": 0.4,
+  "p_value": 0.66,
   "effect_size": 0.0,
-  "n_trials": 5,
-  "cost_usd": 0.0044814,
-  "token_count": 1358,
+  "n_trials": 10,
+  "cost_usd": 0.0075438,
+  "token_count": 2286,
   "per_task": [
     {
       "task_id": "classify-001",
@@ -18,36 +18,76 @@
       "output_b": "billing"
     },
     {
-      "task_id": "classify-002",
-      "score_a": 1.0,
-      "score_b": 1.0,
+      "task_id": "classify-010",
+      "score_a": 0.0,
+      "score_b": 0.0,
       "delta": 0.0,
-      "output_a": "billing",
-      "output_b": "billing"
+      "output_a": "security",
+      "output_b": "security"
     },
     {
-      "task_id": "classify-003",
-      "score_a": 1.0,
+      "task_id": "classify-011",
+      "score_a": 0.0,
       "score_b": 1.0,
-      "delta": 0.0,
-      "output_a": "feature",
-      "output_b": "feature"
+      "delta": 1.0,
+      "output_a": "billing, technical",
+      "output_b": "urgent"
     },
     {
-      "task_id": "classify-004",
-      "score_a": 1.0,
+      "task_id": "classify-015",
+      "score_a": 0.0,
       "score_b": 1.0,
-      "delta": 0.0,
+      "delta": 1.0,
+      "output_a": "urgent, technical",
+      "output_b": "urgent"
+    },
+    {
+      "task_id": "classify-019",
+      "score_a": 0.0,
+      "score_b": 1.0,
+      "delta": 1.0,
       "output_a": "technical",
-      "output_b": "technical"
+      "output_b": "security"
     },
     {
-      "task_id": "classify-005",
-      "score_a": 1.0,
-      "score_b": 1.0,
+      "task_id": "classify-021",
+      "score_a": 0.0,
+      "score_b": 0.0,
       "delta": 0.0,
-      "output_a": "feature",
-      "output_b": "feature"
+      "output_a": "urgent, billing, security",
+      "output_b": "security"
+    },
+    {
+      "task_id": "classify-022",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "urgent, billing, technical",
+      "output_b": "urgent"
+    },
+    {
+      "task_id": "classify-023",
+      "score_a": 1.0,
+      "score_b": 0.0,
+      "delta": -1.0,
+      "output_a": "urgent, security",
+      "output_b": "urgent"
+    },
+    {
+      "task_id": "classify-024",
+      "score_a": 1.0,
+      "score_b": 0.0,
+      "delta": -1.0,
+      "output_a": "feature, billing",
+      "output_b": "billing, feature"
+    },
+    {
+      "task_id": "classify-025",
+      "score_a": 1.0,
+      "score_b": 0.0,
+      "delta": -1.0,
+      "output_a": "technical, security",
+      "output_b": "security"
     }
   ],
   "gate": {
@@ -57,9 +97,9 @@
       {
         "name": "sample_floor",
         "passed": true,
-        "value": 5.0,
+        "value": 10.0,
         "threshold": 5.0,
-        "details": "n_trials (5) >= sample floor (5)"
+        "details": "n_trials (10) >= sample floor (5)"
       },
       {
         "name": "effect_size",

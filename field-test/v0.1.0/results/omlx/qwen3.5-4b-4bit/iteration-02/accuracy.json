@@ -1,6 +1,6 @@
 {
-  "accuracy": 40.0,
-  "correct": 2,
+  "accuracy": 20.0,
+  "correct": 1,
   "total": 5,
   "results": [
     {
@@ -43,9 +43,9 @@
       "task_id": "classify-024",
       "input": "I want to request a new integration feature and also report that the billing page is broken.",
       "expected": "feature, billing",
-      "actual": "feature, billing",
-      "passed": true,
-      "score": 1.0,
+      "actual": "feature",
+      "passed": false,
+      "score": 0.0,
       "error": null
     }
   ]

@@ -1,25 +1,49 @@
 {
-  "n_proposals": 1,
-  "cost_usd": 0.0042537,
-  "tokens_used": 1289,
+  "n_proposals": 3,
+  "cost_usd": 0.0058641,
+  "tokens_used": 1777,
   "proposals": [
     {
-      "section": "Output instructions",
-      "old_text": "Output ONLY the category name. Nothing else. No explanation. No reasoning.",
-      "new_text": "Output ONLY the category name. Nothing else. No explanation. No reasoning. If the input mentions 'billing', 'subscription', 'charged', 'downgrade', or 'plan', classify as 'billing'. If it mentions 'feature', 'available', 'add', or 'support', classify as 'feature'. If it mentions 'deployment', 'pipeline', 'error', 'API', 'endpoint', or 'grayed out', classify as 'technical'. If it mentions 'security', 'vulnerability', 'compromised', 'IP', or 'logged in', classify as 'security'. If it mentions 'urgent', 'critical', 'immediate', or 'emergency', classify as 'urgent'. Otherwise, classify as 'other'.",
-      "hypothesis": "The agent is failing because it lacks explicit keyword-based heuristics to map specific input phrases to the correct categories. The current prompt relies on general semantic understanding which is insufficient for the specific edge cases in the traces (e.g., 'billing page' being mapped to 'other' instead of 'billing'). Adding a keyword lookup rule will force the model to match specific terms before defaulting to 'other'.",
-      "expected_improvement": "By explicitly listing trigger words for each category, the model will be guided to select the specific category associated with the keywords in the input, rather than defaulting to 'other' or misinterpreting the context. This directly addresses the failure in all 10 traces where specific keywords were present but ignored.",
+      "section": "Classification Logic",
+      "old_text": "Classify the input into one or more of: urgent, billing, technical, feature, security, other. If the input contains elements for multiple categories, include all applicable categories. If no specific category applies, use 'other'.",
+      "new_text": "Classify the input into exactly ONE of: urgent, billing, technical, feature, security, other. Prioritize categories based on severity and impact: 'urgent' > 'security' > 'billing' > 'technical' > 'feature' > 'other'. If the input contains elements for multiple categories, output ONLY the highest priority category. If no specific category applies, use 'other'.",
+      "hypothesis": "The current instruction to include 'all applicable categories' causes the model to output multiple tags when a single high-priority tag (like 'urgent' or 'security') is the most critical issue, leading to mismatches where the expected answer is the single most important category. Changing the instruction to select only the highest priority category aligns the output with the expected single-label behavior observed in the failures.",
+      "expected_improvement": "Traces 2, 3, 6, 7, 8, 9, and 10 will likely succeed because the model will be explicitly instructed to pick the single most severe category (e.g., 'urgent' over 'billing/technical', or 'security' over 'technical') rather than listing all detected issues.",
       "evidence_traces": [
-        "Trace 1: 'billing page' -> 'other' (expected 'billing')",
-        "Trace 2: 'charged twice' -> 'other' (expected 'billing')",
-        "Trace 3: 'new feature' -> 'other' (expected 'feature')",
-        "Trace 4: 'deployment pipeline' -> 'other' (expected 'technical')",
-        "Trace 5: 'add SSO support' -> 'other' (expected 'feature')",
-        "Trace 6: 'account compromised' -> 'other' (expected 'security')",
-        "Trace 7: 'checkout button... grayed out' -> 'other' (expected 'technical')",
-        "Trace 8: 'downgrade plan' -> 'other' (expected 'billing')",
-        "Trace 9: 'API... 500 error' -> 'other' (expected 'technical')",
-        "Trace 10: 'critical security vulnerability' -> 'other' (expected 'urgent')"
+        2,
+        3,
+        6,
+        7,
+        8,
+        9,
+        10
+      ]
+    },
+    {
+      "section": "Category Definitions",
+      "old_text": "Classify the input into one or more of: urgent, billing, technical, feature, security, other.",
+      "new_text": "Classify the input into exactly ONE of: urgent (critical system outage, immediate safety risk, payment failure blocking service), billing (invoice errors, payment processing, subscription disputes), technical (bugs, errors, performance issues, feature requests), feature (new capability requests), security (vulnerabilities, unauthorized access), other (general inquiries).",
+      "hypothesis": "The current prompt lacks specific definitions for the categories, causing the model to misclassify ambiguous inputs (e.g., treating 'password reset' as 'security' instead of 'technical', or 'API rate limits' as 'technical' instead of 'feature'). Adding clear definitions will guide the model's semantic understanding.",
+      "expected_improvement": "Trace 4 ('password reset') should be classified as 'technical' (account access issue) rather than 'security'. Trace 5 ('higher rate limit') should be 'feature' (requesting new capability) rather than 'technical'. Trace 9 ('bug or feature regression') should be 'other' (unclear intent) rather than 'technical'.",
+      "evidence_traces": [
+        4,
+        5,
+        9
+      ]
+    },
+    {
+      "section": "Output Constraints",
+      "old_text": "Output ONLY the category name. Nothing else. No explanation. No reasoning.",
+      "new_text": "Output ONLY the single highest-priority category name. Nothing else. No explanation. No reasoning.",
+      "hypothesis": "While the current constraint says 'ONLY the category name', the instruction to include 'all applicable categories' contradicts this, leading to multi-word outputs in traces where a single label was expected. Reinforcing the 'single' constraint explicitly resolves the conflict between the instruction to list all categories and the instruction to output only the name.",
+      "expected_improvement": "Traces 1, 3, 6, 7, 8, and 10 failed because the model output multiple categories (e.g., 'billing, technical') when the expected answer was a single category. Explicitly forcing a single output will prevent these multi-label failures.",
+      "evidence_traces": [
+        1,
+        3,
+        6,
+        7,
+        8,
+        10
       ]
     }
   ]

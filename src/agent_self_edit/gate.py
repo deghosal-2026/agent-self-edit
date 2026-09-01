@@ -79,25 +79,25 @@ def check_effect_size(ab_result: ABResult | None, config: Config) -> CheckResult
 
 
 def check_confidence(ab_result: ABResult | None, config: Config) -> CheckResult:
-    threshold = float(config.ab_test.confidence_level)
+    alpha = 1.0 - float(config.ab_test.confidence_level)
     if ab_result is None:
         return CheckResult(
             name="confidence",
             passed=False,
             value=1.0,
-            threshold=threshold,
+            threshold=alpha,
             details="no A/B result; p-value 1.0",
         )
     p = ab_result.p_value
-    passed = p < threshold
+    passed = p < alpha
     return CheckResult(
         name="confidence",
         passed=passed,
         value=float(p),
-        threshold=threshold,
+        threshold=alpha,
         details=(
-            f"p-value ({p:.4f}) {'< confidence level' if passed else '>= confidence level'} "
-            f"({threshold:.4f})"
+            f"p-value ({p:.4f}) {'< alpha' if passed else '>= alpha'} "
+            f"({alpha:.4f})"
         ),
     )
 

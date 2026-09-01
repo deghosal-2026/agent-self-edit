@@ -5,7 +5,7 @@
     "expected": "technical",
     "llm_output": "billing",
     "score": 0.0,
-    "latency_ms": 363.34454200004984,
+    "latency_ms": 363.71891599992523,
     "tokens": 72,
     "error": null
   },
@@ -15,7 +15,7 @@
     "expected": "urgent",
     "llm_output": "security",
     "score": 0.0,
-    "latency_ms": 353.590582999459,
+    "latency_ms": 361.8740000001708,
     "tokens": 76,
     "error": null
   },
@@ -25,7 +25,7 @@
     "expected": "urgent",
     "llm_output": "technical",
     "score": 0.0,
-    "latency_ms": 359.4461669999873,
+    "latency_ms": 359.3794580010581,
     "tokens": 75,
     "error": null
   },
@@ -35,7 +35,7 @@
     "expected": "urgent",
     "llm_output": "urgent",
     "score": 1.0,
-    "latency_ms": 368.39245800001663,
+    "latency_ms": 359.5869579985447,
     "tokens": 71,
     "error": null
   },
@@ -45,7 +45,7 @@
     "expected": "security",
     "llm_output": "technical",
     "score": 0.0,
-    "latency_ms": 360.2622500002326,
+    "latency_ms": 365.00995800088276,
     "tokens": 74,
     "error": null
   },
@@ -55,7 +55,7 @@
     "expected": "security, billing",
     "llm_output": "security",
     "score": 0.0,
-    "latency_ms": 358.14720800044597,
+    "latency_ms": 361.03650000040943,
     "tokens": 82,
     "error": null
   },
@@ -65,7 +65,7 @@
     "expected": "technical, billing",
     "llm_output": "urgent",
     "score": 0.0,
-    "latency_ms": 366.066917000353,
+    "latency_ms": 355.66258300059417,
     "tokens": 75,
     "error": null
   },
@@ -75,7 +75,7 @@
     "expected": "urgent, security",
     "llm_output": "urgent",
     "score": 0.0,
-    "latency_ms": 356.8241670000134,
+    "latency_ms": 358.75825000039185,
     "tokens": 77,
     "error": null
   },
@@ -85,7 +85,7 @@
     "expected": "feature, billing",
     "llm_output": "other",
     "score": 0.0,
-    "latency_ms": 355.4309169994667,
+    "latency_ms": 357.0106669994857,
     "tokens": 80,
     "error": null
   },
@@ -95,7 +95,7 @@
     "expected": "technical, security",
     "llm_output": "security",
     "score": 0.0,
-    "latency_ms": 359.27779199846555,
+    "latency_ms": 360.6012500003999,
     "tokens": 78,
     "error": null
   }

@@ -1,52 +1,48 @@
 {
   "n_proposals": 3,
-  "cost_usd": 0.0038511,
-  "tokens_used": 1167,
+  "cost_usd": 0.0042867,
+  "tokens_used": 1299,
   "proposals": [
     {
-      "section": "classification instructions",
+      "section": "classification criteria",
       "old_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other.",
-      "new_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other, urgent.",
-      "hypothesis": "Adding 'urgent' as a distinct category may help the model recognize critical security issues that require immediate attention, as seen in Trace 10.",
-      "expected_improvement": "Improved classification of urgent issues.",
+      "new_text": "Classify the input into one or more of: urgent, billing, technical, feature, security, other.",
+      "hypothesis": "Allowing for multiple classifications will help the model capture cases where inputs can belong to more than one category, as seen in several traces where the expected output included multiple categories.",
+      "expected_improvement": "This change should reduce the number of classification failures related to inputs that fit multiple categories.",
       "evidence_traces": [
-        10
+        4,
+        5,
+        6,
+        7,
+        8
       ]
     },
     {
-      "section": "classification instructions",
+      "section": "classification criteria",
       "old_text": "Output ONLY the category name.",
-      "new_text": "Output ONLY the category name. If the input relates to billing, technical, feature, or security, ensure to classify accordingly.",
-      "hypothesis": "Reinforcing the importance of specific categories may help the model focus on correctly identifying billing, technical, feature, and security issues, as seen in Traces 1, 2, 4, 5, 6, 7, 8, and 9.",
-      "expected_improvement": "Reduced misclassification of billing, technical, feature, and security issues.",
+      "new_text": "Output the category name(s) as a comma-separated list.",
+      "hypothesis": "Specifying a comma-separated list will clarify that multiple categories can be returned, addressing the failures where multiple classifications were expected.",
+      "expected_improvement": "This change should help the model understand that it can output multiple categories, reducing misclassifications.",
       "evidence_traces": [
-        1,
-        2,
         4,
         5,
         6,
         7,
-        8,
-        9
+        8
       ]
     },
     {
-      "section": "classification instructions",
+      "section": "classification criteria",
       "old_text": "No explanation. No reasoning.",
-      "new_text": "No explanation. No reasoning. Focus on identifying the correct category based on the context of the input.",
-      "hypothesis": "Emphasizing the need to focus on context may help the model better understand the nuances of each input, leading to more accurate classifications.",
-      "expected_improvement": "Enhanced accuracy in classification by considering input context.",
+      "new_text": "No explanation. No reasoning. If multiple categories are applicable, include all relevant categories.",
+      "hypothesis": "Clarifying that multiple categories should be included if applicable will guide the model to provide all relevant classifications, addressing the failures where multiple outputs were expected.",
+      "expected_improvement": "This change should improve the model's performance in cases where multiple categories are relevant.",
       "evidence_traces": [
-        1,
-        2,
-        3,
         4,
         5,
         6,
         7,
-        8,
-        9,
-        10
+        8
       ]
     }
   ]
