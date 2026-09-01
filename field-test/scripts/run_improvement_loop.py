@@ -153,7 +153,9 @@ def main() -> None:
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     model_slug = args.model.lower().replace("/", "-").replace(":", "-")
-    model_dir = RESULTS_DIR / model_slug
+    # Follow existing convention: results/<provider>/<model>/
+    provider = "omlx" if "localhost" in args.endpoint else "openai"
+    model_dir = RESULTS_DIR.parent / provider / model_slug
     model_dir.mkdir(parents=True, exist_ok=True)
     report_path = model_dir / "improvement-loop-report.json"
 
