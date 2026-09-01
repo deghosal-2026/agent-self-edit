@@ -92,29 +92,54 @@ def _load_task_set(path: str):
     return ts
 
 
-def _seed_trace_store(trace_path: str, task_set_path: str, n: int = 10):
+def _seed_trace_store(trace_path: str, task_set_path: str, n: int, current_prompt: str, llm):
+    """Run the current prompt against the task set, seed real failures.
+
+    Calls the LLM for each task, scores with ExactMatch, and ingests only the
+    tasks where the model actually got it wrong — with the model's real output
+    as final_output, not a fabricated "other".
+    """
     import yaml
     from agent_self_edit.trace import TraceStore
+    from agent_self_edit.scorers import ExactMatchScorer
 
     db_path = Path(trace_path)
     if db_path.exists():
         db_path.unlink()
 
     store = TraceStore(str(db_path), batch_size=n)
+    scorer = ExactMatchScorer()
+
     with open(task_set_path) as f:
         tasks = yaml.safe_load(f)
 
-    for i in range(min(n, len(tasks))):
-        task = tasks[i]
+    # Run current prompt against every task, keep only the real failures
+    seeded = 0
+    for i, task in enumerate(tasks):
+        if seeded >= n:
+            break
+        try:
+            model_output = llm.complete(prompt=task["input"], system_prompt=current_prompt, temperature=0.0)
+        except Exception:
+            model_output = ""
+
+        passed, _ = scorer.score(task["expected_output"], model_output)
+        if passed:
+            continue  # model got it right — not a failure
+
         store.ingest({
-            "task_id": f"iter-{i}",
+            "task_id": task["id"],
             "task_input": task["input"],
-            "final_output": "other",
+            "final_output": model_output,
             "expected_output": task["expected_output"],
             "success": False,
-            "failure_reason": f"misclassified — expected {task['expected_output']}",
+            "failure_reason": f"model said '{model_output.strip()}', expected '{task['expected_output']}'",
             "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         })
+        seeded += 1
+
+    # If fewer than n real failures, that's fine — the analyzer works with what it gets
+    print(f"  Seeded {seeded} real failures (model output ≠ expected)", flush=True)
     return store
 
 
@@ -362,13 +387,19 @@ def main() -> None:
 
     llm = _build_llm(config)
 
-    # Load task set for A/B testing
+    # Load task set for A/B testing — use harder tasks where baseline fails
     task_set = _load_task_set(str(CLASSIFICATION_TASKS))
-    # Use first 5 tasks for fast A/B tests
     from agent_self_edit.tasks import TaskSet
     ab_task_set = TaskSet()
-    for i, task in enumerate(task_set.list_tasks()[:5]):
-        ab_task_set.add_task(task)
+    # Hard tasks: classify-001 (billing->technical), classify-010 (security->urgent),
+    # classify-011 (billing+technical->urgent), classify-015 (->urgent),
+    # classify-019 (->security), classify-021 through 025 (multi-label)
+    ab_task_ids = {"classify-001", "classify-010", "classify-011", "classify-015",
+                   "classify-019", "classify-021", "classify-022", "classify-023",
+                   "classify-024", "classify-025"}
+    for task in task_set.list_tasks():
+        if task.id in ab_task_ids:
+            ab_task_set.add_task(task)
 
     # Baseline accuracy
     print("Measuring baseline accuracy...", flush=True)
@@ -382,8 +413,9 @@ def main() -> None:
         iter_start = time.time()
         iteration_dir = model_dir / f"iteration-{i:02d}"
 
-        # Seed fresh failed traces
-        store = _seed_trace_store(str(trace_db), str(CLASSIFICATION_TASKS), args.traces_per_iteration)
+        # Seed fresh failed traces using the current prompt's real outputs
+        current_prompt = registry.current_prompt
+        store = _seed_trace_store(str(trace_db), str(CLASSIFICATION_TASKS), args.traces_per_iteration, current_prompt, llm)
 
         try:
             iter_result = _run_iteration(i, iteration_dir, config, llm, ab_task_set, store, registry)

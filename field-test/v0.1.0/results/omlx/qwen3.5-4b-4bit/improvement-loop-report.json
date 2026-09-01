@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "provider": "omlx",
+    "model": "Qwen3.5-4B-4bit",
+    "endpoint": "http://localhost:8000/v1",
+    "n_iterations": 1,
+    "baseline_accuracy": 20.0,
+    "final_accuracy": 20.0,
+    "improvement": 0.0,
+    "date": "2026-09-01T01:13:05Z"
+  },
+  "iterations": [
+    {
+      "iteration": 0,
+      "accuracy": 20.0,
+      "gate": "baseline"
+    },
+    {
+      "iteration": 1,
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "n_proposals": 1,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "Classification Logic / Priority Handling",
+          "gate": "near_miss",
+          "winner": "inconclusive",
+          "p_value": 0.1,
+          "mean_delta": 0.3,
+          "n_trials": 10
+        }
+      ],
+      "analysis_cost": 0.004356,
+      "accuracy": 20.0,
+      "accuracy_correct": 1,
+      "accuracy_total": 5,
+      "duration_s": 30.6
+    }
+  ]
+}
