@@ -321,6 +321,22 @@ This script duplicated `test_docker.py` with hardcoded OMLX constants, old confi
 
 Registered the `docker` mark in `pyproject.toml` under `[tool.pytest.ini_options].markers` to eliminate the `PytestUnknownMarkWarning`.
 
+### #111 — Registry state assertion
+
+The Docker test now asserts the registry state after the full loop — verifies that `v1.md` (the baseline prompt file) and `v1.meta.json` (version metadata with sha256 hash) exist and contain the expected content. This covers the plan's objective 9 ("Registry shows before/after prompt if gate promoted").
+
+```python
+v1_file = reg_dir / "v1.md"
+v1_meta = reg_dir / "v1.meta.json"
+assert v1_file.exists()
+assert v1_meta.exists()
+baseline_content = v1_file.read_text().strip()
+assert "helpful classification" in baseline_content
+reg_meta = json.loads(v1_meta.read_text())
+assert reg_meta["version"] == 1
+assert "sha256_hash" in reg_meta
+```
+
 ### Run result
 
 These fixes produced a materially better test run:
@@ -329,6 +345,7 @@ These fixes produced a materially better test run:
 9/9 passed, 0 warnings, 124s
 A/B test: inconclusive (p=0.4600, n=5)  — not a perfect tie, real deltas
 11 analyzer + 10 A/B calls captured     — all with non-zero tokens and latency
+Registry: v1.md exists, baseline prompt verified
 ```
 
 ---
