@@ -152,7 +152,10 @@ def main() -> None:
         sys.exit(1)
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    report_path = RESULTS_DIR / "improvement-loop-report.json"
+    model_slug = args.model.lower().replace("/", "-").replace(":", "-")
+    model_dir = RESULTS_DIR / model_slug
+    model_dir.mkdir(parents=True, exist_ok=True)
+    report_path = model_dir / "improvement-loop-report.json"
 
     # Persistent registry across iterations
     persist_registry = Path(tempfile.mkdtemp(prefix="ase-reg-")) / "registry"
