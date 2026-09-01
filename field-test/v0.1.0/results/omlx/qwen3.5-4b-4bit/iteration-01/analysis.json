@@ -1,0 +1,24 @@
+{
+  "n_proposals": 1,
+  "cost_usd": 0.0036069,
+  "tokens_used": 1093,
+  "proposals": [
+    {
+      "section": "Classification Categories",
+      "old_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other.",
+      "new_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Prioritize 'technical' for system errors, UI bugs, and deployment failures. Prioritize 'billing' for payment issues, charge disputes, and plan changes. Prioritize 'feature' for requests about adding or enabling new capabilities. Prioritize 'security' for account compromise, unauthorized access, and vulnerability reports. Prioritize 'urgent' for critical security vulnerabilities requiring immediate action.",
+      "hypothesis": "The agent is defaulting to 'other' because the category definitions are implicit. Explicitly mapping specific input patterns (e.g., '500 error', 'downgrade plan', 'SSO request') to their corresponding categories will reduce ambiguity and improve classification accuracy.",
+      "expected_improvement": "Reduce 'other' classifications by explicitly defining the decision boundaries for technical, billing, feature, security, and urgent categories based on the failed traces.",
+      "evidence_traces": [
+        "Trace 4 (deployment pipeline failure)",
+        "Trace 7 (checkout button grayed out)",
+        "Trace 9 (API 500 error)",
+        "Trace 2 (charged twice)",
+        "Trace 8 (downgrade plan)",
+        "Trace 5 (add SSO support)",
+        "Trace 6 (account compromised)",
+        "Trace 10 (critical vulnerability)"
+      ]
+    }
+  ]
+}

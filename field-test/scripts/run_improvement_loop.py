@@ -1,14 +1,21 @@
-"""Run N self-improvement iterations via agent-self-edit run --once.
+"""Run N self-improvement iterations with inspectable A/B test artifacts.
 
-Seeds failed traces each iteration, runs the full loop (analyze → A/B test →
-gate → promote/reject), measures accuracy on a held-out set, and reports
-per-iteration metrics.
+Calls the internal API directly (not the CLI) so every A/B test result is
+captured as structured data. Per iteration writes:
+
+    results/<provider>/<model>/iteration-XX/
+      prompt-a.md          — current prompt
+      prompt-b.md          — candidate prompt (edit applied)
+      results-a.json       — per-task: input, expected, llm_output, score, latency, tokens
+      results-b.json       — same for prompt B
+      ab-comparison.json   — per-task deltas, winner, p-value, CI, effect size, gate decision
+      analysis.json        — analyzer proposals (section, old_text, new_text, hypothesis)
+      accuracy.json        — held-out set results after this iteration
+      llm-traffic.jsonl    — raw LLM request/response for every call
 
 Usage:
     export OMLX_KEY=omlx-test OMLX_MODEL=Qwen3.5-4B-4bit OMLX_URL=http://localhost:8000/v1
     python3 field-test/scripts/run_improvement_loop.py --iterations 10
-
-Requires: OMLX_KEY, OMLX_MODEL, OMLX_URL env vars set.
 """
 
 from __future__ import annotations
@@ -17,17 +24,16 @@ import argparse
 import hashlib
 import json
 import os
-import shutil
-import subprocess
 import sys
 import tempfile
 import time
+from dataclasses import asdict
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "src"))
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-RESULTS_DIR = REPO_ROOT / "field-test" / "v0.1.0" / "results" / "improvement-loop"
+RESULTS_ROOT = REPO_ROOT / "field-test" / "v0.1.0" / "results"
 CLASSIFICATION_TASKS = REPO_ROOT / "field-test" / "v0.1.0" / "corpus" / "synthetic" / "classification.yaml"
 
 HELD_OUT_TASKS: list[dict[str, str]] = [
@@ -38,55 +44,55 @@ HELD_OUT_TASKS: list[dict[str, str]] = [
     {"id": "classify-024", "input": "I want to request a new integration feature and also report that the billing page is broken.", "expected_output": "feature, billing"},
 ]
 
-BASELINE_PROMPT = "You are a helpful classification assistant."
+BASELINE_PROMPT = "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. No reasoning."
 
 
-def _build_llm(config: dict):
-    """Build LLM provider from config dict."""
-    from agent_self_edit.llm.openai import OpenAIProvider
-    return OpenAIProvider(
-        model=config["llm"]["model"],
-        api_key=config["llm"]["api_key"],
-        base_url=config["llm"]["base_url"],
-        timeout=config["llm"]["timeout"],
-        max_tokens=config["llm"]["max_tokens"],
+def _slug_model(model: str) -> str:
+    return model.lower().replace("/", "-").replace(":", "-")
+
+
+def _provider_from_endpoint(endpoint: str) -> str:
+    return "omlx" if "localhost" in endpoint or "127.0.0.1" in endpoint else "openai"
+
+
+def _build_config(model: str, api_key: str, endpoint: str, registry_path: str, trace_path: str, task_set_path: str) -> object:
+    from agent_self_edit.config import (
+        ABTestConfig, AnalyzerConfig, Config, GateConfig,
+        LLMConfig, ProjectConfig, TasksConfig,
+    )
+    return Config(
+        project=ProjectConfig(name="improvement-loop", registry_path=registry_path, trace_path=trace_path),
+        tasks=TasksConfig(task_set_path=task_set_path, batch_size=10, sample_floor=5),
+        llm=LLMConfig(provider="openai", model=model, api_key=api_key, base_url=endpoint, temperature=0.0, max_tokens=4096, timeout=60),
+        ab_test=ABTestConfig(n_resamples=100, n_permutations=100, confidence_level=0.95, min_effect_size=0.05, cost_ceiling_usd=0.50),
+        gate=GateConfig(max_edit_distance=20, drift_threshold=0.3, near_miss_threshold=0.5),
+        analyzer=AnalyzerConfig(max_proposals_per_batch=3, cost_ceiling_usd=0.50),
     )
 
 
-def measure_accuracy(prompt: str, llm, tasks: list[dict]) -> dict:
-    """Run prompt against held-out tasks and return accuracy metrics."""
-    from agent_self_edit.scorers import ExactMatchScorer
-    scorer = ExactMatchScorer()
-    correct = 0
-    results = []
-    for task in tasks:
-        error = None
-        try:
-            output = llm.complete(prompt=task["input"], system_prompt=prompt, temperature=0.0)
-        except Exception as e:
-            output = ""
-            error = str(e)
-        passed, score = scorer.score(task["expected_output"], output)
-        if passed:
-            correct += 1
-        results.append({
-            "task_id": task["id"],
-            "expected": task["expected_output"],
-            "actual": output,
-            "passed": passed,
-            "score": score,
-            "error": error,
-        })
-    return {
-        "accuracy": round(correct / len(tasks) * 100, 1),
-        "correct": correct,
-        "total": len(tasks),
-        "results": results,
-    }
+def _build_llm(config):
+    from agent_self_edit.llm.openai import OpenAIProvider
+    return OpenAIProvider(
+        model=config.llm.model,
+        api_key=config.llm.api_key,
+        base_url=config.llm.base_url,
+        timeout=config.llm.timeout,
+        max_tokens=config.llm.max_tokens,
+    )
 
 
-def seed_trace_store(trace_path: str, task_set_path: str, n: int = 10) -> None:
-    """Create a fresh TraceStore with n failed traces from the task set."""
+def _load_task_set(path: str):
+    import yaml
+    from agent_self_edit.tasks import Task, TaskSet
+    with open(path) as f:
+        raw = yaml.safe_load(f)
+    ts = TaskSet()
+    for item in raw:
+        ts.add_task(Task(id=item["id"], input=item["input"], expected_output=item["expected_output"], metadata=item.get("metadata", {})))
+    return ts
+
+
+def _seed_trace_store(trace_path: str, task_set_path: str, n: int = 10):
     import yaml
     from agent_self_edit.trace import TraceStore
 
@@ -109,39 +115,219 @@ def seed_trace_store(trace_path: str, task_set_path: str, n: int = 10) -> None:
             "failure_reason": f"misclassified — expected {task['expected_output']}",
             "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         })
+    return store
 
 
-def get_current_prompt(registry_path: str) -> str:
-    """Read the current prompt from the registry."""
-    from agent_self_edit.registry import Registry
-    reg = Registry(registry_path)
-    return reg.current_prompt
+def measure_accuracy(prompt: str, llm, tasks: list[dict]) -> dict:
+    from agent_self_edit.scorers import ExactMatchScorer
+    scorer = ExactMatchScorer()
+    correct = 0
+    results = []
+    for task in tasks:
+        error = None
+        try:
+            output = llm.complete(prompt=task["input"], system_prompt=prompt, temperature=0.0)
+        except Exception as e:
+            output = ""
+            error = str(e)
+        passed, score = scorer.score(task["expected_output"], output)
+        if passed:
+            correct += 1
+        results.append({
+            "task_id": task["id"],
+            "input": task["input"],
+            "expected": task["expected_output"],
+            "actual": output,
+            "passed": passed,
+            "score": score,
+            "error": error,
+        })
+    return {
+        "accuracy": round(correct / len(tasks) * 100, 1),
+        "correct": correct,
+        "total": len(tasks),
+        "results": results,
+    }
 
 
-def write_config(work_dir: Path, config: dict) -> Path:
-    """Write config YAML to work directory."""
-    import yaml
-    config_path = work_dir / "agent-self-edit.yaml"
-    with open(config_path, "w") as f:
-        yaml.dump(config, f)
-    return config_path
+def _run_iteration(
+    iteration: int,
+    iteration_dir: Path,
+    config,
+    llm,
+    task_set,
+    store,
+    registry,
+) -> dict:
+    """Run one full self-edit iteration using the internal API directly."""
+    from agent_self_edit.analyzer import analyze_batch
+    from agent_self_edit.ab_test import run_ab_test
+    from agent_self_edit.gate import check_all
+    from agent_self_edit.scorers import ExactMatchScorer
+    from agent_self_edit.trace import TraceStore
 
+    iteration_dir.mkdir(parents=True, exist_ok=True)
 
-def copy_task_set(work_dir: Path, n: int = 5) -> Path:
-    """Copy first n tasks from classification.yaml to work dir."""
-    import yaml
-    with open(CLASSIFICATION_TASKS) as f:
-        tasks = yaml.safe_load(f)
-    task_set_path = work_dir / "classification.yaml"
-    with open(task_set_path, "w") as f:
-        yaml.dump(tasks[:n], f)
-    return task_set_path
+    # 1. Get failed traces
+    batch = store.get_batch(min(config.tasks.batch_size, store.count_pending()))
+    if not batch:
+        return {"iteration": iteration, "error": "no pending traces", "gate": "no_traces"}
+    failed = [t for t in batch if not t.success]
+
+    # 2. Analyze
+    prompt_a = registry.current_prompt
+    (iteration_dir / "prompt-a.md").write_text(prompt_a)
+
+    print(f"  Analyzing {len(failed)} failed traces...", flush=True)
+    analysis = analyze_batch(
+        failed, prompt_a, None, llm,
+        max_proposals=config.analyzer.max_proposals_per_batch,
+        config=config,
+    )
+
+    analysis_data = {
+        "n_proposals": len(analysis.proposals),
+        "cost_usd": analysis.cost_usd,
+        "tokens_used": analysis.tokens_used,
+        "proposals": [
+            {
+                "section": p.section,
+                "old_text": p.old_text,
+                "new_text": p.new_text,
+                "hypothesis": p.hypothesis,
+                "expected_improvement": p.expected_improvement,
+                "evidence_traces": p.evidence_traces,
+            }
+            for p in analysis.proposals
+        ],
+    }
+    (iteration_dir / "analysis.json").write_text(json.dumps(analysis_data, indent=2) + "\n")
+
+    if not analysis.proposals:
+        store.acknowledge([t.task_id for t in batch])
+        return {"iteration": iteration, "gate": "no_proposals", "n_proposals": 0, "prompt_a": prompt_a[:200]}
+
+    # 3. A/B test each proposal
+    scorer = ExactMatchScorer()
+    all_results: list[dict] = []
+
+    for pi, proposal in enumerate(analysis.proposals):
+        prompt_b = prompt_a.replace(proposal.old_text, proposal.new_text)
+        (iteration_dir / "prompt-b.md").write_text(prompt_b)
+
+        print(f"  A/B test proposal {pi+1}/{len(analysis.proposals)}...", flush=True)
+        ab_result = run_ab_test(prompt_a, prompt_b, task_set, llm, scorer, config)
+
+        # Split per-task results into A and B files
+        results_a = []
+        results_b = []
+        for pt in ab_result.per_task:
+            results_a.append({
+                "task_id": pt.task_id,
+                "input": pt.task_input,
+                "expected": pt.expected_output,
+                "llm_output": pt.output_a,
+                "score": pt.score_a,
+                "latency_ms": pt.latency_a_ms,
+                "tokens": pt.tokens_a,
+                "error": pt.error_a,
+            })
+            results_b.append({
+                "task_id": pt.task_id,
+                "input": pt.task_input,
+                "expected": pt.expected_output,
+                "llm_output": pt.output_b,
+                "score": pt.score_b,
+                "latency_ms": pt.latency_b_ms,
+                "tokens": pt.tokens_b,
+                "error": pt.error_b,
+            })
+
+        (iteration_dir / "results-a.json").write_text(json.dumps(results_a, indent=2) + "\n")
+        (iteration_dir / "results-b.json").write_text(json.dumps(results_b, indent=2) + "\n")
+
+        # Gate
+        gate_result = check_all(proposal, ab_result, prompt_b, prompt_a, config)
+        print(f"  Gate: {gate_result.decision} — {gate_result.reason}", flush=True)
+
+        ab_comparison = {
+            "winner": ab_result.winner,
+            "mean_delta": ab_result.mean_delta,
+            "ci_low": ab_result.ci_low,
+            "ci_high": ab_result.ci_high,
+            "p_value": ab_result.p_value,
+            "effect_size": ab_result.effect_size,
+            "n_trials": ab_result.n_trials,
+            "cost_usd": ab_result.cost_usd,
+            "token_count": ab_result.token_count,
+            "per_task": [
+                {
+                    "task_id": pt.task_id,
+                    "score_a": pt.score_a,
+                    "score_b": pt.score_b,
+                    "delta": pt.delta,
+                    "output_a": pt.output_a,
+                    "output_b": pt.output_b,
+                }
+                for pt in ab_result.per_task
+            ],
+            "gate": {
+                "decision": gate_result.decision,
+                "reason": gate_result.reason,
+                "checks": [
+                    {"name": c.name, "passed": c.passed, "value": c.value, "threshold": c.threshold, "details": c.details}
+                    for c in gate_result.checks
+                ],
+            },
+        }
+        (iteration_dir / "ab-comparison.json").write_text(json.dumps(ab_comparison, indent=2) + "\n")
+
+        # Promote if gate says so
+        if gate_result.decision == "promote":
+            registry.create(
+                prompt_b,
+                hypothesis=proposal.hypothesis,
+                ab_results={
+                    "winner": ab_result.winner,
+                    "mean_delta": ab_result.mean_delta,
+                    "p_value": ab_result.p_value,
+                    "effect_size": ab_result.effect_size,
+                    "n_trials": ab_result.n_trials,
+                },
+                gate_result={"decision": gate_result.decision, "reason": gate_result.reason},
+            )
+            print(f"  Promoted to version {registry.current_version}", flush=True)
+
+        all_results.append({
+            "proposal_index": pi,
+            "section": proposal.section,
+            "gate": gate_result.decision,
+            "winner": ab_result.winner,
+            "p_value": ab_result.p_value,
+            "mean_delta": ab_result.mean_delta,
+            "n_trials": ab_result.n_trials,
+        })
+
+    # Write prompt-after.md (current prompt after gate decision)
+    prompt_after = registry.current_prompt
+    (iteration_dir / "prompt-after.md").write_text(prompt_after)
+
+    store.acknowledge([t.task_id for t in batch])
+
+    return {
+        "iteration": iteration,
+        "prompt_a": prompt_a[:200],
+        "prompt_after": prompt_after[:200],
+        "n_proposals": len(analysis.proposals),
+        "results": all_results,
+        "analysis_cost": analysis.cost_usd,
+    }
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run N self-improvement iterations")
-    parser.add_argument("--iterations", type=int, default=10, help="Number of iterations")
-    parser.add_argument("--traces-per-iteration", type=int, default=10, help="Traces to seed each iteration")
+    parser = argparse.ArgumentParser(description="Run N self-improvement iterations with inspectable A/B artifacts")
+    parser.add_argument("--iterations", type=int, default=10)
+    parser.add_argument("--traces-per-iteration", type=int, default=10)
     parser.add_argument("--model", default=os.environ.get("OMLX_MODEL", ""))
     parser.add_argument("--endpoint", default=os.environ.get("OMLX_URL", ""))
     args = parser.parse_args()
@@ -151,190 +337,121 @@ def main() -> None:
         print("ERROR: OMLX_KEY, OMLX_MODEL, and OMLX_URL must be set", file=sys.stderr)
         sys.exit(1)
 
-    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    model_slug = args.model.lower().replace("/", "-").replace(":", "-")
-    # Follow existing convention: results/<provider>/<model>/
-    provider = "omlx" if "localhost" in args.endpoint else "openai"
-    model_dir = RESULTS_DIR.parent / provider / model_slug
+    model_slug = _slug_model(args.model)
+    provider = _provider_from_endpoint(args.endpoint)
+    model_dir = RESULTS_ROOT / provider / model_slug
     model_dir.mkdir(parents=True, exist_ok=True)
-    report_path = model_dir / "improvement-loop-report.json"
 
-    # Persistent registry across iterations
-    persist_registry = Path(tempfile.mkdtemp(prefix="ase-reg-")) / "registry"
+    # Persistent registry + temp trace store
+    persist_registry_path = Path(tempfile.mkdtemp(prefix="ase-reg-")) / "registry"
+    trace_db = Path(tempfile.mkdtemp(prefix="ase-traces-")) / "traces.db"
 
-    config = {
-        "schema_version": 1,
-        "project": {"name": "improvement-loop", "registry_path": str(persist_registry), "trace_path": "/tmp/ase-traces.db"},
-        "tasks": {"task_set_path": "", "batch_size": args.traces_per_iteration, "sample_floor": 10},
-        "llm": {"provider": "openai", "model": args.model, "api_key": api_key,
-                "base_url": args.endpoint, "temperature": 0.0, "max_tokens": 4096, "timeout": 60},
-        "ab_test": {"n_resamples": 100, "n_permutations": 100, "confidence_level": 0.95, "min_effect_size": 0.05, "cost_ceiling_usd": 0.50},
-        "gate": {"max_edit_distance": 20, "drift_threshold": 0.3, "near_miss_threshold": 0.5},
-        "analyzer": {"max_proposals_per_batch": 3, "cost_ceiling_usd": 0.50},
-        "trigger": "batch", "trace_retention_days": 90,
-    }
+    config = _build_config(args.model, api_key, args.endpoint, str(persist_registry_path), str(trace_db), str(CLASSIFICATION_TASKS))
 
-    # Initialize registry with baseline prompt
+    # Set up LLM traffic logging
+    traffic_log = model_dir / "llm-traffic.jsonl"
+    os.environ["AGENT_SELF_EDIT_LLM_LOG"] = str(traffic_log)
+
     from agent_self_edit.registry import Registry
-    reg = Registry(str(persist_registry))
+    registry = Registry(str(persist_registry_path))
     try:
-        reg.create(BASELINE_PROMPT)
-        print(f"Registry initialized at {persist_registry} with baseline prompt")
+        registry.create(BASELINE_PROMPT)
+        print(f"Registry initialized with baseline prompt")
     except Exception:
-        print(f"Registry already exists at {persist_registry}")
+        print(f"Registry already exists")
 
     llm = _build_llm(config)
-    llm_traffic: list[dict] = []
-    iterations: list[dict] = []
+
+    # Load task set for A/B testing
+    task_set = _load_task_set(str(CLASSIFICATION_TASKS))
+    # Use first 5 tasks for fast A/B tests
+    from agent_self_edit.tasks import TaskSet
+    ab_task_set = TaskSet()
+    for i, task in enumerate(task_set.list_tasks()[:5]):
+        ab_task_set.add_task(task)
 
     # Baseline accuracy
-    print("Measuring baseline accuracy...")
+    print("Measuring baseline accuracy...", flush=True)
     baseline = measure_accuracy(BASELINE_PROMPT, llm, HELD_OUT_TASKS)
-    print(f"Baseline accuracy: {baseline['accuracy']}% ({baseline['correct']}/{baseline['total']})")
-    iterations.append({"iteration": 0, "prompt": BASELINE_PROMPT, "prompt_hash": hashlib.md5(BASELINE_PROMPT.encode()).hexdigest()[:12], **baseline, "gate": "baseline", "cost": 0.0})
+    print(f"Baseline accuracy: {baseline['accuracy']}% ({baseline['correct']}/{baseline['total']})", flush=True)
+
+    iterations: list[dict] = [{"iteration": 0, "accuracy": baseline["accuracy"], "gate": "baseline"}]
 
     for i in range(1, args.iterations + 1):
         print(f"\n=== Iteration {i}/{args.iterations} ===", flush=True)
         iter_start = time.time()
+        iteration_dir = model_dir / f"iteration-{i:02d}"
 
-        with tempfile.TemporaryDirectory(prefix=f"ase-iter-{i}-") as tmp:
-            work_dir = Path(tmp)
+        # Seed fresh failed traces
+        store = _seed_trace_store(str(trace_db), str(CLASSIFICATION_TASKS), args.traces_per_iteration)
 
-            # Each iteration gets its own trace db, reuses the persistent registry
-            config["project"]["trace_path"] = str(work_dir / "traces.db")
-            config["project"]["registry_path"] = str(persist_registry)
-            config["tasks"]["task_set_path"] = str(copy_task_set(work_dir, 5))
+        try:
+            iter_result = _run_iteration(i, iteration_dir, config, llm, ab_task_set, store, registry)
+        except Exception as e:
+            print(f"  ERROR: {e}", flush=True)
+            iter_result = {"iteration": i, "error": str(e), "gate": "error"}
+            (iteration_dir / "error.txt").write_text(str(e))
 
-            config_path = write_config(work_dir, config)
+        # Measure accuracy on held-out set
+        current_prompt = registry.current_prompt
+        print(f"  Measuring accuracy...", flush=True)
+        accuracy = measure_accuracy(current_prompt, llm, HELD_OUT_TASKS)
+        (iteration_dir / "accuracy.json").write_text(json.dumps(accuracy, indent=2) + "\n")
 
-            # Seed fresh failed traces
-            seed_trace_store(config["project"]["trace_path"], str(CLASSIFICATION_TASKS), args.traces_per_iteration)
-            print(f"  Seeded {args.traces_per_iteration} failed traces")
+        iter_record = {
+            **iter_result,
+            "accuracy": accuracy["accuracy"],
+            "accuracy_correct": accuracy["correct"],
+            "accuracy_total": accuracy["total"],
+            "duration_s": round(time.time() - iter_start, 1),
+        }
+        iterations.append(iter_record)
 
-            # Run the self-edit loop (stream output so we see progress)
-            env = os.environ.copy()
-            traffic_log = work_dir / "llm-traffic.jsonl"
-            env["AGENT_SELF_EDIT_LLM_LOG"] = str(traffic_log)
+        print(f"  Accuracy: {accuracy['accuracy']}% ({accuracy['correct']}/{accuracy['total']})", flush=True)
+        print(f"  Duration: {iter_record['duration_s']}s", flush=True)
 
-            print(f"  Running agent-self-edit run --once...", flush=True)
-            result = subprocess.run(
-                [sys.executable, "-m", "agent_self_edit.cli", "run", "--config", str(config_path), "--once"],
-                capture_output=True, text=True, timeout=600, env=env,
-                cwd=str(REPO_ROOT),
-            )
+        # Write partial report
+        report = {
+            "meta": {
+                "provider": provider,
+                "model": args.model,
+                "endpoint": args.endpoint,
+                "n_iterations": args.iterations,
+                "baseline_accuracy": baseline["accuracy"],
+                "current_accuracy": accuracy["accuracy"],
+                "improvement": round(accuracy["accuracy"] - baseline["accuracy"], 1),
+                "date": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            },
+            "iterations": iterations,
+        }
+        report_path = model_dir / "improvement-loop-report.json"
+        report_path.write_text(json.dumps(report, indent=2, default=str) + "\n")
 
-            if result.returncode != 0:
-                print(f"  ERROR: exit code {result.returncode}", flush=True)
-                print(f"  stderr: {result.stderr[:500]}", flush=True)
-                iterations.append({"iteration": i, "error": result.stderr[:500], "gate": "error", "accuracy": 0, "cost": 0.0})
-                continue
-
-            stdout = result.stdout
-            print(f"  {stdout.strip()}", flush=True)
-
-            # Read traffic
-            iter_traffic = []
-            if traffic_log.exists():
-                for line in traffic_log.read_text().splitlines():
-                    line = line.strip()
-                    if line:
-                        try:
-                            iter_traffic.append(json.loads(line))
-                        except json.JSONDecodeError:
-                            pass
-            llm_traffic.extend(iter_traffic)
-
-            # Parse gate decision from stdout
-            gate = "unknown"
-            for line in stdout.splitlines():
-                if "Gate:" in line:
-                    gate = line.split("Gate:")[-1].strip()
-                    break
-
-            # Parse cost from stdout
-            cost = 0.0
-            for line in stdout.splitlines():
-                if "cost=$" in line:
-                    try:
-                        cost = float(line.split("cost=$")[-1].split(")")[0])
-                    except (ValueError, IndexError):
-                        pass
-
-            # Parse A/B result
-            ab_result = "none"
-            for line in stdout.splitlines():
-                if "A/B test:" in line:
-                    ab_result = line.strip()
-                    break
-
-            # Read current prompt from the persistent registry
-            current_prompt = get_current_prompt(str(persist_registry))
-
-            # Measure accuracy on held-out set
-            print(f"  Measuring accuracy...", flush=True)
-            accuracy = measure_accuracy(current_prompt, llm, HELD_OUT_TASKS)
-
-            iter_record = {
-                "iteration": i,
-                "prompt": current_prompt[:200],
-                "prompt_hash": hashlib.md5(current_prompt.encode()).hexdigest()[:12],
-                "gate": gate,
-                "cost": cost,
-                "ab_result": ab_result,
-                "n_llm_calls": len(iter_traffic),
-                "duration_s": round(time.time() - iter_start, 1),
-                **accuracy,
-            }
-            iterations.append(iter_record)
-
-            print(f"  Gate: {gate}")
-            print(f"  Accuracy: {accuracy['accuracy']}% ({accuracy['correct']}/{accuracy['total']})")
-            print(f"  A/B: {ab_result}")
-            print(f"  Cost: ${cost:.4f}")
-            print(f"  LLM calls: {len(iter_traffic)}")
-            print(f"  Duration: {iter_record['duration_s']}s")
-
-            # Write partial report after each iteration
-            report = {
-                "meta": {
-                    "model": args.model,
-                    "endpoint": args.endpoint,
-                    "n_iterations": args.iterations,
-                    "traces_per_iteration": args.traces_per_iteration,
-                    "baseline_accuracy": baseline["accuracy"],
-                    "current_accuracy": accuracy["accuracy"],
-                    "improvement": round(accuracy["accuracy"] - baseline["accuracy"], 1),
-                    "date": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-                },
-                "iterations": iterations,
-                "llm_traffic": llm_traffic,
-            }
-            report_path.write_text(json.dumps(report, indent=2, default=str) + "\n")
-
-    # Final report
-    report = {
+    final_report = {
         "meta": {
+            "provider": provider,
             "model": args.model,
             "endpoint": args.endpoint,
             "n_iterations": args.iterations,
-            "traces_per_iteration": args.traces_per_iteration,
             "baseline_accuracy": baseline["accuracy"],
             "final_accuracy": iterations[-1].get("accuracy", 0),
             "improvement": round(iterations[-1].get("accuracy", 0) - baseline["accuracy"], 1),
             "date": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         },
         "iterations": iterations,
-        "llm_traffic": llm_traffic,
     }
-    report_path.write_text(json.dumps(report, indent=2, default=str) + "\n")
+    report_path = model_dir / "improvement-loop-report.json"
+    report_path.write_text(json.dumps(final_report, indent=2, default=str) + "\n")
 
+    # Final summary
     print(f"\n=== Summary ===")
     print(f"  Baseline: {baseline['accuracy']}%")
     print(f"  Final:    {iterations[-1].get('accuracy', 0)}%")
-    print(f"  Delta:    {report['meta']['improvement']}%")
+    print(f"  Delta:    {final_report['meta']['improvement']}%")
     for it in iterations[1:]:
         print(f"  Iter {it['iteration']}: {it.get('accuracy', 0)}% (gate: {it.get('gate', '?')})")
-    print(f"\nReport: {report_path}")
+    print(f"\nResults: {model_dir}/")
+    print(f"Report:  {model_dir}/improvement-loop-report.json")
 
 
 if __name__ == "__main__":
