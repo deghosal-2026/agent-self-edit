@@ -1,0 +1,43 @@
+{
+  "n_proposals": 3,
+  "cost_usd": 0.0056859,
+  "tokens_used": 1723,
+  "proposals": [
+    {
+      "section": "Priority Rules: 2",
+      "old_text": "2. If the input describes a service outage, login failure, or inability to use a paid service, prioritize 'technical' over 'feature' or 'security' unless explicitly a security breach.",
+      "new_text": "2. If the input describes a service outage, login failure, or inability to use a paid service, prioritize 'technical' over 'feature' or 'security' unless the input explicitly mentions 'urgent' keywords (e.g., 'urgent', 'immediate', 'blocked', 'down AND', 'hacked', 'stolen') or describes a critical security vulnerability requiring immediate attention.",
+      "hypothesis": "Traces 3, 5, and 9 show the model incorrectly classifying urgent outages/login failures as 'technical' when the expected label is 'urgent'. The current rule prioritizes 'technical' too strongly, ignoring the 'urgent' keyword override defined in Rule 1. Adding 'urgent' keywords and 'critical security vulnerability' as exceptions to Rule 2 will align Rule 2 with Rule 1's intent.",
+      "expected_improvement": "",
+      "evidence_traces": [
+        3,
+        5,
+        9
+      ]
+    },
+    {
+      "section": "Priority Rules: 4",
+      "old_text": "4. If multiple issues are present (e.g., 'hacked' AND 'billing'), include all relevant categories separated by a comma (e.g., 'security, billing').",
+      "new_text": "4. If multiple issues are present (e.g., 'hacked' AND 'billing'), include all relevant categories separated by a comma (e.g., 'security, billing'). However, if 'urgent' keywords are present alongside other categories, ensure 'urgent' is included in the output list.",
+      "hypothesis": "Traces 2, 8, and 10 show the model omitting 'urgent' from the multi-category output even when 'urgent' keywords or critical vulnerabilities are present. While Rule 1 defines the priority, Rule 4 needs to explicitly mandate the inclusion of 'urgent' in the output list when applicable, preventing the model from dropping it in favor of other categories.",
+      "expected_improvement": "",
+      "evidence_traces": [
+        2,
+        8,
+        10
+      ]
+    },
+    {
+      "section": "Priority Rules: 3",
+      "old_text": "3. If the input describes a specific bug in a feature (e.g., 'bug in search', 'ignores filters'), classify as 'technical' if it blocks functionality, otherwise 'feature'.",
+      "new_text": "3. If the input describes a specific bug in a feature (e.g., 'bug in search', 'ignores filters'), classify as 'technical' if it blocks functionality. However, if the bug is related to authentication, authorization, or data exposure, classify as 'security' instead of 'technical'.",
+      "hypothesis": "Traces 4, 6, and 7 show the model misclassifying security-related bugs (password reset, phishing reporting, 403 errors) as 'technical' or 'other'. The current rule only checks for 'blocking functionality', missing the semantic distinction between a functional bug and a security vulnerability. Adding a check for auth/exposure issues will correctly route these to 'security'.",
+      "expected_improvement": "",
+      "evidence_traces": [
+        4,
+        6,
+        7
+      ]
+    }
+  ]
+}

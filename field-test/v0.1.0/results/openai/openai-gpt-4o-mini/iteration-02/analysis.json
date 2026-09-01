@@ -1,41 +1,48 @@
 {
   "n_proposals": 3,
-  "cost_usd": 0.0038676,
-  "tokens_used": 1172,
+  "cost_usd": 0.0041844000000000004,
+  "tokens_used": 1268,
   "proposals": [
     {
-      "section": "classification instructions",
+      "section": "classification criteria",
       "old_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other.",
-      "new_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, urgent, other.",
-      "hypothesis": "Adding 'urgent' to the classification options may help the model recognize critical security issues as urgent, which were misclassified in Trace 10.",
-      "expected_improvement": "This change should help the model correctly classify urgent security issues.",
+      "new_text": "Classify the input into one or more of: urgent, billing, technical, feature, security, other.",
+      "hypothesis": "Allowing for multiple classifications will help the model capture cases where inputs can belong to more than one category, as seen in several traces.",
+      "expected_improvement": "The model will be able to classify inputs that require multiple categories, reducing misclassifications.",
       "evidence_traces": [
-        10
-      ]
-    },
-    {
-      "section": "classification instructions",
-      "old_text": "Output ONLY the category name.",
-      "new_text": "Output ONLY the category name. If the input relates to billing or technical issues, prioritize those categories.",
-      "hypothesis": "Emphasizing the prioritization of billing and technical categories may help the model correctly classify inputs related to billing and technical issues, as seen in Traces 1, 2, 4, 7, and 9.",
-      "expected_improvement": "This change should help the model better distinguish and classify billing and technical issues.",
-      "evidence_traces": [
-        1,
-        2,
         4,
+        5,
+        6,
         7,
-        9
+        8
       ]
     },
     {
-      "section": "classification instructions",
+      "section": "classification criteria",
       "old_text": "Output ONLY the category name.",
-      "new_text": "Output ONLY the category name. If the input mentions a feature request, classify it as feature.",
-      "hypothesis": "Clarifying that inputs mentioning feature requests should be classified as 'feature' may help the model correctly classify feature-related inputs, as seen in Traces 3 and 5.",
-      "expected_improvement": "This change should help the model accurately classify feature requests.",
+      "new_text": "Output the category name(s) as a comma-separated list.",
+      "hypothesis": "Specifying a comma-separated list will clarify that multiple categories can be returned, addressing the failures where multiple classifications were expected.",
+      "expected_improvement": "The model will provide the expected multiple classifications instead of a single category.",
       "evidence_traces": [
-        3,
-        5
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    },
+    {
+      "section": "classification criteria",
+      "old_text": "No explanation. No reasoning.",
+      "new_text": "No explanation. No reasoning. If multiple categories apply, include all relevant categories.",
+      "hypothesis": "Clarifying that multiple categories should be included will guide the model to provide all applicable classifications, addressing the failures related to multiple expected outputs.",
+      "expected_improvement": "The model will be more likely to output all relevant categories when applicable.",
+      "evidence_traces": [
+        4,
+        5,
+        6,
+        7,
+        8
       ]
     }
   ]

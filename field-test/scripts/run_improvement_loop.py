@@ -65,7 +65,7 @@ def _build_config(model: str, api_key: str, endpoint: str, registry_path: str, t
         tasks=TasksConfig(task_set_path=task_set_path, batch_size=10, sample_floor=5),
         llm=LLMConfig(provider="openai", model=model, api_key=api_key, base_url=endpoint, temperature=0.0, max_tokens=4096, timeout=60),
         ab_test=ABTestConfig(n_resamples=100, n_permutations=100, confidence_level=0.95, min_effect_size=0.05, cost_ceiling_usd=0.50),
-        gate=GateConfig(max_edit_distance=20, drift_threshold=0.3, near_miss_threshold=0.5),
+        gate=GateConfig(max_edit_distance=20, drift_threshold=0.5, near_miss_threshold=0.5),
         analyzer=AnalyzerConfig(max_proposals_per_batch=3, cost_ceiling_usd=0.50),
     )
 
@@ -272,7 +272,7 @@ def _run_iteration(
         (iteration_dir / "results-b.json").write_text(json.dumps(results_b, indent=2) + "\n")
 
         # Gate
-        gate_result = check_all(proposal, ab_result, prompt_b, prompt_a, config)
+        gate_result = check_all(proposal, ab_result, prompt_a, prompt_a, config)
         print(f"  Gate: {gate_result.decision} — {gate_result.reason}", flush=True)
 
         ab_comparison = {

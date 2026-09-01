@@ -5,7 +5,7 @@
     "expected": "technical",
     "llm_output": "billing",
     "score": 0.0,
-    "latency_ms": 376.76537500010454,
+    "latency_ms": 404.10166600122466,
     "tokens": 253,
     "error": null
   },
@@ -15,7 +15,7 @@
     "expected": "urgent",
     "llm_output": "security, urgent",
     "score": 0.0,
-    "latency_ms": 421.12162499961414,
+    "latency_ms": 437.77741699886974,
     "tokens": 260,
     "error": null
   },
@@ -25,7 +25,7 @@
     "expected": "urgent",
     "llm_output": "technical",
     "score": 0.0,
-    "latency_ms": 369.68741600048816,
+    "latency_ms": 383.1214580004598,
     "tokens": 257,
     "error": null
   },
@@ -35,7 +35,7 @@
     "expected": "urgent",
     "llm_output": "urgent",
     "score": 1.0,
-    "latency_ms": 374.24033299976145,
+    "latency_ms": 385.44079100029194,
     "tokens": 253,
     "error": null
   },
@@ -45,7 +45,7 @@
     "expected": "security",
     "llm_output": "technical",
     "score": 0.0,
-    "latency_ms": 506.8810000002486,
+    "latency_ms": 376.7526249994262,
     "tokens": 256,
     "error": null
   },
@@ -55,7 +55,7 @@
     "expected": "security, billing",
     "llm_output": "urgent, security, billing",
     "score": 0.0,
-    "latency_ms": 586.5331670001979,
+    "latency_ms": 524.3459159992199,
     "tokens": 268,
     "error": null
   },
@@ -65,7 +65,7 @@
     "expected": "technical, billing",
     "llm_output": "urgent, billing, technical",
     "score": 0.0,
-    "latency_ms": 519.5484579999174,
+    "latency_ms": 525.036540999281,
     "tokens": 262,
     "error": null
   },
@@ -75,7 +75,7 @@
     "expected": "urgent, security",
     "llm_output": "urgent, security",
     "score": 1.0,
-    "latency_ms": 446.0806249999223,
+    "latency_ms": 460.7148329996562,
     "tokens": 261,
     "error": null
   },
@@ -85,7 +85,7 @@
     "expected": "feature, billing",
     "llm_output": "feature, billing",
     "score": 1.0,
-    "latency_ms": 515.1436659998581,
+    "latency_ms": 471.81329199884203,
     "tokens": 265,
     "error": null
   },
@@ -95,7 +95,7 @@
     "expected": "technical, security",
     "llm_output": "security, technical, urgent",
     "score": 0.0,
-    "latency_ms": 502.6891659999819,
+    "latency_ms": 494.2806250001013,
     "tokens": 264,
     "error": null
   }

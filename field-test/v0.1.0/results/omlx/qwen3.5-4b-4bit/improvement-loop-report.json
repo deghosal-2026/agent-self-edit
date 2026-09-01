@@ -3,11 +3,11 @@
     "provider": "omlx",
     "model": "Qwen3.5-4B-4bit",
     "endpoint": "http://localhost:8000/v1",
-    "n_iterations": 1,
+    "n_iterations": 2,
     "baseline_accuracy": 20.0,
-    "final_accuracy": 20.0,
-    "improvement": 0.0,
-    "date": "2026-09-01T01:13:05Z"
+    "final_accuracy": 40.0,
+    "improvement": 20.0,
+    "date": "2026-09-01T01:32:29Z"
   },
   "iterations": [
     {
@@ -18,13 +18,13 @@
     {
       "iteration": 1,
       "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
-      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. \n\nPriority Rules:\n1. If the input contains 'urgent' keywords (",
       "n_proposals": 1,
       "results": [
         {
           "proposal_index": 0,
           "section": "Classification Logic / Priority Handling",
-          "gate": "near_miss",
+          "gate": "promote",
           "winner": "inconclusive",
           "p_value": 0.1,
           "mean_delta": 0.3,
@@ -32,10 +32,50 @@
         }
       ],
       "analysis_cost": 0.004356,
-      "accuracy": 20.0,
-      "accuracy_correct": 1,
+      "accuracy": 40.0,
+      "accuracy_correct": 2,
       "accuracy_total": 5,
-      "duration_s": 30.6
+      "duration_s": 31.2
+    },
+    {
+      "iteration": 2,
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. \n\nPriority Rules:\n1. If the input contains 'urgent' keywords (",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. \n\nPriority Rules:\n1. If the input contains 'urgent' keywords (",
+      "n_proposals": 3,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "Priority Rules: 2",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 10
+        },
+        {
+          "proposal_index": 1,
+          "section": "Priority Rules: 4",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 10
+        },
+        {
+          "proposal_index": 2,
+          "section": "Priority Rules: 3",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 10
+        }
+      ],
+      "analysis_cost": 0.0056859,
+      "accuracy": 40.0,
+      "accuracy_correct": 2,
+      "accuracy_total": 5,
+      "duration_s": 59.7
     }
   ]
 }

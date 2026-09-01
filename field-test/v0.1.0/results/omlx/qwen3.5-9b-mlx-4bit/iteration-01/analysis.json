@@ -1,25 +1,43 @@
 {
-  "n_proposals": 1,
-  "cost_usd": 0.0042537,
-  "tokens_used": 1289,
+  "n_proposals": 3,
+  "cost_usd": 0.0057453,
+  "tokens_used": 1741,
   "proposals": [
     {
-      "section": "Output instructions",
+      "section": "Output Format",
       "old_text": "Output ONLY the category name. Nothing else. No explanation. No reasoning.",
-      "new_text": "Output ONLY the category name. Nothing else. No explanation. No reasoning. If the input mentions 'billing', 'subscription', 'charged', 'downgrade', or 'plan', classify as 'billing'. If it mentions 'feature', 'available', 'add', or 'support', classify as 'feature'. If it mentions 'deployment', 'pipeline', 'error', 'API', 'endpoint', or 'grayed out', classify as 'technical'. If it mentions 'security', 'vulnerability', 'compromised', 'IP', or 'logged in', classify as 'security'. If it mentions 'urgent', 'critical', 'immediate', or 'emergency', classify as 'urgent'. Otherwise, classify as 'other'.",
-      "hypothesis": "The agent is failing because it lacks explicit keyword-based heuristics to map specific input phrases to the correct categories. The current prompt relies on general semantic understanding which is insufficient for the specific edge cases in the traces (e.g., 'billing page' being mapped to 'other' instead of 'billing'). Adding a keyword lookup rule will force the model to match specific terms before defaulting to 'other'.",
-      "expected_improvement": "By explicitly listing trigger words for each category, the model will be guided to select the specific category associated with the keywords in the input, rather than defaulting to 'other' or misinterpreting the context. This directly addresses the failure in all 10 traces where specific keywords were present but ignored.",
+      "new_text": "Output ONLY the category names separated by ', '. If multiple categories apply, list them all. Nothing else. No explanation. No reasoning.",
+      "hypothesis": "The current instruction 'ONLY the category name' (singular) forces the model to pick a single label even when the input clearly triggers multiple categories. The traces show cases where the input contains elements for two distinct categories (e.g., Trace 7, 8, 9, 10), but the model failed because it was constrained to output just one. Explicitly allowing multiple comma-separated categories aligns the instruction with the expected multi-label outputs.",
+      "expected_improvement": "The model will learn to output 'security, billing' or 'feature, billing' instead of arbitrarily picking one, resolving failures in traces 7, 8, 9, and 10.",
       "evidence_traces": [
-        "Trace 1: 'billing page' -> 'other' (expected 'billing')",
-        "Trace 2: 'charged twice' -> 'other' (expected 'billing')",
-        "Trace 3: 'new feature' -> 'other' (expected 'feature')",
-        "Trace 4: 'deployment pipeline' -> 'other' (expected 'technical')",
-        "Trace 5: 'add SSO support' -> 'other' (expected 'feature')",
-        "Trace 6: 'account compromised' -> 'other' (expected 'security')",
-        "Trace 7: 'checkout button... grayed out' -> 'other' (expected 'technical')",
-        "Trace 8: 'downgrade plan' -> 'other' (expected 'billing')",
-        "Trace 9: 'API... 500 error' -> 'other' (expected 'technical')",
-        "Trace 10: 'critical security vulnerability' -> 'other' (expected 'urgent')"
+        7,
+        8,
+        9,
+        10
+      ]
+    },
+    {
+      "section": "Priority Logic",
+      "old_text": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other.",
+      "new_text": "You are a helpful classification assistant. Classify the input into one or more of: urgent, billing, technical, feature, security, other. If the input contains elements for multiple categories, include all applicable categories. If no specific category applies, use 'other'.",
+      "hypothesis": "Traces 2, 3, and 4 fail because the model is instructed to pick 'exactly one' category, causing it to prioritize the most obvious keyword (e.g., 'security' over 'urgent', or 'billing' over 'technical') rather than recognizing the primary intent or urgency. Removing the 'exactly one' constraint and adding priority logic allows the model to handle the conflicts seen in the traces.",
+      "expected_improvement": "By removing the 'exactly one' constraint and adding guidance on handling conflicts (e.g., 'urgent' overrides 'security' if both are present, or 'technical' overrides 'billing' for login issues), the model will output the correct primary or combined labels for traces 2, 3, and 4.",
+      "evidence_traces": [
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "section": "Category Definitions",
+      "old_text": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other.",
+      "new_text": "You are a helpful classification assistant. Classify the input into one or more of: urgent, billing, technical, feature, security, other.\n\nDefinitions:\n- urgent: Critical issues requiring immediate action (e.g., hacked accounts, service outages, stolen data).\n- billing: Issues related to payments, refunds, or subscription amounts.\n- technical: Bugs, errors, broken features, or login issues.\n- feature: Requests for new functionality or integrations.\n- security: Vulnerabilities, unauthorized access, or data breaches.\n- other: Anything else.\n\nPriority: If 'urgent' and another category apply, output 'urgent' first. If 'security' and 'billing' apply, output both.",
+      "hypothesis": "The model lacks specific definitions for the categories, leading to ambiguous decisions in edge cases (e.g., Trace 4: password reset is 'technical' not 'billing'; Trace 5: rate limits are 'feature' not 'technical'). Adding clear definitions and a priority hierarchy will guide the model to make more accurate distinctions.",
+      "expected_improvement": "Providing explicit definitions will help the model distinguish between 'billing' and 'technical' for password resets (Trace 4), 'feature' and 'technical' for rate limits (Trace 5), and 'technical' and 'security' for 403 errors (Trace 6).",
+      "evidence_traces": [
+        4,
+        5,
+        6
       ]
     }
   ]

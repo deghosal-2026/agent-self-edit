@@ -5,9 +5,9 @@
     "endpoint": "https://openrouter.ai/api/v1",
     "n_iterations": 10,
     "baseline_accuracy": 60.0,
-    "final_accuracy": 60.0,
+    "current_accuracy": 60.0,
     "improvement": 0.0,
-    "date": "2026-09-01T01:05:43Z"
+    "date": "2026-09-01T01:23:01Z"
   },
   "iterations": [
     {
@@ -23,37 +23,37 @@
       "results": [
         {
           "proposal_index": 0,
-          "section": "classification instructions",
+          "section": "system prompt",
           "gate": "reject",
           "winner": "tie",
           "p_value": 1.0,
           "mean_delta": 0.0,
-          "n_trials": 5
+          "n_trials": 10
         },
         {
           "proposal_index": 1,
-          "section": "classification instructions",
+          "section": "system prompt",
           "gate": "reject",
           "winner": "tie",
           "p_value": 1.0,
           "mean_delta": 0.0,
-          "n_trials": 5
+          "n_trials": 10
         },
         {
           "proposal_index": 2,
-          "section": "classification instructions",
-          "gate": "reject",
-          "winner": "tie",
-          "p_value": 1.0,
-          "mean_delta": 0.0,
-          "n_trials": 5
+          "section": "system prompt",
+          "gate": "near_miss",
+          "winner": "inconclusive",
+          "p_value": 0.45,
+          "mean_delta": 0.09999999999999998,
+          "n_trials": 10
         }
       ],
-      "analysis_cost": 0.0036597,
+      "analysis_cost": 0.0042074999999999994,
       "accuracy": 60.0,
       "accuracy_correct": 3,
       "accuracy_total": 5,
-      "duration_s": 32.0
+      "duration_s": 87.9
     },
     {
       "iteration": 2,
@@ -63,37 +63,37 @@
       "results": [
         {
           "proposal_index": 0,
-          "section": "classification instructions",
+          "section": "classification criteria",
           "gate": "reject",
           "winner": "tie",
           "p_value": 1.0,
           "mean_delta": 0.0,
-          "n_trials": 5
+          "n_trials": 10
         },
         {
           "proposal_index": 1,
-          "section": "classification instructions",
-          "gate": "reject",
-          "winner": "tie",
-          "p_value": 1.0,
-          "mean_delta": 0.0,
-          "n_trials": 5
+          "section": "classification criteria",
+          "gate": "near_miss",
+          "winner": "inconclusive",
+          "p_value": 0.51,
+          "mean_delta": 0.09999999999999998,
+          "n_trials": 10
         },
         {
           "proposal_index": 2,
-          "section": "classification instructions",
-          "gate": "reject",
-          "winner": "tie",
-          "p_value": 1.0,
-          "mean_delta": 0.0,
-          "n_trials": 5
+          "section": "classification criteria",
+          "gate": "near_miss",
+          "winner": "inconclusive",
+          "p_value": 0.45,
+          "mean_delta": 0.09999999999999998,
+          "n_trials": 10
         }
       ],
-      "analysis_cost": 0.0038676,
+      "analysis_cost": 0.0041844000000000004,
       "accuracy": 60.0,
       "accuracy_correct": 3,
       "accuracy_total": 5,
-      "duration_s": 31.5
+      "duration_s": 94.5
     },
     {
       "iteration": 3,
@@ -103,317 +103,37 @@
       "results": [
         {
           "proposal_index": 0,
-          "section": "classification instructions",
+          "section": "classification criteria",
           "gate": "reject",
           "winner": "tie",
           "p_value": 1.0,
           "mean_delta": 0.0,
-          "n_trials": 5
+          "n_trials": 10
         },
         {
           "proposal_index": 1,
-          "section": "classification instructions",
+          "section": "classification criteria",
           "gate": "reject",
-          "winner": "tie",
-          "p_value": 1.0,
+          "winner": "inconclusive",
+          "p_value": 0.67,
           "mean_delta": 0.0,
-          "n_trials": 5
+          "n_trials": 10
         },
         {
           "proposal_index": 2,
-          "section": "classification instructions",
-          "gate": "reject",
-          "winner": "tie",
-          "p_value": 1.0,
-          "mean_delta": 0.0,
-          "n_trials": 5
+          "section": "classification criteria",
+          "gate": "near_miss",
+          "winner": "inconclusive",
+          "p_value": 0.45,
+          "mean_delta": 0.09999999999999998,
+          "n_trials": 10
         }
       ],
-      "analysis_cost": 0.0040161,
+      "analysis_cost": 0.0041448,
       "accuracy": 60.0,
       "accuracy_correct": 3,
       "accuracy_total": 5,
-      "duration_s": 38.7
-    },
-    {
-      "iteration": 4,
-      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
-      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
-      "n_proposals": 3,
-      "results": [
-        {
-          "proposal_index": 0,
-          "section": "classification instructions",
-          "gate": "reject",
-          "winner": "tie",
-          "p_value": 1.0,
-          "mean_delta": 0.0,
-          "n_trials": 5
-        },
-        {
-          "proposal_index": 1,
-          "section": "classification instructions",
-          "gate": "reject",
-          "winner": "tie",
-          "p_value": 1.0,
-          "mean_delta": 0.0,
-          "n_trials": 5
-        },
-        {
-          "proposal_index": 2,
-          "section": "classification instructions",
-          "gate": "reject",
-          "winner": "tie",
-          "p_value": 1.0,
-          "mean_delta": 0.0,
-          "n_trials": 5
-        }
-      ],
-      "analysis_cost": 0.0038841,
-      "accuracy": 60.0,
-      "accuracy_correct": 3,
-      "accuracy_total": 5,
-      "duration_s": 35.3
-    },
-    {
-      "iteration": 5,
-      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
-      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
-      "n_proposals": 3,
-      "results": [
-        {
-          "proposal_index": 0,
-          "section": "classification instructions",
-          "gate": "reject",
-          "winner": "tie",
-          "p_value": 1.0,
-          "mean_delta": 0.0,
-          "n_trials": 5
-        },
-        {
-          "proposal_index": 1,
-          "section": "classification instructions",
-          "gate": "reject",
-          "winner": "tie",
-          "p_value": 1.0,
-          "mean_delta": 0.0,
-          "n_trials": 5
-        },
-        {
-          "proposal_index": 2,
-          "section": "classification instructions",
-          "gate": "reject",
-          "winner": "tie",
-          "p_value": 1.0,
-          "mean_delta": 0.0,
-          "n_trials": 5
-        }
-      ],
-      "analysis_cost": 0.0040095,
-      "accuracy": 60.0,
-      "accuracy_correct": 3,
-      "accuracy_total": 5,
-      "duration_s": 39.2
-    },
-    {
-      "iteration": 6,
-      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
-      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
-      "n_proposals": 3,
-      "results": [
-        {
-          "proposal_index": 0,
-          "section": "classification instructions",
-          "gate": "reject",
-          "winner": "tie",
-          "p_value": 1.0,
-          "mean_delta": 0.0,
-          "n_trials": 5
-        },
-        {
-          "proposal_index": 1,
-          "section": "classification instructions",
-          "gate": "reject",
-          "winner": "tie",
-          "p_value": 1.0,
-          "mean_delta": 0.0,
-          "n_trials": 5
-        },
-        {
-          "proposal_index": 2,
-          "section": "classification instructions",
-          "gate": "reject",
-          "winner": "tie",
-          "p_value": 1.0,
-          "mean_delta": 0.0,
-          "n_trials": 5
-        }
-      ],
-      "analysis_cost": 0.0041349,
-      "accuracy": 60.0,
-      "accuracy_correct": 3,
-      "accuracy_total": 5,
-      "duration_s": 42.1
-    },
-    {
-      "iteration": 7,
-      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
-      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
-      "n_proposals": 3,
-      "results": [
-        {
-          "proposal_index": 0,
-          "section": "classification instructions",
-          "gate": "reject",
-          "winner": "tie",
-          "p_value": 1.0,
-          "mean_delta": 0.0,
-          "n_trials": 5
-        },
-        {
-          "proposal_index": 1,
-          "section": "classification instructions",
-          "gate": "reject",
-          "winner": "tie",
-          "p_value": 1.0,
-          "mean_delta": 0.0,
-          "n_trials": 5
-        },
-        {
-          "proposal_index": 2,
-          "section": "classification instructions",
-          "gate": "reject",
-          "winner": "tie",
-          "p_value": 1.0,
-          "mean_delta": 0.0,
-          "n_trials": 5
-        }
-      ],
-      "analysis_cost": 0.0038511,
-      "accuracy": 60.0,
-      "accuracy_correct": 3,
-      "accuracy_total": 5,
-      "duration_s": 38.4
-    },
-    {
-      "iteration": 8,
-      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
-      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
-      "n_proposals": 3,
-      "results": [
-        {
-          "proposal_index": 0,
-          "section": "classification instructions",
-          "gate": "reject",
-          "winner": "tie",
-          "p_value": 1.0,
-          "mean_delta": 0.0,
-          "n_trials": 5
-        },
-        {
-          "proposal_index": 1,
-          "section": "classification instructions",
-          "gate": "reject",
-          "winner": "tie",
-          "p_value": 1.0,
-          "mean_delta": 0.0,
-          "n_trials": 5
-        },
-        {
-          "proposal_index": 2,
-          "section": "classification instructions",
-          "gate": "reject",
-          "winner": "tie",
-          "p_value": 1.0,
-          "mean_delta": 0.0,
-          "n_trials": 5
-        }
-      ],
-      "analysis_cost": 0.0038643,
-      "accuracy": 60.0,
-      "accuracy_correct": 3,
-      "accuracy_total": 5,
-      "duration_s": 35.9
-    },
-    {
-      "iteration": 9,
-      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
-      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
-      "n_proposals": 3,
-      "results": [
-        {
-          "proposal_index": 0,
-          "section": "classification instructions",
-          "gate": "reject",
-          "winner": "tie",
-          "p_value": 1.0,
-          "mean_delta": 0.0,
-          "n_trials": 5
-        },
-        {
-          "proposal_index": 1,
-          "section": "classification instructions",
-          "gate": "reject",
-          "winner": "tie",
-          "p_value": 1.0,
-          "mean_delta": 0.0,
-          "n_trials": 5
-        },
-        {
-          "proposal_index": 2,
-          "section": "classification instructions",
-          "gate": "reject",
-          "winner": "tie",
-          "p_value": 1.0,
-          "mean_delta": 0.0,
-          "n_trials": 5
-        }
-      ],
-      "analysis_cost": 0.0038708999999999996,
-      "accuracy": 60.0,
-      "accuracy_correct": 3,
-      "accuracy_total": 5,
-      "duration_s": 42.0
-    },
-    {
-      "iteration": 10,
-      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
-      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
-      "n_proposals": 3,
-      "results": [
-        {
-          "proposal_index": 0,
-          "section": "classification instructions",
-          "gate": "reject",
-          "winner": "tie",
-          "p_value": 1.0,
-          "mean_delta": 0.0,
-          "n_trials": 5
-        },
-        {
-          "proposal_index": 1,
-          "section": "classification instructions",
-          "gate": "reject",
-          "winner": "tie",
-          "p_value": 1.0,
-          "mean_delta": 0.0,
-          "n_trials": 5
-        },
-        {
-          "proposal_index": 2,
-          "section": "classification instructions",
-          "gate": "reject",
-          "winner": "tie",
-          "p_value": 1.0,
-          "mean_delta": 0.0,
-          "n_trials": 5
-        }
-      ],
-      "analysis_cost": 0.0039798,
-      "accuracy": 60.0,
-      "accuracy_correct": 3,
-      "accuracy_total": 5,
-      "duration_s": 42.5
+      "duration_s": 81.5
     }
   ]
 }

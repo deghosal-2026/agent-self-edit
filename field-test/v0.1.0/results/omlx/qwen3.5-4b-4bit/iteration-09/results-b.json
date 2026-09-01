@@ -1,0 +1,102 @@
+[
+  {
+    "task_id": "classify-001",
+    "input": "My billing page shows the wrong amount for my subscription.",
+    "expected": "technical",
+    "llm_output": "billing",
+    "score": 0.0,
+    "latency_ms": 336.3934579992929,
+    "tokens": 253,
+    "error": null
+  },
+  {
+    "task_id": "classify-010",
+    "input": "This is a critical security vulnerability that needs immediate attention.",
+    "expected": "urgent",
+    "llm_output": "security, urgent",
+    "score": 0.0,
+    "latency_ms": 384.9212080003781,
+    "tokens": 260,
+    "error": null
+  },
+  {
+    "task_id": "classify-011",
+    "input": "I'm paying for a service I can't use because the login page is down.",
+    "expected": "urgent",
+    "llm_output": "technical",
+    "score": 0.0,
+    "latency_ms": 339.46054199986975,
+    "tokens": 257,
+    "error": null
+  },
+  {
+    "task_id": "classify-015",
+    "input": "When will the maintenance window end? Our team is blocked.",
+    "expected": "urgent",
+    "llm_output": "urgent",
+    "score": 1.0,
+    "latency_ms": 365.25000000074215,
+    "tokens": 253,
+    "error": null
+  },
+  {
+    "task_id": "classify-019",
+    "input": "I'm getting a 403 Forbidden error on endpoints I used to access.",
+    "expected": "security",
+    "llm_output": "technical",
+    "score": 0.0,
+    "latency_ms": 407.9371660009201,
+    "tokens": 256,
+    "error": null
+  },
+  {
+    "task_id": "classify-021",
+    "input": "My account was hacked and they changed my billing address \u2014 I need a refund AND a password reset.",
+    "expected": "security, billing",
+    "llm_output": "urgent, security, billing",
+    "score": 0.0,
+    "latency_ms": 502.90491600026144,
+    "tokens": 268,
+    "error": null
+  },
+  {
+    "task_id": "classify-022",
+    "input": "The API is down AND I'm being charged for premium tier that I can't use.",
+    "expected": "technical, billing",
+    "llm_output": "urgent, billing, technical",
+    "score": 0.0,
+    "latency_ms": 496.3997079994442,
+    "tokens": 262,
+    "error": null
+  },
+  {
+    "task_id": "classify-023",
+    "input": "Someone is using my stolen credit card on your platform and I need urgent help.",
+    "expected": "urgent, security",
+    "llm_output": "urgent, security",
+    "score": 1.0,
+    "latency_ms": 392.60358399951656,
+    "tokens": 261,
+    "error": null
+  },
+  {
+    "task_id": "classify-024",
+    "input": "I want to request a new integration feature and also report that the billing page is broken.",
+    "expected": "feature, billing",
+    "llm_output": "feature, billing",
+    "score": 1.0,
+    "latency_ms": 411.46054199998616,
+    "tokens": 265,
+    "error": null
+  },
+  {
+    "task_id": "classify-025",
+    "input": "The deployment failed and it exposed a security vulnerability in the auth module.",
+    "expected": "technical, security",
+    "llm_output": "security, technical, urgent",
+    "score": 0.0,
+    "latency_ms": 429.3921250009589,
+    "tokens": 264,
+    "error": null
+  }
+]

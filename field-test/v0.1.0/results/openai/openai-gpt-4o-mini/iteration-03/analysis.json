@@ -1,39 +1,48 @@
 {
   "n_proposals": 3,
-  "cost_usd": 0.0040161,
-  "tokens_used": 1217,
+  "cost_usd": 0.0041448,
+  "tokens_used": 1256,
   "proposals": [
     {
-      "section": "classification instructions",
+      "section": "classification criteria",
       "old_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other.",
-      "new_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other. If the input relates to a billing issue, classify it as billing.",
-      "hypothesis": "By explicitly stating that billing issues should be classified as billing, the agent may better recognize and categorize billing-related inputs.",
-      "expected_improvement": "This change should reduce misclassifications related to billing.",
+      "new_text": "Classify the input into one or more of: urgent, billing, technical, feature, security, other.",
+      "hypothesis": "Allowing for multiple classifications will help the model capture cases where inputs can belong to more than one category, as seen in several traces.",
+      "expected_improvement": "The model will be able to classify inputs that require multiple categories, reducing misclassifications.",
       "evidence_traces": [
-        2,
+        4,
+        5,
+        6,
+        7,
         8
       ]
     },
     {
-      "section": "classification instructions",
-      "old_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other.",
-      "new_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other. If the input indicates a security concern, classify it as security.",
-      "hypothesis": "By explicitly stating that security concerns should be classified as security, the agent may better recognize and categorize security-related inputs.",
-      "expected_improvement": "This change should reduce misclassifications related to security.",
+      "section": "classification criteria",
+      "old_text": "Output ONLY the category name.",
+      "new_text": "Output the category name(s) as a comma-separated list.",
+      "hypothesis": "Specifying a comma-separated list will guide the model to provide multiple outputs when necessary, addressing cases where multiple categories are expected.",
+      "expected_improvement": "The model will provide the correct output format for cases requiring multiple classifications.",
       "evidence_traces": [
+        4,
+        5,
         6,
-        10
+        7,
+        8
       ]
     },
     {
-      "section": "classification instructions",
-      "old_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other.",
-      "new_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other. If the input mentions a feature request, classify it as feature.",
-      "hypothesis": "By explicitly stating that feature requests should be classified as feature, the agent may better recognize and categorize feature-related inputs.",
-      "expected_improvement": "This change should reduce misclassifications related to feature requests.",
+      "section": "classification criteria",
+      "old_text": "No explanation. No reasoning.",
+      "new_text": "No explanation. No reasoning. If multiple categories apply, list them all.",
+      "hypothesis": "Clarifying that multiple categories should be listed will help the model understand that it can output more than one category when applicable.",
+      "expected_improvement": "The model will correctly identify and output all relevant categories for complex inputs.",
       "evidence_traces": [
-        3,
-        5
+        4,
+        5,
+        6,
+        7,
+        8
       ]
     }
   ]

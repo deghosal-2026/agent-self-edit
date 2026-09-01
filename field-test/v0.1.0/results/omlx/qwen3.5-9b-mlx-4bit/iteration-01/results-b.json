@@ -5,48 +5,98 @@
     "expected": "technical",
     "llm_output": "billing",
     "score": 0.0,
-    "latency_ms": 503.609124999457,
-    "tokens": 203,
-    "error": null
-  },
-  {
-    "task_id": "classify-002",
-    "input": "I was charged twice for the same plan.",
-    "expected": "billing",
-    "llm_output": "billing",
-    "score": 1.0,
-    "latency_ms": 502.20729100055905,
-    "tokens": 198,
-    "error": null
-  },
-  {
-    "task_id": "classify-003",
-    "input": "When will the new feature be available in production?",
-    "expected": "feature",
-    "llm_output": "feature",
-    "score": 1.0,
-    "latency_ms": 501.1977909998677,
-    "tokens": 202,
-    "error": null
-  },
-  {
-    "task_id": "classify-004",
-    "input": "Our deployment pipeline failed on the staging environment.",
-    "expected": "technical",
-    "llm_output": "technical",
-    "score": 1.0,
-    "latency_ms": 500.1592079997863,
+    "latency_ms": 439.0482079998037,
     "tokens": 204,
     "error": null
   },
   {
-    "task_id": "classify-005",
-    "input": "Can you add SSO support for our enterprise account?",
-    "expected": "feature",
-    "llm_output": "feature",
+    "task_id": "classify-010",
+    "input": "This is a critical security vulnerability that needs immediate attention.",
+    "expected": "urgent",
+    "llm_output": "urgent",
     "score": 1.0,
-    "latency_ms": 508.5595000000467,
-    "tokens": 201,
+    "latency_ms": 449.7488750002958,
+    "tokens": 207,
+    "error": null
+  },
+  {
+    "task_id": "classify-011",
+    "input": "I'm paying for a service I can't use because the login page is down.",
+    "expected": "urgent",
+    "llm_output": "urgent, technical",
+    "score": 0.0,
+    "latency_ms": 571.527750000314,
+    "tokens": 209,
+    "error": null
+  },
+  {
+    "task_id": "classify-015",
+    "input": "When will the maintenance window end? Our team is blocked.",
+    "expected": "urgent",
+    "llm_output": "urgent",
+    "score": 1.0,
+    "latency_ms": 427.91708299955644,
+    "tokens": 204,
+    "error": null
+  },
+  {
+    "task_id": "classify-019",
+    "input": "I'm getting a 403 Forbidden error on endpoints I used to access.",
+    "expected": "security",
+    "llm_output": "technical",
+    "score": 0.0,
+    "latency_ms": 495.6032080008299,
+    "tokens": 206,
+    "error": null
+  },
+  {
+    "task_id": "classify-021",
+    "input": "My account was hacked and they changed my billing address \u2014 I need a refund AND a password reset.",
+    "expected": "security, billing",
+    "llm_output": "urgent, billing, security",
+    "score": 0.0,
+    "latency_ms": 649.9896250006714,
+    "tokens": 218,
+    "error": null
+  },
+  {
+    "task_id": "classify-022",
+    "input": "The API is down AND I'm being charged for premium tier that I can't use.",
+    "expected": "technical, billing",
+    "llm_output": "urgent, billing",
+    "score": 0.0,
+    "latency_ms": 570.5589160006639,
+    "tokens": 209,
+    "error": null
+  },
+  {
+    "task_id": "classify-023",
+    "input": "Someone is using my stolen credit card on your platform and I need urgent help.",
+    "expected": "urgent, security",
+    "llm_output": "urgent, security",
+    "score": 1.0,
+    "latency_ms": 576.4460829996096,
+    "tokens": 212,
+    "error": null
+  },
+  {
+    "task_id": "classify-024",
+    "input": "I want to request a new integration feature and also report that the billing page is broken.",
+    "expected": "feature, billing",
+    "llm_output": "feature, billing",
+    "score": 1.0,
+    "latency_ms": 581.996375000017,
+    "tokens": 215,
+    "error": null
+  },
+  {
+    "task_id": "classify-025",
+    "input": "The deployment failed and it exposed a security vulnerability in the auth module.",
+    "expected": "technical, security",
+    "llm_output": "urgent, security",
+    "score": 0.0,
+    "latency_ms": 572.6794170004723,
+    "tokens": 212,
     "error": null
   }
 ]
