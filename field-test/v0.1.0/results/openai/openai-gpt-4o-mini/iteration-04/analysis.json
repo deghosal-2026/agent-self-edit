@@ -1,0 +1,48 @@
+{
+  "n_proposals": 3,
+  "cost_usd": 0.0038841,
+  "tokens_used": 1177,
+  "proposals": [
+    {
+      "section": "classification instructions",
+      "old_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other.",
+      "new_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, urgent, other.",
+      "hypothesis": "Adding 'urgent' to the classification options may help the model recognize critical security issues as urgent, which were misclassified in Trace 10.",
+      "expected_improvement": "This change should help the model correctly classify urgent security issues.",
+      "evidence_traces": [
+        10
+      ]
+    },
+    {
+      "section": "classification instructions",
+      "old_text": "Output ONLY the category name.",
+      "new_text": "Output ONLY the category name. If the input relates to billing, technical, feature, or security, prioritize those categories over 'other'.",
+      "hypothesis": "Prioritizing specific categories may help the model focus on the relevant classifications instead of defaulting to 'other'.",
+      "expected_improvement": "This change should reduce the number of misclassifications by guiding the model to recognize and prioritize specific categories.",
+      "evidence_traces": [
+        1,
+        2,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ]
+    },
+    {
+      "section": "classification instructions",
+      "old_text": "Output ONLY the category name.",
+      "new_text": "Output ONLY the category name. If the input mentions billing issues, classify as billing; if it mentions features, classify as feature.",
+      "hypothesis": "Providing explicit instructions for billing and feature-related inputs may help the model classify these inputs correctly.",
+      "expected_improvement": "This change should help the model correctly classify billing and feature-related inputs.",
+      "evidence_traces": [
+        1,
+        2,
+        3,
+        5,
+        8
+      ]
+    }
+  ]
+}

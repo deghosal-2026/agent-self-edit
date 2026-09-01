@@ -1,0 +1,26 @@
+{
+  "n_proposals": 1,
+  "cost_usd": 0.0042537,
+  "tokens_used": 1289,
+  "proposals": [
+    {
+      "section": "Output instructions",
+      "old_text": "Output ONLY the category name. Nothing else. No explanation. No reasoning.",
+      "new_text": "Output ONLY the category name. Nothing else. No explanation. No reasoning. If the input mentions 'billing', 'subscription', 'charged', 'downgrade', or 'plan', classify as 'billing'. If it mentions 'feature', 'available', 'add', or 'support', classify as 'feature'. If it mentions 'deployment', 'pipeline', 'error', 'API', 'endpoint', or 'grayed out', classify as 'technical'. If it mentions 'security', 'vulnerability', 'compromised', 'IP', or 'logged in', classify as 'security'. If it mentions 'urgent', 'critical', 'immediate', or 'emergency', classify as 'urgent'. Otherwise, classify as 'other'.",
+      "hypothesis": "The agent is failing because it lacks explicit keyword-based heuristics to map specific input phrases to the correct categories. The current prompt relies on general semantic understanding which is insufficient for the specific edge cases in the traces (e.g., 'billing page' being mapped to 'other' instead of 'billing'). Adding a keyword lookup rule will force the model to match specific terms before defaulting to 'other'.",
+      "expected_improvement": "By explicitly listing trigger words for each category, the model will be guided to select the specific category associated with the keywords in the input, rather than defaulting to 'other' or misinterpreting the context. This directly addresses the failure in all 10 traces where specific keywords were present but ignored.",
+      "evidence_traces": [
+        "Trace 1: 'billing page' -> 'other' (expected 'billing')",
+        "Trace 2: 'charged twice' -> 'other' (expected 'billing')",
+        "Trace 3: 'new feature' -> 'other' (expected 'feature')",
+        "Trace 4: 'deployment pipeline' -> 'other' (expected 'technical')",
+        "Trace 5: 'add SSO support' -> 'other' (expected 'feature')",
+        "Trace 6: 'account compromised' -> 'other' (expected 'security')",
+        "Trace 7: 'checkout button... grayed out' -> 'other' (expected 'technical')",
+        "Trace 8: 'downgrade plan' -> 'other' (expected 'billing')",
+        "Trace 9: 'API... 500 error' -> 'other' (expected 'technical')",
+        "Trace 10: 'critical security vulnerability' -> 'other' (expected 'urgent')"
+      ]
+    }
+  ]
+}

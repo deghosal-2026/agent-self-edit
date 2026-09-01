@@ -1,137 +1,239 @@
 {
   "meta": {
+    "provider": "omlx",
     "model": "Qwen3.5-9B-MLX-4bit",
     "endpoint": "http://localhost:8000/v1",
     "n_iterations": 10,
-    "traces_per_iteration": 10,
-    "baseline_accuracy": 0.0,
-    "final_accuracy": 0,
+    "baseline_accuracy": 40.0,
+    "final_accuracy": 40.0,
     "improvement": 0.0,
-    "date": "2026-09-01T00:38:23Z"
+    "date": "2026-09-01T01:04:22Z"
   },
   "iterations": [
     {
       "iteration": 0,
-      "prompt": "You are a helpful classification assistant.",
-      "prompt_hash": "6cde634721b2",
-      "accuracy": 0.0,
-      "correct": 0,
-      "total": 5,
-      "results": [
-        {
-          "task_id": "classify-006",
-          "expected": "security",
-          "actual": "I'm sorry to hear that your account may have been compromised. This is a serious security issue, but taking immediate action can help protect your data and prevent further damage. Here's what you should do right away:\n\n### 1. **Change Your Password Immediately**\n   - Go to the account's login page and change your password to a strong, unique one.\n   - Avoid reusing passwords from other accounts.\n   - Enable **two-factor authentication (2FA)** if available (e.g., via an app like Google Authenticator or Authy, or via SMS).\n\n### 2. **Review Recent Activity**\n   - Check the account's \"Login Activity\" or \"Recent Devices\" section (usually found in account settings).\n   - Look for unfamiliar IPs, locations, or devices.\n   - Revoke access for any suspicious sessions or devices.\n\n### 3. **Check for Unauthorized Changes**\n   - Review recent changes to your account (e.g., updated email, phone number, payment methods, or linked services).\n   - Check for unexpected emails, messages, or notifications from the service.\n\n### 4. **Secure Related Accounts**\n   - If you reused this password elsewhere, change it on those accounts too.\n   - Check if any third-party apps or services have access to your account (e.g., via \"Connected Apps\" or \"Authorized Devices\").\n\n### 5. **Contact Support**\n   - Reach out to the platform's support team (e.g., via their official help page or support chat).\n   - Provide details about the suspicious login (IP address, time, device) to help them investigate.\n\n### 6. **Enable Additional Protections**\n   - Turn on **login alerts** (e.g., email or SMS notifications for future logins).\n   - Use a password manager to generate and store strong passwords.\n   - Consider enabling **biometric login** (if supported) for added security.\n\n### 7. **Monitor for Fraud**\n   - Watch for unusual charges or activity linked to your account.\n   - If financial data was involved, contact your bank or credit card issuer immediately.\n\n### 8. **Scan Your Devices**\n   - Run a malware/virus scan on your devices to ensure no keyloggers or spyware are present.\n\nIf you're unsure where to start, prioritize **changing your password** and **revoking suspicious sessions**. Let me know which platform this is (e.g., email, social media, banking), and I can provide more specific steps! Stay vigilant, and don't hesitate to act quickly. \ud83d\udd12",
-          "passed": false,
-          "score": 0.0,
-          "error": null
-        },
-        {
-          "task_id": "classify-011",
-          "expected": "urgent",
-          "actual": "This is a frustrating situation, and you are absolutely right to be concerned. Being charged for a service you cannot access due to a technical outage on the provider's end is a common consumer rights issue.\n\nHere is a step-by-step guide on how to handle this, depending on your location and the specific service:\n\n### 1. Check the Service Status First\nBefore contacting support, verify if the issue is widespread.\n*   Visit **DownDetector** (downdetector.com) or the service's official \"System Status\" page.\n*   If thousands of users are reporting the same issue, the problem is likely on the provider's side, not yours. This strengthens your case for a refund or credit, as the provider is failing to deliver the service they promised.\n\n### 2. Contact Customer Support\nReach out to the service provider immediately.\n*   **Email/Support Ticket:** Send a clear message stating: *\"I was charged on [Date] for [Service Name]. However, the login page has been down since [Time/Date], making the service unusable. Please refund my charge or provide a credit for the downtime.\"*\n*   **Live Chat:** If available, use live chat for a faster response.\n*   **Phone:** Call their support line if the issue is urgent.\n\n### 3. Know Your Rights (General Principles)\nIn many jurisdictions, you have a right to a refund if a digital service is not working as advertised.\n*   **Consumer Protection Laws:** In the US (FTC), UK (Consumer Rights Act), EU (Unfair Contract Terms Directive), and Australia (ACCC), businesses are generally required to provide the service they paid for. If the service is inaccessible for a significant period (often 30+ minutes to a few hours, depending on the contract), you are entitled to a partial or full refund.\n*   **Terms of Service:** Check the provider's Terms of Service (ToS). Look for a \"Service Level Agreement\" (SLA) or a \"Refund Policy.\" Some providers explicitly state that if the service is down for more than X hours, you are eligible for a refund.\n\n### 4. Escalate if Necessary\nIf the provider refuses to help:\n*   **Chargeback (Credit/Debit Card):** If you paid by card, you can dispute the charge with your bank. Provide evidence (screenshots of the down login page, emails from the provider admitting the outage, or DownDetector reports). Banks often side with the consumer in these cases.\n*   **Regulatory Complaint:**\n    *   **US:** File a complaint with the **FTC** (ReportFraud.ftc.gov) or your state's Attorney General.\n    *   **UK:** Contact **Citizens Advice** or report to **Trading Standards**.\n    *   **EU:** Contact your national consumer authority (e.g., **BeUC** in Belgium, **Verbraucherzentrale** in Germany).\n    *   **Australia:** Contact the **ACCC**.\n\n### 5. Prevent Future Issues\n*   **Payment Methods:** Consider using PayPal or a prepaid card for subscriptions. This makes it easier to dispute charges later.\n*   **Auto-Renewal:** Be very careful with auto-renewal settings.\n*   **Wait for Confirmation:** If possible, wait until the service is confirmed working before confirming a subscription renewal.\n\n**What specific service are you trying to access?** If you tell me the name of the service and your country, I can give you more specific advice on their refund policy or the best regulatory body to contact.",
-          "passed": false,
-          "score": 0.0,
-          "error": null
-        },
-        {
-          "task_id": "classify-015",
-          "expected": "urgent",
-          "actual": "I do not have access to your organization's specific IT calendar, ticketing system (like ServiceNow or Jira), or the specific maintenance event you are referring to. Therefore, I cannot tell you exactly when the maintenance window will end.\n\nTo get the answer you need immediately, please try the following steps:\n\n1.  **Check the Maintenance Notification Email**: If your team received an alert, the end time is usually listed in the \"Summary\" or \"Details\" section of that email.\n2.  **Contact the Vendor or Service Provider**: If this is a third-party service (e.g., AWS, Azure, Salesforce, a SaaS platform), check their **Status Page** or **System Status Dashboard**. They often list scheduled maintenance windows there.\n3.  **Check Your Internal IT Portal**: Look for a \"Maintenance Calendar\" or \"Service Now\" dashboard on your company intranet.\n4.  **Contact Your IT Support Team**: Since your team is blocked, this is the fastest solution. Send a message to your internal IT helpdesk or the specific engineer responsible for that system.\n\n**If you can provide the name of the system or service experiencing the maintenance**, I can look up the general public status page for that vendor and tell you if there is a known scheduled maintenance window for that service right now.",
-          "passed": false,
-          "score": 0.0,
-          "error": null
-        },
-        {
-          "task_id": "classify-019",
-          "expected": "security",
-          "actual": "A **403 Forbidden** error means the server understands your request but refuses to authorize it. Unlike a 404 (Not Found), the resource exists, but you don't have permission to access it.\n\nSince you mentioned this is happening on endpoints you **used to access**, this suggests a change in permissions, configuration, or the server environment rather than a broken link.\n\nHere is a step-by-step guide to troubleshooting and fixing this issue:\n\n### 1. Check Authentication & Tokens (Most Common)\nIf the error happens immediately upon hitting the endpoint, the server likely doesn't recognize you as logged in or your token has expired.\n*   **Expired Access Token:** If you are using an API key or JWT, it may have expired. Try regenerating your token or logging in again.\n*   **Missing Headers:** Ensure your request includes the necessary headers (e.g., `Authorization: Bearer <token>`, `Cookie`, or `X-API-Key`).\n*   **Wrong Scope/Role:** You might have been logged in, but your current user role no longer has permission for that specific endpoint (e.g., you were an \"Admin\" before, but now you are a \"User\").\n\n### 2. Verify Request Method and Parameters\nSometimes the endpoint exists, but the *way* you are accessing it has changed.\n*   **HTTP Method:** Does the endpoint require `POST` but you are sending `GET`? (Or vice versa).\n*   **Required Parameters:** The server might now require a specific query parameter or header that wasn't required before.\n*   **Content-Type:** If you are sending data (POST/PUT), ensure the `Content-Type` header matches what the server expects (e.g., `application/json` vs `application/xml`).\n\n### 3. Check for Server-Side Changes\nSince you \"used to access\" these, the backend configuration might have changed:\n*   **Middleware Updates:** The server might have added new middleware that blocks traffic from your IP address, user agent, or specific domains.\n*   **Rate Limiting:** You might have hit a rate limit, causing the server to temporarily block you with a 403.\n*   **Maintenance Mode:** The specific resource might be under maintenance, blocking access for everyone (or specific users).\n*   **SSL/TLS Issues:** If you are accessing via `http` and the server requires `https` (or vice versa), or if the SSL certificate is invalid, you can get a 403.\n\n### 4. Inspect the Response Headers\nIf you are using a tool like **Postman**, **cURL**, or the **Browser DevTools Network tab**, look at the **Response Headers**.\n*   Look for `WWW-Authenticate`. This tells you exactly what is missing.\n    *   `WWW-Authenticate: Bearer realm=\"...\"` -> You need a Bearer token.\n    *   `WWW-Authenticate: Basic` -> You need Basic Auth.\n    *   `WWW-Authenticate: Proxy` -> You need to configure a proxy.\n*   Look for `Retry-After`. If present, the server is telling you to wait before trying again (Rate Limiting).\n\n### 5. Client-Side Issues\n*   **Caching:** Your browser or client might be caching an old session or an old version of the API response. Try doing a **Hard Refresh** (`Ctrl + F5` or `Cmd + Shift + R`) or clearing your cookies/cache.\n*   **Redirect Loops:** Sometimes a 403 is a symptom of a redirect loop caused by mismatched cookies or session IDs.\n\n### How to Proceed\nTo give you a more specific solution, could you provide:\n1.  **The specific URL** causing the error?\n2.  **The HTTP method** you are using (GET, POST, etc.)?\n3.  **How you are making the request** (Browser, Postman, Python script, etc.)?\n4.  **Any error details** in the response body (e.g., \"Invalid token,\" \"Access denied,\" \"Unauthorized\")?\n\nOnce you provide these details, I can help you pinpoint the exact cause and the fix.",
-          "passed": false,
-          "score": 0.0,
-          "error": null
-        },
-        {
-          "task_id": "classify-024",
-          "expected": "feature, billing",
-          "actual": "Based on your message, here is a clear and professional way to structure your request so the support team can address both issues efficiently:\n\n---\n\n**Subject:** New Integration Request & Billing Page Issue\n\n**Body:**\n\nHello,\n\nI am writing to you regarding two separate matters:\n\n1.  **New Integration Request:**\n    We would like to request a new integration with **[Name of the Service/Platform you want to integrate]**. Please let us know the next steps, any required credentials, or if there are any associated costs or timelines for this feature.\n\n2.  **Billing Page Error:**\n    We are currently unable to access the billing page. When we attempt to load it, we receive the following error: **[Insert specific error message or describe what happens, e.g., \"500 Internal Server Error\" or \"Page not found\"]**. This is preventing us from managing our subscriptions and invoices.\n\nCould you please provide an update on the integration availability and let us know how to resolve the billing page issue as soon as possible?\n\nBest regards,\n\n[Your Name]\n[Your Account Number/Company Name]\n\n---\n\n**Tips for sending:**\n*   **Fill in the brackets:** Replace `[Name of the Service...]` and `[Insert specific error message...]` with the actual details.\n*   **Check the error:** If you are using a browser, try opening the billing page in an **Incognito/Private window**. If it works there, it might be a browser extension or cache issue; if it doesn't, it's likely a server-side bug.\n*   **Attach screenshots:** If the billing page shows a specific error screen, attaching a screenshot will help the support team fix it much faster.",
-          "passed": false,
-          "score": 0.0,
-          "error": null
-        }
-      ],
-      "gate": "baseline",
-      "cost": 0.0
+      "accuracy": 40.0,
+      "gate": "baseline"
     },
     {
       "iteration": 1,
-      "error": "/opt/homebrew/opt/python@3.14/bin/python3.14: No module named agent_self_edit.cli.__main__; 'agent_self_edit.cli' is a package and cannot be directly executed\n",
-      "gate": "error",
-      "accuracy": 0,
-      "cost": 0.0
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "n_proposals": 1,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "Output instructions",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 5
+        }
+      ],
+      "analysis_cost": 0.0042537,
+      "accuracy": 40.0,
+      "accuracy_correct": 2,
+      "accuracy_total": 5,
+      "duration_s": 30.1
     },
     {
       "iteration": 2,
-      "error": "/opt/homebrew/opt/python@3.14/bin/python3.14: No module named agent_self_edit.cli.__main__; 'agent_self_edit.cli' is a package and cannot be directly executed\n",
-      "gate": "error",
-      "accuracy": 0,
-      "cost": 0.0
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "n_proposals": 1,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "Output instructions",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 5
+        }
+      ],
+      "analysis_cost": 0.0042537,
+      "accuracy": 40.0,
+      "accuracy_correct": 2,
+      "accuracy_total": 5,
+      "duration_s": 30.2
     },
     {
       "iteration": 3,
-      "error": "/opt/homebrew/opt/python@3.14/bin/python3.14: No module named agent_self_edit.cli.__main__; 'agent_self_edit.cli' is a package and cannot be directly executed\n",
-      "gate": "error",
-      "accuracy": 0,
-      "cost": 0.0
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "n_proposals": 1,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "Output instructions",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 5
+        }
+      ],
+      "analysis_cost": 0.0042537,
+      "accuracy": 40.0,
+      "accuracy_correct": 2,
+      "accuracy_total": 5,
+      "duration_s": 31.6
     },
     {
       "iteration": 4,
-      "error": "/opt/homebrew/opt/python@3.14/bin/python3.14: No module named agent_self_edit.cli.__main__; 'agent_self_edit.cli' is a package and cannot be directly executed\n",
-      "gate": "error",
-      "accuracy": 0,
-      "cost": 0.0
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "n_proposals": 1,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "Output instructions",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 5
+        }
+      ],
+      "analysis_cost": 0.0042537,
+      "accuracy": 40.0,
+      "accuracy_correct": 2,
+      "accuracy_total": 5,
+      "duration_s": 32.4
     },
     {
       "iteration": 5,
-      "error": "/opt/homebrew/opt/python@3.14/bin/python3.14: No module named agent_self_edit.cli.__main__; 'agent_self_edit.cli' is a package and cannot be directly executed\n",
-      "gate": "error",
-      "accuracy": 0,
-      "cost": 0.0
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "n_proposals": 1,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "Output instructions",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 5
+        }
+      ],
+      "analysis_cost": 0.0042537,
+      "accuracy": 40.0,
+      "accuracy_correct": 2,
+      "accuracy_total": 5,
+      "duration_s": 33.8
     },
     {
       "iteration": 6,
-      "error": "/opt/homebrew/opt/python@3.14/bin/python3.14: No module named agent_self_edit.cli.__main__; 'agent_self_edit.cli' is a package and cannot be directly executed\n",
-      "gate": "error",
-      "accuracy": 0,
-      "cost": 0.0
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "n_proposals": 1,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "Output instructions",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 5
+        }
+      ],
+      "analysis_cost": 0.0042537,
+      "accuracy": 40.0,
+      "accuracy_correct": 2,
+      "accuracy_total": 5,
+      "duration_s": 34.0
     },
     {
       "iteration": 7,
-      "error": "/opt/homebrew/opt/python@3.14/bin/python3.14: No module named agent_self_edit.cli.__main__; 'agent_self_edit.cli' is a package and cannot be directly executed\n",
-      "gate": "error",
-      "accuracy": 0,
-      "cost": 0.0
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "n_proposals": 1,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "Output instructions",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 5
+        }
+      ],
+      "analysis_cost": 0.0042537,
+      "accuracy": 40.0,
+      "accuracy_correct": 2,
+      "accuracy_total": 5,
+      "duration_s": 32.3
     },
     {
       "iteration": 8,
-      "error": "/opt/homebrew/opt/python@3.14/bin/python3.14: No module named agent_self_edit.cli.__main__; 'agent_self_edit.cli' is a package and cannot be directly executed\n",
-      "gate": "error",
-      "accuracy": 0,
-      "cost": 0.0
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "n_proposals": 1,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "Output instructions",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 5
+        }
+      ],
+      "analysis_cost": 0.0042537,
+      "accuracy": 40.0,
+      "accuracy_correct": 2,
+      "accuracy_total": 5,
+      "duration_s": 33.0
     },
     {
       "iteration": 9,
-      "error": "/opt/homebrew/opt/python@3.14/bin/python3.14: No module named agent_self_edit.cli.__main__; 'agent_self_edit.cli' is a package and cannot be directly executed\n",
-      "gate": "error",
-      "accuracy": 0,
-      "cost": 0.0
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "n_proposals": 1,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "Output instructions",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 5
+        }
+      ],
+      "analysis_cost": 0.0042537,
+      "accuracy": 40.0,
+      "accuracy_correct": 2,
+      "accuracy_total": 5,
+      "duration_s": 30.7
     },
     {
       "iteration": 10,
-      "error": "/opt/homebrew/opt/python@3.14/bin/python3.14: No module named agent_self_edit.cli.__main__; 'agent_self_edit.cli' is a package and cannot be directly executed\n",
-      "gate": "error",
-      "accuracy": 0,
-      "cost": 0.0
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "n_proposals": 1,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "Output instructions",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 5
+        }
+      ],
+      "analysis_cost": 0.0042537,
+      "accuracy": 40.0,
+      "accuracy_correct": 2,
+      "accuracy_total": 5,
+      "duration_s": 30.8
     }
-  ],
-  "llm_traffic": []
+  ]
 }

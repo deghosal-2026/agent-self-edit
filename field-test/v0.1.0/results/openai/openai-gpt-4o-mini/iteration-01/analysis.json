@@ -1,0 +1,38 @@
+{
+  "n_proposals": 3,
+  "cost_usd": 0.0036597,
+  "tokens_used": 1109,
+  "proposals": [
+    {
+      "section": "classification instructions",
+      "old_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other.",
+      "new_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other, urgent.",
+      "hypothesis": "Adding 'urgent' as a distinct category may help the model recognize critical security issues that require immediate attention, as seen in Trace 10.",
+      "expected_improvement": "Improved classification of urgent issues.",
+      "evidence_traces": [
+        10
+      ]
+    },
+    {
+      "section": "classification instructions",
+      "old_text": "Output ONLY the category name.",
+      "new_text": "Output ONLY the category name, including urgent if applicable.",
+      "hypothesis": "Clarifying that 'urgent' is a valid output may help the model correctly classify urgent issues, as seen in Trace 10.",
+      "expected_improvement": "Increased accuracy in identifying urgent issues.",
+      "evidence_traces": [
+        10
+      ]
+    },
+    {
+      "section": "classification instructions",
+      "old_text": "Output ONLY the category name.",
+      "new_text": "Output ONLY the category name. If the input suggests a billing issue, classify it as billing.",
+      "hypothesis": "Specifying that billing-related inputs should be classified as billing may help the model correctly classify billing issues, as seen in Traces 2 and 8.",
+      "expected_improvement": "Enhanced classification accuracy for billing-related inputs.",
+      "evidence_traces": [
+        2,
+        8
+      ]
+    }
+  ]
+}

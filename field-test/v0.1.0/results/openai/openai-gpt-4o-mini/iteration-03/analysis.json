@@ -1,0 +1,40 @@
+{
+  "n_proposals": 3,
+  "cost_usd": 0.0040161,
+  "tokens_used": 1217,
+  "proposals": [
+    {
+      "section": "classification instructions",
+      "old_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other.",
+      "new_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other. If the input relates to a billing issue, classify it as billing.",
+      "hypothesis": "By explicitly stating that billing issues should be classified as billing, the agent may better recognize and categorize billing-related inputs.",
+      "expected_improvement": "This change should reduce misclassifications related to billing.",
+      "evidence_traces": [
+        2,
+        8
+      ]
+    },
+    {
+      "section": "classification instructions",
+      "old_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other.",
+      "new_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other. If the input indicates a security concern, classify it as security.",
+      "hypothesis": "By explicitly stating that security concerns should be classified as security, the agent may better recognize and categorize security-related inputs.",
+      "expected_improvement": "This change should reduce misclassifications related to security.",
+      "evidence_traces": [
+        6,
+        10
+      ]
+    },
+    {
+      "section": "classification instructions",
+      "old_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other.",
+      "new_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other. If the input mentions a feature request, classify it as feature.",
+      "hypothesis": "By explicitly stating that feature requests should be classified as feature, the agent may better recognize and categorize feature-related inputs.",
+      "expected_improvement": "This change should reduce misclassifications related to feature requests.",
+      "evidence_traces": [
+        3,
+        5
+      ]
+    }
+  ]
+}

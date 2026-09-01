@@ -1,0 +1,53 @@
+{
+  "n_proposals": 3,
+  "cost_usd": 0.0041349,
+  "tokens_used": 1253,
+  "proposals": [
+    {
+      "section": "classification instructions",
+      "old_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other.",
+      "new_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other. If the input relates to a billing issue, classify it as billing; if it relates to a technical issue, classify it as technical; if it relates to a feature request, classify it as feature; if it relates to a security concern, classify it as security; if it is urgent, classify it as urgent.",
+      "hypothesis": "Providing explicit guidance on how to classify inputs based on their context will help the agent make more accurate classifications.",
+      "expected_improvement": "This change should reduce misclassifications by clarifying the context for each category.",
+      "evidence_traces": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        10
+      ]
+    },
+    {
+      "section": "classification instructions",
+      "old_text": "Output ONLY the category name.",
+      "new_text": "Output ONLY the category name. Ensure that the category reflects the primary concern of the input.",
+      "hypothesis": "Emphasizing that the output should reflect the primary concern may help the agent prioritize the most relevant classification.",
+      "expected_improvement": "This change should help the agent focus on the main issue presented in the input, leading to fewer misclassifications.",
+      "evidence_traces": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        10
+      ]
+    },
+    {
+      "section": "classification instructions",
+      "old_text": "Nothing else. No explanation. No reasoning.",
+      "new_text": "Nothing else. No explanation. No reasoning. If the input contains multiple issues, prioritize the most urgent or relevant one.",
+      "hypothesis": "Instructing the agent to prioritize the most urgent or relevant issue may help it classify inputs that contain multiple concerns more accurately.",
+      "expected_improvement": "This change should improve the classification of inputs that may have overlapping categories, particularly urgent cases.",
+      "evidence_traces": [
+        10
+      ]
+    }
+  ]
+}

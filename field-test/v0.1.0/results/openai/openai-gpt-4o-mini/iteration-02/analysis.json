@@ -1,0 +1,42 @@
+{
+  "n_proposals": 3,
+  "cost_usd": 0.0038676,
+  "tokens_used": 1172,
+  "proposals": [
+    {
+      "section": "classification instructions",
+      "old_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other.",
+      "new_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, urgent, other.",
+      "hypothesis": "Adding 'urgent' to the classification options may help the model recognize critical security issues as urgent, which were misclassified in Trace 10.",
+      "expected_improvement": "This change should help the model correctly classify urgent security issues.",
+      "evidence_traces": [
+        10
+      ]
+    },
+    {
+      "section": "classification instructions",
+      "old_text": "Output ONLY the category name.",
+      "new_text": "Output ONLY the category name. If the input relates to billing or technical issues, prioritize those categories.",
+      "hypothesis": "Emphasizing the prioritization of billing and technical categories may help the model correctly classify inputs related to billing and technical issues, as seen in Traces 1, 2, 4, 7, and 9.",
+      "expected_improvement": "This change should help the model better distinguish and classify billing and technical issues.",
+      "evidence_traces": [
+        1,
+        2,
+        4,
+        7,
+        9
+      ]
+    },
+    {
+      "section": "classification instructions",
+      "old_text": "Output ONLY the category name.",
+      "new_text": "Output ONLY the category name. If the input mentions a feature request, classify it as feature.",
+      "hypothesis": "Clarifying that inputs mentioning feature requests should be classified as 'feature' may help the model correctly classify feature-related inputs, as seen in Traces 3 and 5.",
+      "expected_improvement": "This change should help the model accurately classify feature requests.",
+      "evidence_traces": [
+        3,
+        5
+      ]
+    }
+  ]
+}

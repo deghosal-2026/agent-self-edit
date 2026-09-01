@@ -1,0 +1,40 @@
+{
+  "n_proposals": 3,
+  "cost_usd": 0.0039798,
+  "tokens_used": 1206,
+  "proposals": [
+    {
+      "section": "classification instructions",
+      "old_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other.",
+      "new_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other. If the input relates to a billing issue, classify it as billing.",
+      "hypothesis": "Adding a specific instruction to classify billing-related inputs correctly may help the agent better identify billing issues.",
+      "expected_improvement": "This change should reduce misclassifications related to billing inputs.",
+      "evidence_traces": [
+        2,
+        8
+      ]
+    },
+    {
+      "section": "classification instructions",
+      "old_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other.",
+      "new_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other. If the input mentions a feature request, classify it as feature.",
+      "hypothesis": "Adding a specific instruction to classify feature-related inputs correctly may help the agent better identify feature requests.",
+      "expected_improvement": "This change should reduce misclassifications related to feature requests.",
+      "evidence_traces": [
+        3,
+        5
+      ]
+    },
+    {
+      "section": "classification instructions",
+      "old_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other.",
+      "new_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other. If the input indicates a security concern, classify it as security.",
+      "hypothesis": "Adding a specific instruction to classify security-related inputs correctly may help the agent better identify security issues.",
+      "expected_improvement": "This change should reduce misclassifications related to security concerns.",
+      "evidence_traces": [
+        6,
+        10
+      ]
+    }
+  ]
+}

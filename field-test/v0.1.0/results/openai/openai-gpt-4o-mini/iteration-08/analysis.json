@@ -1,0 +1,43 @@
+{
+  "n_proposals": 3,
+  "cost_usd": 0.0038643,
+  "tokens_used": 1171,
+  "proposals": [
+    {
+      "section": "classification instructions",
+      "old_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other.",
+      "new_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, urgent, other.",
+      "hypothesis": "Adding 'urgent' to the classification options may help the model recognize critical security issues as urgent, which were misclassified in Trace 10.",
+      "expected_improvement": "This change should help the model correctly classify urgent security issues.",
+      "evidence_traces": [
+        10
+      ]
+    },
+    {
+      "section": "classification instructions",
+      "old_text": "Output ONLY the category name.",
+      "new_text": "Output ONLY the category name. If the input relates to billing or technical issues, prioritize those categories.",
+      "hypothesis": "Emphasizing the prioritization of billing and technical categories may help the model correctly classify inputs related to billing and technical issues, as seen in Traces 1, 2, 4, 7, and 9.",
+      "expected_improvement": "This change should help the model better classify billing and technical issues.",
+      "evidence_traces": [
+        1,
+        2,
+        4,
+        7,
+        9
+      ]
+    },
+    {
+      "section": "classification instructions",
+      "old_text": "Output ONLY the category name.",
+      "new_text": "Output ONLY the category name. Ensure to consider context clues in the input.",
+      "hypothesis": "Encouraging the model to consider context clues may help it better understand the nature of the input, leading to more accurate classifications, as seen in Traces 3, 5, and 6.",
+      "expected_improvement": "This change should help the model classify feature and security-related inputs more accurately.",
+      "evidence_traces": [
+        3,
+        5,
+        6
+      ]
+    }
+  ]
+}

@@ -1,137 +1,419 @@
 {
   "meta": {
+    "provider": "openai",
     "model": "openai/gpt-4o-mini",
     "endpoint": "https://openrouter.ai/api/v1",
     "n_iterations": 10,
-    "traces_per_iteration": 10,
-    "baseline_accuracy": 0.0,
-    "final_accuracy": 0,
+    "baseline_accuracy": 60.0,
+    "final_accuracy": 60.0,
     "improvement": 0.0,
-    "date": "2026-09-01T00:37:09Z"
+    "date": "2026-09-01T01:05:43Z"
   },
   "iterations": [
     {
       "iteration": 0,
-      "prompt": "You are a helpful classification assistant.",
-      "prompt_hash": "6cde634721b2",
-      "accuracy": 0.0,
-      "correct": 0,
-      "total": 5,
-      "results": [
-        {
-          "task_id": "classify-006",
-          "expected": "security",
-          "actual": "If you suspect that your account has been compromised, it's important to take immediate action to secure it. Here are the steps you should follow:\n\n1. **Change Your Password**: Immediately change your password to something strong and unique. Avoid using easily guessable information.\n\n2. **Enable Two-Factor Authentication (2FA)**: If the service offers it, enable 2FA to add an extra layer of security to your account.\n\n3. **Check Account Activity**: Review your account activity for any unauthorized actions or changes. Look for unfamiliar logins, messages, or transactions.\n\n4. **Log Out of All Sessions**: If the service allows it, log out of all active sessions to ensure that any unauthorized access is terminated.\n\n5. **Update Security Questions**: If your account uses security questions, consider changing them, especially if they can be easily guessed or found online.\n\n6. **Check Recovery Options**: Ensure that your recovery email and phone number are up to date and secure.\n\n7. **Scan for Malware**: Run a security scan on your devices to check for malware or keyloggers that may have compromised your account.\n\n8. **Contact Support**: If you notice any suspicious activity or if you are unable to regain access to your account, contact the service's customer support for assistance.\n\n9. **Monitor Your Accounts**: Keep an eye on your other accounts and financial statements for any unusual activity.\n\n10. **Educate Yourself on Phishing**: Be cautious of phishing attempts and learn how to recognize suspicious emails or messages.\n\nTaking these steps can help you regain control of your account and protect your information.",
-          "passed": false,
-          "score": 0.0,
-          "error": null
-        },
-        {
-          "task_id": "classify-011",
-          "expected": "urgent",
-          "actual": "I'm sorry to hear that you're having trouble accessing the service. Here are a few steps you can take:\n\n1. **Check Service Status**: Look for any official status page or social media updates from the service provider to see if they are experiencing widespread issues.\n\n2. **Clear Cache and Cookies**: Sometimes, clearing your browser's cache and cookies can resolve login issues.\n\n3. **Try a Different Browser or Device**: If possible, try accessing the login page from a different web browser or device to see if the issue persists.\n\n4. **Contact Support**: Reach out to the service's customer support for assistance. They may be able to provide information on the issue and when it might be resolved.\n\n5. **Wait and Retry**: If the issue is on the service provider's end, it may be resolved shortly. Waiting a little while and trying again can sometimes be the best option.\n\nIf the problem continues, consider asking for a refund or credit for the time you were unable to use the service.",
-          "passed": false,
-          "score": 0.0,
-          "error": null
-        },
-        {
-          "task_id": "classify-015",
-          "expected": "urgent",
-          "actual": "I'm sorry, but I don't have access to real-time information or specific maintenance schedules. I recommend checking your organization's communication channels, such as email updates or a status page, for the latest information on the maintenance window. You could also reach out to your IT support team for assistance.",
-          "passed": false,
-          "score": 0.0,
-          "error": null
-        },
-        {
-          "task_id": "classify-019",
-          "expected": "security",
-          "actual": "A 403 Forbidden error indicates that the server understands your request but refuses to authorize it. Here are some common reasons and potential solutions for this issue:\n\n1. **Insufficient Permissions**: \n   - Ensure that your user account has the necessary permissions to access the endpoint. Check with your system administrator or the API documentation.\n\n2. **IP Whitelisting**: \n   - Some services restrict access based on IP addresses. If your IP has changed or is not whitelisted, you may receive a 403 error. Contact the service provider to verify your IP status.\n\n3. **Authentication Issues**: \n   - If the endpoint requires authentication (like an API key, OAuth token, etc.), ensure that you are providing valid credentials. Check if your token has expired or if you need to refresh it.\n\n4. **CORS Policy**: \n   - If you are making requests from a web application, the server may have Cross-Origin Resource Sharing (CORS) policies that block your request. Check the server's CORS settings.\n\n5. **Resource Ownership**: \n   - You may be trying to access a resource that you do not own or have not been granted access to. Verify that you have the right to access the resource.\n\n6. **Rate Limiting**: \n   - Some APIs enforce rate limits. If you exceed the allowed number of requests, you may receive a 403 error. Check the API documentation for rate limits.\n\n7. **Firewall or Security Settings**: \n   - The server may have firewall rules or security settings that block certain requests. Contact the server administrator for assistance.\n\n8. **URL Changes**: \n   - If the endpoint URL has changed, you may be trying to access an outdated URL. Verify that you are using the correct endpoint.\n\n9. **Server Configuration**: \n   - There may be server-side configurations that restrict access to certain users or roles. This is often the case in web applications with user roles.\n\n10. **Browser Cache**: \n    - If you are accessing the endpoint through a web browser, try clearing your cache or using incognito mode to see if that resolves the issue.\n\nIf you have checked all of the above and are still encountering the error, consider reaching out to the support team of the service you are trying to access for further assistance.",
-          "passed": false,
-          "score": 0.0,
-          "error": null
-        },
-        {
-          "task_id": "classify-024",
-          "expected": "feature, billing",
-          "actual": "It sounds like you have two important issues to address. Here\u2019s a suggested approach for your request:\n\n---\n\n**Subject:** Feature Request and Billing Page Issue\n\n**Dear [Support/Development Team],**\n\nI hope this message finds you well. I would like to request a new integration feature and also report an issue with the billing page.\n\n**1. Feature Request:**\nI would like to suggest the addition of [describe the integration feature you want, including its potential benefits and how it could enhance user experience]. I believe this feature would greatly benefit users by [explain how it would improve functionality or usability].\n\n**2. Billing Page Issue:**\nAdditionally, I have encountered a problem with the billing page. It appears to be broken, as [describe the issue you are experiencing, such as error messages, inability to access the page, etc.]. This issue is affecting my ability to manage my account effectively.\n\nThank you for your attention to these matters. I look forward to your response.\n\nBest regards,  \n[Your Name]  \n[Your Contact Information]  \n[Your Account Information, if applicable]\n\n---\n\nFeel free to customize the message as needed!",
-          "passed": false,
-          "score": 0.0,
-          "error": null
-        }
-      ],
-      "gate": "baseline",
-      "cost": 0.0
+      "accuracy": 60.0,
+      "gate": "baseline"
     },
     {
       "iteration": 1,
-      "error": "/opt/homebrew/opt/python@3.14/bin/python3.14: No module named agent_self_edit.cli.__main__; 'agent_self_edit.cli' is a package and cannot be directly executed\n",
-      "gate": "error",
-      "accuracy": 0,
-      "cost": 0.0
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "n_proposals": 3,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "classification instructions",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 5
+        },
+        {
+          "proposal_index": 1,
+          "section": "classification instructions",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 5
+        },
+        {
+          "proposal_index": 2,
+          "section": "classification instructions",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 5
+        }
+      ],
+      "analysis_cost": 0.0036597,
+      "accuracy": 60.0,
+      "accuracy_correct": 3,
+      "accuracy_total": 5,
+      "duration_s": 32.0
     },
     {
       "iteration": 2,
-      "error": "/opt/homebrew/opt/python@3.14/bin/python3.14: No module named agent_self_edit.cli.__main__; 'agent_self_edit.cli' is a package and cannot be directly executed\n",
-      "gate": "error",
-      "accuracy": 0,
-      "cost": 0.0
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "n_proposals": 3,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "classification instructions",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 5
+        },
+        {
+          "proposal_index": 1,
+          "section": "classification instructions",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 5
+        },
+        {
+          "proposal_index": 2,
+          "section": "classification instructions",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 5
+        }
+      ],
+      "analysis_cost": 0.0038676,
+      "accuracy": 60.0,
+      "accuracy_correct": 3,
+      "accuracy_total": 5,
+      "duration_s": 31.5
     },
     {
       "iteration": 3,
-      "error": "/opt/homebrew/opt/python@3.14/bin/python3.14: No module named agent_self_edit.cli.__main__; 'agent_self_edit.cli' is a package and cannot be directly executed\n",
-      "gate": "error",
-      "accuracy": 0,
-      "cost": 0.0
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "n_proposals": 3,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "classification instructions",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 5
+        },
+        {
+          "proposal_index": 1,
+          "section": "classification instructions",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 5
+        },
+        {
+          "proposal_index": 2,
+          "section": "classification instructions",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 5
+        }
+      ],
+      "analysis_cost": 0.0040161,
+      "accuracy": 60.0,
+      "accuracy_correct": 3,
+      "accuracy_total": 5,
+      "duration_s": 38.7
     },
     {
       "iteration": 4,
-      "error": "/opt/homebrew/opt/python@3.14/bin/python3.14: No module named agent_self_edit.cli.__main__; 'agent_self_edit.cli' is a package and cannot be directly executed\n",
-      "gate": "error",
-      "accuracy": 0,
-      "cost": 0.0
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "n_proposals": 3,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "classification instructions",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 5
+        },
+        {
+          "proposal_index": 1,
+          "section": "classification instructions",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 5
+        },
+        {
+          "proposal_index": 2,
+          "section": "classification instructions",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 5
+        }
+      ],
+      "analysis_cost": 0.0038841,
+      "accuracy": 60.0,
+      "accuracy_correct": 3,
+      "accuracy_total": 5,
+      "duration_s": 35.3
     },
     {
       "iteration": 5,
-      "error": "/opt/homebrew/opt/python@3.14/bin/python3.14: No module named agent_self_edit.cli.__main__; 'agent_self_edit.cli' is a package and cannot be directly executed\n",
-      "gate": "error",
-      "accuracy": 0,
-      "cost": 0.0
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "n_proposals": 3,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "classification instructions",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 5
+        },
+        {
+          "proposal_index": 1,
+          "section": "classification instructions",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 5
+        },
+        {
+          "proposal_index": 2,
+          "section": "classification instructions",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 5
+        }
+      ],
+      "analysis_cost": 0.0040095,
+      "accuracy": 60.0,
+      "accuracy_correct": 3,
+      "accuracy_total": 5,
+      "duration_s": 39.2
     },
     {
       "iteration": 6,
-      "error": "/opt/homebrew/opt/python@3.14/bin/python3.14: No module named agent_self_edit.cli.__main__; 'agent_self_edit.cli' is a package and cannot be directly executed\n",
-      "gate": "error",
-      "accuracy": 0,
-      "cost": 0.0
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "n_proposals": 3,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "classification instructions",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 5
+        },
+        {
+          "proposal_index": 1,
+          "section": "classification instructions",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 5
+        },
+        {
+          "proposal_index": 2,
+          "section": "classification instructions",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 5
+        }
+      ],
+      "analysis_cost": 0.0041349,
+      "accuracy": 60.0,
+      "accuracy_correct": 3,
+      "accuracy_total": 5,
+      "duration_s": 42.1
     },
     {
       "iteration": 7,
-      "error": "/opt/homebrew/opt/python@3.14/bin/python3.14: No module named agent_self_edit.cli.__main__; 'agent_self_edit.cli' is a package and cannot be directly executed\n",
-      "gate": "error",
-      "accuracy": 0,
-      "cost": 0.0
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "n_proposals": 3,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "classification instructions",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 5
+        },
+        {
+          "proposal_index": 1,
+          "section": "classification instructions",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 5
+        },
+        {
+          "proposal_index": 2,
+          "section": "classification instructions",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 5
+        }
+      ],
+      "analysis_cost": 0.0038511,
+      "accuracy": 60.0,
+      "accuracy_correct": 3,
+      "accuracy_total": 5,
+      "duration_s": 38.4
     },
     {
       "iteration": 8,
-      "error": "/opt/homebrew/opt/python@3.14/bin/python3.14: No module named agent_self_edit.cli.__main__; 'agent_self_edit.cli' is a package and cannot be directly executed\n",
-      "gate": "error",
-      "accuracy": 0,
-      "cost": 0.0
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "n_proposals": 3,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "classification instructions",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 5
+        },
+        {
+          "proposal_index": 1,
+          "section": "classification instructions",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 5
+        },
+        {
+          "proposal_index": 2,
+          "section": "classification instructions",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 5
+        }
+      ],
+      "analysis_cost": 0.0038643,
+      "accuracy": 60.0,
+      "accuracy_correct": 3,
+      "accuracy_total": 5,
+      "duration_s": 35.9
     },
     {
       "iteration": 9,
-      "error": "/opt/homebrew/opt/python@3.14/bin/python3.14: No module named agent_self_edit.cli.__main__; 'agent_self_edit.cli' is a package and cannot be directly executed\n",
-      "gate": "error",
-      "accuracy": 0,
-      "cost": 0.0
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "n_proposals": 3,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "classification instructions",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 5
+        },
+        {
+          "proposal_index": 1,
+          "section": "classification instructions",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 5
+        },
+        {
+          "proposal_index": 2,
+          "section": "classification instructions",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 5
+        }
+      ],
+      "analysis_cost": 0.0038708999999999996,
+      "accuracy": 60.0,
+      "accuracy_correct": 3,
+      "accuracy_total": 5,
+      "duration_s": 42.0
     },
     {
       "iteration": 10,
-      "error": "/opt/homebrew/opt/python@3.14/bin/python3.14: No module named agent_self_edit.cli.__main__; 'agent_self_edit.cli' is a package and cannot be directly executed\n",
-      "gate": "error",
-      "accuracy": 0,
-      "cost": 0.0
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. N",
+      "n_proposals": 3,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "classification instructions",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 5
+        },
+        {
+          "proposal_index": 1,
+          "section": "classification instructions",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 5
+        },
+        {
+          "proposal_index": 2,
+          "section": "classification instructions",
+          "gate": "reject",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 5
+        }
+      ],
+      "analysis_cost": 0.0039798,
+      "accuracy": 60.0,
+      "accuracy_correct": 3,
+      "accuracy_total": 5,
+      "duration_s": 42.5
     }
-  ],
-  "llm_traffic": []
+  ]
 }

@@ -1,0 +1,53 @@
+{
+  "n_proposals": 3,
+  "cost_usd": 0.0038511,
+  "tokens_used": 1167,
+  "proposals": [
+    {
+      "section": "classification instructions",
+      "old_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other.",
+      "new_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other, urgent.",
+      "hypothesis": "Adding 'urgent' as a distinct category may help the model recognize critical security issues that require immediate attention, as seen in Trace 10.",
+      "expected_improvement": "Improved classification of urgent issues.",
+      "evidence_traces": [
+        10
+      ]
+    },
+    {
+      "section": "classification instructions",
+      "old_text": "Output ONLY the category name.",
+      "new_text": "Output ONLY the category name. If the input relates to billing, technical, feature, or security, ensure to classify accordingly.",
+      "hypothesis": "Reinforcing the importance of specific categories may help the model focus on correctly identifying billing, technical, feature, and security issues, as seen in Traces 1, 2, 4, 5, 6, 7, 8, and 9.",
+      "expected_improvement": "Reduced misclassification of billing, technical, feature, and security issues.",
+      "evidence_traces": [
+        1,
+        2,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ]
+    },
+    {
+      "section": "classification instructions",
+      "old_text": "No explanation. No reasoning.",
+      "new_text": "No explanation. No reasoning. Focus on identifying the correct category based on the context of the input.",
+      "hypothesis": "Emphasizing the need to focus on context may help the model better understand the nuances of each input, leading to more accurate classifications.",
+      "expected_improvement": "Enhanced accuracy in classification by considering input context.",
+      "evidence_traces": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ]
+    }
+  ]
+}

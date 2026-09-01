@@ -1,0 +1,73 @@
+{
+  "winner": "tie",
+  "mean_delta": 0.0,
+  "ci_low": 0.0,
+  "ci_high": 0.0,
+  "p_value": 1.0,
+  "effect_size": 0.0,
+  "n_trials": 5,
+  "cost_usd": 0.0026301000000000002,
+  "token_count": 797,
+  "per_task": [
+    {
+      "task_id": "classify-001",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "billing",
+      "output_b": "billing"
+    },
+    {
+      "task_id": "classify-002",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "billing",
+      "output_b": "billing"
+    },
+    {
+      "task_id": "classify-003",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "feature",
+      "output_b": "feature"
+    },
+    {
+      "task_id": "classify-004",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "technical",
+      "output_b": "technical"
+    },
+    {
+      "task_id": "classify-005",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "feature",
+      "output_b": "feature"
+    }
+  ],
+  "gate": {
+    "decision": "reject",
+    "reason": "1/6 checks passed; below near-miss threshold (50%)",
+    "checks": [
+      {
+        "name": "sample_floor",
+        "passed": true,
+        "value": 5.0,
+        "threshold": 5.0,
+        "details": "n_trials (5) >= sample floor (5)"
+      },
+      {
+        "name": "effect_size",
+        "passed": false,
+        "value": 0.0,
+        "threshold": 0.05,
+        "details": "effect size (0.0%) < min (5.0%)"
+      }
+    ]
+  }
+}

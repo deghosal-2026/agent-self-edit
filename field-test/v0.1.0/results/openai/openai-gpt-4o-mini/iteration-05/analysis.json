@@ -1,0 +1,42 @@
+{
+  "n_proposals": 3,
+  "cost_usd": 0.0040095,
+  "tokens_used": 1215,
+  "proposals": [
+    {
+      "section": "classification instructions",
+      "old_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other.",
+      "new_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, urgent, other.",
+      "hypothesis": "Adding 'urgent' to the classification options may help the model recognize critical security issues as urgent, which it failed to classify correctly in Trace 10.",
+      "expected_improvement": "This change should help the model correctly classify urgent issues, reducing misclassifications related to urgency.",
+      "evidence_traces": [
+        10
+      ]
+    },
+    {
+      "section": "classification instructions",
+      "old_text": "Output ONLY the category name.",
+      "new_text": "Output ONLY the category name. If the input relates to billing or technical issues, prioritize those categories.",
+      "hypothesis": "Emphasizing the prioritization of billing and technical categories may help the model focus on these common issues, which were misclassified in several traces.",
+      "expected_improvement": "This change should help the model better classify billing and technical issues, reducing the number of misclassifications in these areas.",
+      "evidence_traces": [
+        1,
+        2,
+        4,
+        7,
+        9
+      ]
+    },
+    {
+      "section": "classification instructions",
+      "old_text": "Nothing else. No explanation. No reasoning.",
+      "new_text": "Nothing else. No explanation. No reasoning. If the input mentions a feature request, classify it as feature.",
+      "hypothesis": "Specifying that feature requests should be classified as 'feature' may help the model correctly identify and classify inputs related to feature inquiries, which were misclassified in several traces.",
+      "expected_improvement": "This change should help the model correctly classify feature-related inquiries, reducing misclassifications in this category.",
+      "evidence_traces": [
+        3,
+        5
+      ]
+    }
+  ]
+}
