@@ -437,6 +437,22 @@ def test_docker_run_full_loop_omlx():
                   f"tie is expected when the proposal doesn't improve accuracy. "
                   f"Delta assertion: deltas are zero for all tasks, gate correctly rejects.")
 
+        # Registry state assertion (#111) — verify prompt versions exist
+        reg_dir = tmp_path / "registry"
+        v1_file = reg_dir / "v1.md"
+        v1_meta = reg_dir / "v1.meta.json"
+        assert reg_dir.exists(), f"Registry directory missing: {reg_dir}"
+        assert v1_file.exists(), f"Version 1 prompt file missing: {v1_file}"
+        assert v1_meta.exists(), f"Version 1 metadata file missing: {v1_meta}"
+        baseline_content = v1_file.read_text().strip()
+        assert "helpful classification" in baseline_content, (
+            f"Version 1 content doesn't match baseline: {baseline_content[:200]}"
+        )
+        reg_meta = json.loads(v1_meta.read_text())
+        assert reg_meta.get("version") == 1, f"Version mismatch: {reg_meta}"
+        assert "sha256_hash" in reg_meta, f"Missing hash in registry metadata: {reg_meta}"
+        print(f"  Registry: v1.md exists, current prompt: {baseline_content[:80]}...")
+
         _write_report("docker-run-full-loop-omlx", result, traffic_log)
 
 
@@ -531,5 +547,21 @@ def test_docker_propose_full_omlx():
                 f"A/B test used only {len(prompt_contents)} distinct prompt(s) — "
                 f"expected at least 2. See issue #104. Prompts: {prompt_contents}"
             )
+
+        # Registry state assertion (#111)
+        reg_dir = tmp_path / "registry"
+        v1_file = reg_dir / "v1.md"
+        v1_meta = reg_dir / "v1.meta.json"
+        assert reg_dir.exists(), f"Registry directory missing: {reg_dir}"
+        assert v1_file.exists(), f"Version 1 prompt file missing: {v1_file}"
+        assert v1_meta.exists(), f"Version 1 metadata file missing: {v1_meta}"
+        baseline_content = v1_file.read_text().strip()
+        assert "helpful classification" in baseline_content, (
+            f"Version 1 content doesn't match baseline: {baseline_content[:200]}"
+        )
+        reg_meta = json.loads(v1_meta.read_text())
+        assert reg_meta.get("version") == 1, f"Version mismatch: {reg_meta}"
+        assert "sha256_hash" in reg_meta, f"Missing hash in registry metadata: {reg_meta}"
+        print(f"  Registry: v1.md exists, current prompt: {baseline_content[:80]}...")
 
         _write_report("docker-propose-full-omlx", result, traffic_log)
