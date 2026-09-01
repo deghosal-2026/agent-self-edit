@@ -1,138 +1,37 @@
 # Field Test Scripts
 
-All scripts run from the repo root. Results are stored under `field-test/v0.1.0/results/<provider>/<model>/`.
+All scripts run from the repo root. Results are stored under `field-test/v0.1.0/results/`.
 
 ---
 
-## Run Traces Through an LLM (synthetic or real)
+## 10-Iteration Improvement Loop
 
-`run_traces.py` takes any trace file (synthetic or real JSONL), runs each trace's `task_input` through an LLM, scores the output, and records the full LLM request/response, latency, and token usage for debuggability.
-
-The system prompt is **auto-detected** from the trace file domain (customer support, coding, classification, etc.). Pass `--system-prompt` only to override.
-
-Scoring adapts to the trace type:
-- **Real traces** (label-based `expected_output` like `"Successful customer-support-triage task"`): pass = LLM produced a non-empty, non-error response.
-- **Synthetic traces** (real answer in `expected_output`): pass = exact match against LLM output.
-
-### Required
-
-`OPENROUTER_API_KEY` must be set in the environment. No defaults.
-
-### Quick test (10 traces, both arms)
+`run_improvement_loop.py` runs the actual self-edit loop (`agent-self-edit run --once`) for N iterations, measuring accuracy on a held-out set after each iteration. This is the core field test for #100.
 
 ```bash
-# Generate a small synthetic set
-python field-test/scripts/generate_traces.py \
-  field-test/v0.1.0/corpus/synthetic/classification.yaml \
-  --output /tmp/synth.jsonl --failure-rate 0.3
+# Local OMLX — 10 iterations (default model: Qwen3.5-4B-4bit)
+python3 field-test/scripts/run_improvement_loop.py --iterations 10 \
+  --model Qwen3.5-4B-4bit --endpoint http://localhost:8000/v1 --api-key omlx-test
 
-# Local OMLX — 10 synthetic + 10 real
-export OPENROUTER_API_KEY=omlx-test
-python field-test/scripts/run_traces.py /tmp/synth.jsonl \
-  --provider omlx --model qwen3.5-4b-4bit --endpoint http://localhost:8000/v1 --limit 10
-python field-test/scripts/run_traces.py \
-  field-test/v0.1.0/corpus/real-life/real-traces/hf-customer-support-traces.jsonl \
-  --provider omlx --model qwen3.5-4b-4bit --endpoint http://localhost:8000/v1 --limit 10
-
-# Cloud OpenRouter — 10 synthetic + 10 real
-export OPENROUTER_API_KEY=sk-or-v1-...
-python field-test/scripts/run_traces.py /tmp/synth.jsonl \
-  --provider openai --model openai/gpt-4o-mini --endpoint https://openrouter.ai/api/v1 --limit 10
-python field-test/scripts/run_traces.py \
-  field-test/v0.1.0/corpus/real-life/real-traces/hf-customer-support-traces.jsonl \
-  --provider openai --model openai/gpt-4o-mini --endpoint https://openrouter.ai/api/v1 --limit 10
+# Cloud (OpenRouter)
+python3 field-test/scripts/run_improvement_loop.py --iterations 10 \
+  --model openai/gpt-4o-mini --endpoint https://openrouter.ai/api/v1 --api-key sk-or-v1-...
 ```
 
-`--limit N` runs only the first N traces from any trace file. Use it for quick sanity checks.
+### Options
 
-### Local OMLX
-
-```bash
-export OPENROUTER_API_KEY=omlx-test
-
-# Real traces — all 5 files
-for f in field-test/v0.1.0/corpus/real-life/real-traces/*.jsonl; do
-  python field-test/scripts/run_traces.py "$f" \
-    --provider omlx --model qwen3.5-9b-mlx-4bit \
-    --endpoint http://localhost:8000/v1
-done
-
-# Synthetic traces — generate all 4 task sets, then run each
-for yaml in field-test/v0.1.0/corpus/synthetic/*.yaml; do
-  name=$(basename "$yaml" .yaml)
-  python field-test/scripts/generate_traces.py "$yaml" \
-    --output "/tmp/synth-${name}.jsonl" --failure-rate 0.3
-  python field-test/scripts/run_traces.py "/tmp/synth-${name}.jsonl" \
-    --provider omlx --model qwen3.5-9b-mlx-4bit \
-    --endpoint http://localhost:8000/v1
-done
-```
-
-### Cloud LLM (OpenRouter)
-
-Uses the OpenRouter API. Set `OPENROUTER_API_KEY` in your env.
-
-```bash
-export OPENROUTER_API_KEY=sk-or-v1-...
-
-# Real traces — all 5 files
-for f in field-test/v0.1.0/corpus/real-life/real-traces/*.jsonl; do
-  python field-test/scripts/run_traces.py "$f" \
-    --provider openai --model openai/gpt-4o-mini \
-    --endpoint https://openrouter.ai/api/v1
-done
-
-# Synthetic traces — all 4 task sets
-for jsonl in /tmp/synth-*.jsonl; do
-  python field-test/scripts/run_traces.py "$jsonl" \
-    --provider openai --model openai/gpt-4o-mini \
-    --endpoint https://openrouter.ai/api/v1
-done
-```
-
-Supported models (set via `--model`): `openai/gpt-4o-mini`, `anthropic/claude-3-5-sonnet`, `openai/gpt-4o`, `meta-llama/llama-3.1-70b`, and hundreds more. Full list at [openrouter.ai/models](https://openrouter.ai/models). Use `openai/gpt-4o-mini` for fastest/cheapest results.
-
-### All env vars are overridable
-
-```bash
-# Local OMLX
-export OPENROUTER_API_KEY=omlx-test
-export LLM_PROVIDER=omlx
-export LLM_MODEL=qwen3.5-9b-mlx-4bit
-export LLM_ENDPOINT=http://localhost:8000/v1
-python field-test/scripts/run_traces.py field-test/v0.1.0/corpus/real-life/real-traces/hf-customer-support-traces.jsonl
-
-# Cloud — just swap the env vars
-export OPENROUTER_API_KEY=sk-or-v1-...
-export LLM_PROVIDER=openai
-export LLM_MODEL=openai/gpt-4o-mini
-export LLM_ENDPOINT=https://openrouter.ai/api/v1
-python field-test/scripts/run_traces.py field-test/v0.1.0/corpus/real-life/real-traces/hf-customer-support-traces.jsonl
-```
-
-### Environment variables
-
-| Var | Purpose | Example |
-|-----|---------|---------|
-| `OPENROUTER_API_KEY` | API key (required, no fallback) | `omlx-test`, `sk-or-v1-...` |
-| `LLM_PROVIDER` | `omlx` or `openai` | `omlx` |
-| `LLM_MODEL` | Model name | `qwen3.5-9b-mlx-4bit`, `openai/gpt-4o-mini` |
-| `LLM_ENDPOINT` | API base URL | `http://localhost:8000/v1`, `https://openrouter.ai/api/v1` |
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--iterations` | 10 | Number of self-edit iterations |
+| `--traces-per-iteration` | 10 | Traces to seed each iteration |
+| `--model` | `Qwen3.5-4B-4bit` | LLM model name |
+| `--endpoint` | `http://localhost:8000/v1` | API base URL |
+| `--api-key` | `omlx-test` | API key |
 
 ### Output
 
-Results are written to `field-test/v0.1.0/results/<provider>/<model>/`:
-
-- `<trace-name>-results.json` — full report: meta (accuracy, tokens, latency) + per-trace LLM I/O and scoring
-- `llm-traffic-<trace-name>.jsonl` — append-only raw request/response pairs
-
-Example:
-
-```
-field-test/v0.1.0/results/omlx/qwen3.5-9b-mlx-4bit/
-  hf-customer-support-traces-results.json
-  llm-traffic-hf-customer-support-traces.jsonl
-```
+Results go to `field-test/v0.1.0/results/improvement-loop/`:
+- `improvement-loop-report.json` — per-iteration accuracy, gate outcomes, cost, LLM traffic
 
 ---
 
@@ -141,24 +40,22 @@ field-test/v0.1.0/results/omlx/qwen3.5-9b-mlx-4bit/
 ### Run full pytest suite (9 tests: build, OMLX connectivity, smoke, integration)
 
 ```bash
-python field-test/scripts/run_docker_tests.py
+python3 field-test/scripts/run_docker_tests.py
 ```
 
 Requires: Docker daemon running, OMLX server at `http://localhost:8000/v1`.
 
-### Run standalone field test (one-shot end-to-end with LLM traffic capture)
+### Direct pytest
 
 ```bash
-python field-test/scripts/run_docker_field_test.py
+pytest tests/test_docker.py -v -m docker --no-cov
 ```
 
-Outputs go to `field-test/v0.1.0/results/docker/omlx/qwen3.5-9b-mlx-4bit/`.
-
-### Override OMLX connection (for cloud LLM or different local model)
+### Override OMLX connection
 
 ```bash
-OMLX_URL=http://localhost:8000/v1 OMLX_MODEL=Qwen3.5-9B-MLX-4bit OMLX_KEY=omlx-test \
-  python field-test/scripts/run_docker_tests.py
+OMLX_URL=http://localhost:8000/v1 OMLX_MODEL=Qwen3.5-4B-4bit OMLX_KEY=omlx-test \
+  python3 field-test/scripts/run_docker_tests.py
 ```
 
 ---
@@ -172,17 +69,17 @@ The `download_hf_traces.py` script downloads the `juliensimon/open-agent-traces`
 pip install datasets
 
 # Run the download script from the repo root
-python field-test/scripts/download_hf_traces.py
+python3 field-test/scripts/download_hf_traces.py
 ```
 
 Output goes to `field-test/v0.1.0/corpus/real-life/real-traces/hf-*.jsonl`.
 
 ## Import Portfolio Traces
 
-The `import_real_traces.py` script converts real traces from sibling projects (agent-exec-trace, agent-eval-forge) into the AgentSelfEdit Trace schema.
+The `import_real_traces.py` script converts real traces from sibling projects (agent-exec-trace, agent-eval-forge) into the AgentSelfEdit Trace schema. Generates unique task_ids for each trace (#97 fix).
 
 ```bash
-python field-test/scripts/import_real_traces.py
+python3 field-test/scripts/import_real_traces.py
 ```
 
 Requires the sibling repos to be checked out at `~/Desktop/code/github/agent-exec-trace` and `~/Desktop/code/github/agent-eval-forge`.
@@ -193,7 +90,7 @@ The `generate_traces.py` script produces synthetic traces from a task set (YAML)
 
 ```bash
 # Generate traces from classification task set
-python field-test/scripts/generate_traces.py \
+python3 field-test/scripts/generate_traces.py \
   field-test/v0.1.0/corpus/synthetic/classification.yaml \
   --output /tmp/traces.jsonl \
   --failure-rate 0.3
