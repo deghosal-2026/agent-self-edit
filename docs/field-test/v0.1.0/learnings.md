@@ -372,6 +372,82 @@ Three paths to get a real promotion:
 
 ---
 
+## Part 1b: Final 15-Iteration Run (4B, 50 traces/iteration)
+
+### Setup
+- Model: Qwen3.5-4B-4bit (local OMLX)
+- Iterations: 15
+- Traces per iteration: 50 (real failures from current prompt)
+- A/B task set: 26 hard classification tasks
+- Gate config: confidence_level=0.95 (alpha=0.05), drift_threshold=0.5
+
+### Result
+
+| Metric | Value |
+|--------|-------|
+| Baseline accuracy | 20% (1/5 held-out) |
+| Final accuracy | 20% (1/5 held-out) |
+| Improvement | 0% |
+| Iterations | 15/15 completed |
+| Gate decision | reject (all 15) |
+| Checks passed | 2/6 (all 15) |
+| Only failing check | confidence (p=0.23 >= alpha=0.05) |
+
+### Per-iteration consistency
+
+Every single iteration produced identical A/B results — the analyzer proposed the same edit, the model produced the same outputs, the gate rejected for the same reason:
+
+| Task | Delta | Direction | Every iteration |
+|------|-------|-----------|----------------|
+| classify-014 | -1.0 | BROKEN (A correct, B wrong) | ✅ |
+| classify-015 | +1.0 | FIXED (A wrong, B correct) | ✅ |
+| classify-023 | +1.0 | FIXED | ✅ |
+| classify-024 | +1.0 | FIXED | ✅ |
+| classify-029 | +1.0 | FIXED | ✅ |
+
+Net effect: +4 fixed, -1 broken = +3 net improvement on 26 tasks. Mean delta = 0.115 (11.5%). But p=0.23 — not significant at p<0.05.
+
+### Why the gate correctly rejected
+
+The edit fixes 4 tasks but breaks 1 (classify-014). That's a 3-net improvement on 26 tasks. The permutation test asks: "could this happen by chance?" With 3/26 tasks changing, there's a 23% probability it's noise. The gate requires p<0.05 (less than 5% chance of noise). **Correct rejection.**
+
+### Why the loop is stuck
+
+The analyzer sees the same 50 real failures every iteration. It proposes the same edit (add priority rules to the classification prompt). The A/B test produces the same result. The gate rejects. Repeat. There is no learning between iterations.
+
+### Canonical conclusion
+
+**The gate works.** It consistently rejects an edit that produces a real but underpowered improvement. The system is mechanically sound end-to-end. The current analyzer strategy does not produce statistically significant improvement on this classification task set.
+
+### Issues fixed in this session
+
+| Issue | What was wrong | Fix |
+|-------|----------------|-----|
+| #95 | `run_traces.py` was a generic eval runner, not the self-edit loop | Deleted |
+| #96 | Scoring used label mode — passed any non-empty response | Deleted with `run_traces.py` |
+| #97 | Duplicate `task_id` in observatory traces (all `s_BlipZorp_000000`) | Added `_unique_task_id()` with hash+counter |
+| #99 | `run_docker_field_test.py` stale, duplicated `test_docker.py` | Deleted |
+| #100 | No 10-iteration improvement script | Created `run_improvement_loop.py` calling internal API directly |
+| #101 | `FIELD_TEST_REPORT.md` missing | Pending — write from this analysis |
+| #105 | Ruff: 13 lint errors | Pending |
+| #106 | Mypy: 5 type errors | Pending |
+| #107 | Guardrail FP/FN + cost not measured vs real LLM | Pending — gate behavior now validated |
+| #108 | Docker: no per-trace latency/token assertions | Fixed — added `prompt_tokens > 0`, `completion_tokens > 0`, `latency_ms > 0` |
+| #109 | Docker: all 10 seeded traces identical | Fixed — varied inputs from `classification.yaml` |
+| #110 | Docker: accepts tie without delta check | Fixed — regex parse p-value from stdout, assert in [0,1] |
+| #111 | Docker: no registry state assertion | Fixed — assert `v1.md`, `v1.meta.json` exist with correct content |
+| #112 | Docker test plan stale | Fixed — updated to match current test code |
+| #93 | D10 field test plan missing | Closed — plan exists at `docs/field-test/v0.1.0/field-test-plan.md` |
+| — | Fake failure traces (`final_output: "other"`) | Fixed — seed real model outputs via LLM call + ExactMatchScorer |
+| — | A/B task set too easy (first 5 tasks) | Fixed — use 26 hard tasks where baseline fails |
+| — | Gate `check_all` passed `prompt_b` as `current_prompt` | Fixed — pass `prompt_a` (original) |
+| — | Confidence check inverted (`p < 0.95` instead of `p < 0.05`) | Fixed — `alpha = 1 - confidence_level`, check `p < alpha` |
+| — | `run_improvement_loop.py` shelled out to CLI | Rewritten — calls internal API directly, writes per-iteration A/B artifacts |
+| — | `run_improvement_loop.py` hardcoded defaults | Fixed — all config via env vars, no hardcoded model/endpoint/key |
+| — | Pytest `UnknownMarkWarning` for `docker` mark | Fixed — registered in `pyproject.toml` |
+
+---
+
 ## Part 2: Mini Field Test Learnings (Aug 31, from mini-field-test-report.md)
 
 ### What Was Not Expected

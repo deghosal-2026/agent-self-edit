@@ -5,7 +5,7 @@
     "expected": "technical",
     "llm_output": "billing",
     "score": 0.0,
-    "latency_ms": 396.8949580012122,
+    "latency_ms": 337.4980830012646,
     "tokens": 253,
     "error": null
   },
@@ -15,7 +15,7 @@
     "expected": "security",
     "llm_output": "security",
     "score": 1.0,
-    "latency_ms": 386.09366699893144,
+    "latency_ms": 339.7634159991867,
     "tokens": 258,
     "error": null
   },
@@ -25,7 +25,7 @@
     "expected": "technical",
     "llm_output": "technical",
     "score": 1.0,
-    "latency_ms": 374.7967499984952,
+    "latency_ms": 346.03887500088604,
     "tokens": 256,
     "error": null
   },
@@ -35,7 +35,7 @@
     "expected": "billing",
     "llm_output": "billing",
     "score": 1.0,
-    "latency_ms": 381.3281660004577,
+    "latency_ms": 340.5579999998736,
     "tokens": 253,
     "error": null
   },
@@ -45,7 +45,7 @@
     "expected": "technical",
     "llm_output": "technical",
     "score": 1.0,
-    "latency_ms": 376.18558299982396,
+    "latency_ms": 340.2977500009001,
     "tokens": 253,
     "error": null
   },
@@ -55,7 +55,7 @@
     "expected": "urgent",
     "llm_output": "security, urgent",
     "score": 0.0,
-    "latency_ms": 428.0378749990632,
+    "latency_ms": 384.92637500166893,
     "tokens": 260,
     "error": null
   },
@@ -65,7 +65,7 @@
     "expected": "urgent",
     "llm_output": "technical",
     "score": 0.0,
-    "latency_ms": 380.8005829996546,
+    "latency_ms": 334.6405409993167,
     "tokens": 257,
     "error": null
   },
@@ -75,7 +75,7 @@
     "expected": "technical",
     "llm_output": "technical",
     "score": 1.0,
-    "latency_ms": 396.2339999998221,
+    "latency_ms": 353.84316699855844,
     "tokens": 248,
     "error": null
   },
@@ -85,7 +85,7 @@
     "expected": "billing",
     "llm_output": "billing",
     "score": 1.0,
-    "latency_ms": 376.6340410002158,
+    "latency_ms": 344.4702500000858,
     "tokens": 253,
     "error": null
   },
@@ -95,7 +95,7 @@
     "expected": "technical",
     "llm_output": "feature",
     "score": 0.0,
-    "latency_ms": 380.562041000303,
+    "latency_ms": 340.9412909986713,
     "tokens": 254,
     "error": null
   },
@@ -105,7 +105,7 @@
     "expected": "urgent",
     "llm_output": "urgent",
     "score": 1.0,
-    "latency_ms": 388.11208300103317,
+    "latency_ms": 345.42449999935343,
     "tokens": 253,
     "error": null
   },
@@ -115,7 +115,7 @@
     "expected": "security",
     "llm_output": "security",
     "score": 1.0,
-    "latency_ms": 381.5039999990404,
+    "latency_ms": 343.2685420011694,
     "tokens": 257,
     "error": null
   },
@@ -125,7 +125,7 @@
     "expected": "feature",
     "llm_output": "feature",
     "score": 1.0,
-    "latency_ms": 371.5403749993129,
+    "latency_ms": 337.3797919994104,
     "tokens": 255,
     "error": null
   },
@@ -135,7 +135,7 @@
     "expected": "feature",
     "llm_output": "feature",
     "score": 1.0,
-    "latency_ms": 380.8353750009701,
+    "latency_ms": 342.3995000011928,
     "tokens": 250,
     "error": null
   },
@@ -145,7 +145,7 @@
     "expected": "security",
     "llm_output": "technical",
     "score": 0.0,
-    "latency_ms": 388.2815419983672,
+    "latency_ms": 333.0024589995446,
     "tokens": 256,
     "error": null
   },
@@ -155,7 +155,7 @@
     "expected": "billing",
     "llm_output": "billing",
     "score": 1.0,
-    "latency_ms": 382.8745419996267,
+    "latency_ms": 344.8182500014809,
     "tokens": 257,
     "error": null
   },
@@ -165,7 +165,7 @@
     "expected": "security, billing",
     "llm_output": "urgent, security, billing",
     "score": 0.0,
-    "latency_ms": 509.40224999976635,
+    "latency_ms": 458.1735840001784,
     "tokens": 268,
     "error": null
   },
@@ -175,7 +175,7 @@
     "expected": "technical, billing",
     "llm_output": "urgent, billing, technical",
     "score": 0.0,
-    "latency_ms": 510.8277500003169,
+    "latency_ms": 455.7855829989421,
     "tokens": 262,
     "error": null
   },
@@ -185,7 +185,7 @@
     "expected": "urgent, security",
     "llm_output": "urgent, security",
     "score": 1.0,
-    "latency_ms": 435.8064169991849,
+    "latency_ms": 382.9170419994625,
     "tokens": 261,
     "error": null
   },
@@ -195,7 +195,7 @@
     "expected": "feature, billing",
     "llm_output": "feature, billing",
     "score": 1.0,
-    "latency_ms": 460.2112089996808,
+    "latency_ms": 409.34324999943783,
     "tokens": 265,
     "error": null
   },
@@ -205,7 +205,7 @@
     "expected": "technical, security",
     "llm_output": "security, technical, urgent",
     "score": 0.0,
-    "latency_ms": 488.10670799866784,
+    "latency_ms": 427.65358299948275,
     "tokens": 264,
     "error": null
   },
@@ -215,7 +215,7 @@
     "expected": "other",
     "llm_output": "technical, billing",
     "score": 0.0,
-    "latency_ms": 462.16133300004003,
+    "latency_ms": 408.3269589991687,
     "tokens": 261,
     "error": null
   },
@@ -225,7 +225,7 @@
     "expected": "other",
     "llm_output": "technical",
     "score": 0.0,
-    "latency_ms": 406.9982920009352,
+    "latency_ms": 369.6997499991994,
     "tokens": 260,
     "error": null
   },
@@ -235,7 +235,7 @@
     "expected": "other",
     "llm_output": "billing, technical",
     "score": 0.0,
-    "latency_ms": 462.54812499864784,
+    "latency_ms": 428.4073750004609,
     "tokens": 273,
     "error": null
   },
@@ -245,7 +245,7 @@
     "expected": "other",
     "llm_output": "other",
     "score": 1.0,
-    "latency_ms": 412.95191700010037,
+    "latency_ms": 369.04108400085534,
     "tokens": 256,
     "error": null
   },
@@ -255,7 +255,7 @@
     "expected": "other",
     "llm_output": "other",
     "score": 1.0,
-    "latency_ms": 385.5928339999082,
+    "latency_ms": 340.59324999907403,
     "tokens": 255,
     "error": null
   }
