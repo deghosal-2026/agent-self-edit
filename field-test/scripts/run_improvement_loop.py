@@ -5,7 +5,8 @@ gate → promote/reject), measures accuracy on a held-out set, and reports
 per-iteration metrics.
 
 Usage:
-    python field-test/scripts/run_improvement_loop.py --iterations 10
+    export OMLX_KEY=omlx-test OMLX_MODEL=Qwen3.5-4B-4bit OMLX_URL=http://localhost:8000/v1
+    python3 field-test/scripts/run_improvement_loop.py --iterations 10
 
 Requires: OMLX_KEY, OMLX_MODEL, OMLX_URL env vars set.
 """
@@ -13,6 +14,7 @@ Requires: OMLX_KEY, OMLX_MODEL, OMLX_URL env vars set.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import shutil
@@ -58,6 +60,7 @@ def measure_accuracy(prompt: str, llm, tasks: list[dict]) -> dict:
     correct = 0
     results = []
     for task in tasks:
+        error = None
         try:
             output = llm.complete(prompt=task["input"], system_prompt=prompt, temperature=0.0)
         except Exception as e:
@@ -72,6 +75,7 @@ def measure_accuracy(prompt: str, llm, tasks: list[dict]) -> dict:
             "actual": output,
             "passed": passed,
             "score": score,
+            "error": error,
         })
     return {
         "accuracy": round(correct / len(tasks) * 100, 1),
@@ -86,7 +90,6 @@ def seed_trace_store(trace_path: str, task_set_path: str, n: int = 10) -> None:
     import yaml
     from agent_self_edit.trace import TraceStore
 
-    # Remove existing db
     db_path = Path(trace_path)
     if db_path.exists():
         db_path.unlink()
@@ -151,9 +154,12 @@ def main() -> None:
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     report_path = RESULTS_DIR / "improvement-loop-report.json"
 
+    # Persistent registry across iterations
+    persist_registry = Path(tempfile.mkdtemp(prefix="ase-reg-")) / "registry"
+
     config = {
         "schema_version": 1,
-        "project": {"name": "improvement-loop", "registry_path": "/tmp/ase-registry", "trace_path": "/tmp/ase-traces.db"},
+        "project": {"name": "improvement-loop", "registry_path": str(persist_registry), "trace_path": "/tmp/ase-traces.db"},
         "tasks": {"task_set_path": "", "batch_size": args.traces_per_iteration, "sample_floor": 10},
         "llm": {"provider": "openai", "model": args.model, "api_key": api_key,
                 "base_url": args.endpoint, "temperature": 0.0, "max_tokens": 4096, "timeout": 60},
@@ -163,56 +169,63 @@ def main() -> None:
         "trigger": "batch", "trace_retention_days": 90,
     }
 
-    # Initialize registry
+    # Initialize registry with baseline prompt
     from agent_self_edit.registry import Registry
-    reg = Registry(config["project"]["registry_path"])
+    reg = Registry(str(persist_registry))
     try:
         reg.create(BASELINE_PROMPT)
+        print(f"Registry initialized at {persist_registry} with baseline prompt")
     except Exception:
-        pass  # already exists
+        print(f"Registry already exists at {persist_registry}")
 
     llm = _build_llm(config)
     llm_traffic: list[dict] = []
     iterations: list[dict] = []
 
     # Baseline accuracy
+    print("Measuring baseline accuracy...")
     baseline = measure_accuracy(BASELINE_PROMPT, llm, HELD_OUT_TASKS)
     print(f"Baseline accuracy: {baseline['accuracy']}% ({baseline['correct']}/{baseline['total']})")
-    iterations.append({"iteration": 0, "prompt": BASELINE_PROMPT, **baseline, "gate": "baseline", "cost": 0.0})
+    iterations.append({"iteration": 0, "prompt": BASELINE_PROMPT, "prompt_hash": hashlib.md5(BASELINE_PROMPT.encode()).hexdigest()[:12], **baseline, "gate": "baseline", "cost": 0.0})
 
     for i in range(1, args.iterations + 1):
-        print(f"\n=== Iteration {i}/{args.iterations} ===")
+        print(f"\n=== Iteration {i}/{args.iterations} ===", flush=True)
+        iter_start = time.time()
 
-        # Create fresh work directory
         with tempfile.TemporaryDirectory(prefix=f"ase-iter-{i}-") as tmp:
             work_dir = Path(tmp)
 
-            # Set up config paths
+            # Each iteration gets its own trace db, reuses the persistent registry
             config["project"]["trace_path"] = str(work_dir / "traces.db")
-            config["project"]["registry_path"] = str(work_dir / "registry")
+            config["project"]["registry_path"] = str(persist_registry)
             config["tasks"]["task_set_path"] = str(copy_task_set(work_dir, 5))
-
-            # Copy registry from previous iteration
-            src_reg = Path(reg._path) if hasattr(reg, '_path') else Path(config["project"]["registry_path"])
-            if src_reg.exists():
-                shutil.copytree(src_reg, work_dir / "registry", dirs_exist_ok=True)
 
             config_path = write_config(work_dir, config)
 
-            # Seed traces
+            # Seed fresh failed traces
             seed_trace_store(config["project"]["trace_path"], str(CLASSIFICATION_TASKS), args.traces_per_iteration)
+            print(f"  Seeded {args.traces_per_iteration} failed traces")
 
-            # Run the self-edit loop
+            # Run the self-edit loop (stream output so we see progress)
             env = os.environ.copy()
             traffic_log = work_dir / "llm-traffic.jsonl"
             env["AGENT_SELF_EDIT_LLM_LOG"] = str(traffic_log)
 
+            print(f"  Running agent-self-edit run --once...", flush=True)
             result = subprocess.run(
                 [sys.executable, "-m", "agent_self_edit.cli", "run", "--config", str(config_path), "--once"],
                 capture_output=True, text=True, timeout=600, env=env,
-                cwd=REPO_ROOT,
+                cwd=str(REPO_ROOT),
             )
-            stdout = result.stdout + "\n" + (result.stderr or "")
+
+            if result.returncode != 0:
+                print(f"  ERROR: exit code {result.returncode}", flush=True)
+                print(f"  stderr: {result.stderr[:500]}", flush=True)
+                iterations.append({"iteration": i, "error": result.stderr[:500], "gate": "error", "accuracy": 0, "cost": 0.0})
+                continue
+
+            stdout = result.stdout
+            print(f"  {stdout.strip()}", flush=True)
 
             # Read traffic
             iter_traffic = []
@@ -224,16 +237,16 @@ def main() -> None:
                             iter_traffic.append(json.loads(line))
                         except json.JSONDecodeError:
                             pass
-
             llm_traffic.extend(iter_traffic)
 
-            # Parse results from stdout
+            # Parse gate decision from stdout
             gate = "unknown"
             for line in stdout.splitlines():
                 if "Gate:" in line:
                     gate = line.split("Gate:")[-1].strip()
                     break
 
+            # Parse cost from stdout
             cost = 0.0
             for line in stdout.splitlines():
                 if "cost=$" in line:
@@ -242,16 +255,18 @@ def main() -> None:
                     except (ValueError, IndexError):
                         pass
 
+            # Parse A/B result
             ab_result = "none"
             for line in stdout.splitlines():
                 if "A/B test:" in line:
                     ab_result = line.strip()
                     break
 
-            # Read current prompt from registry
-            current_prompt = get_current_prompt(str(work_dir / "registry"))
+            # Read current prompt from the persistent registry
+            current_prompt = get_current_prompt(str(persist_registry))
 
-            # Measure accuracy
+            # Measure accuracy on held-out set
+            print(f"  Measuring accuracy...", flush=True)
             accuracy = measure_accuracy(current_prompt, llm, HELD_OUT_TASKS)
 
             iter_record = {
@@ -262,6 +277,7 @@ def main() -> None:
                 "cost": cost,
                 "ab_result": ab_result,
                 "n_llm_calls": len(iter_traffic),
+                "duration_s": round(time.time() - iter_start, 1),
                 **accuracy,
             }
             iterations.append(iter_record)
@@ -271,15 +287,24 @@ def main() -> None:
             print(f"  A/B: {ab_result}")
             print(f"  Cost: ${cost:.4f}")
             print(f"  LLM calls: {len(iter_traffic)}")
+            print(f"  Duration: {iter_record['duration_s']}s")
 
-            # Copy registry to next iteration
-            src = work_dir / "registry"
-            if src.exists():
-                dst = Path(config["project"]["registry_path"])
-                dst.parent.mkdir(parents=True, exist_ok=True)
-                if dst.exists():
-                    shutil.rmtree(dst)
-                shutil.copytree(src, dst)
+            # Write partial report after each iteration
+            report = {
+                "meta": {
+                    "model": args.model,
+                    "endpoint": args.endpoint,
+                    "n_iterations": args.iterations,
+                    "traces_per_iteration": args.traces_per_iteration,
+                    "baseline_accuracy": baseline["accuracy"],
+                    "current_accuracy": accuracy["accuracy"],
+                    "improvement": round(accuracy["accuracy"] - baseline["accuracy"], 1),
+                    "date": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                },
+                "iterations": iterations,
+                "llm_traffic": llm_traffic,
+            }
+            report_path.write_text(json.dumps(report, indent=2, default=str) + "\n")
 
     # Final report
     report = {
@@ -289,24 +314,23 @@ def main() -> None:
             "n_iterations": args.iterations,
             "traces_per_iteration": args.traces_per_iteration,
             "baseline_accuracy": baseline["accuracy"],
-            "final_accuracy": iterations[-1]["accuracy"],
-            "improvement": round(iterations[-1]["accuracy"] - baseline["accuracy"], 1),
+            "final_accuracy": iterations[-1].get("accuracy", 0),
+            "improvement": round(iterations[-1].get("accuracy", 0) - baseline["accuracy"], 1),
             "date": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         },
         "iterations": iterations,
         "llm_traffic": llm_traffic,
     }
     report_path.write_text(json.dumps(report, indent=2, default=str) + "\n")
-    print(f"\nReport: {report_path}")
 
     print(f"\n=== Summary ===")
     print(f"  Baseline: {baseline['accuracy']}%")
-    print(f"  Final:    {iterations[-1]['accuracy']}%")
+    print(f"  Final:    {iterations[-1].get('accuracy', 0)}%")
     print(f"  Delta:    {report['meta']['improvement']}%")
     for it in iterations[1:]:
-        print(f"  Iter {it['iteration']}: {it['accuracy']}% (gate: {it['gate']})")
+        print(f"  Iter {it['iteration']}: {it.get('accuracy', 0)}% (gate: {it.get('gate', '?')})")
+    print(f"\nReport: {report_path}")
 
 
 if __name__ == "__main__":
-    import hashlib
     main()
