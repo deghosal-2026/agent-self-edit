@@ -7,7 +7,7 @@ per-iteration metrics.
 Usage:
     python field-test/scripts/run_improvement_loop.py --iterations 10
 
-Requires: OMLX running at localhost:8000/v1, config defaults hardcoded below.
+Requires: OMLX_KEY, OMLX_MODEL, OMLX_URL env vars set.
 """
 
 from __future__ import annotations
@@ -139,10 +139,14 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Run N self-improvement iterations")
     parser.add_argument("--iterations", type=int, default=10, help="Number of iterations")
     parser.add_argument("--traces-per-iteration", type=int, default=10, help="Traces to seed each iteration")
-    parser.add_argument("--model", default=os.environ.get("OMLX_MODEL", "Qwen3.5-4B-4bit"))
-    parser.add_argument("--endpoint", default=os.environ.get("OMLX_URL", "http://localhost:8000/v1"))
+    parser.add_argument("--model", default=os.environ.get("OMLX_MODEL", ""))
+    parser.add_argument("--endpoint", default=os.environ.get("OMLX_URL", ""))
     args = parser.parse_args()
-    api_key = os.environ.get("OMLX_KEY", "omlx-test")
+    api_key = os.environ.get("OMLX_KEY", "")
+
+    if not args.model or not args.endpoint or not api_key:
+        print("ERROR: OMLX_KEY, OMLX_MODEL, and OMLX_URL must be set", file=sys.stderr)
+        sys.exit(1)
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     report_path = RESULTS_DIR / "improvement-loop-report.json"
