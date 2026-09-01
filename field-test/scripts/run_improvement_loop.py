@@ -141,8 +141,8 @@ def main() -> None:
     parser.add_argument("--traces-per-iteration", type=int, default=10, help="Traces to seed each iteration")
     parser.add_argument("--model", default=os.environ.get("OMLX_MODEL", "Qwen3.5-4B-4bit"))
     parser.add_argument("--endpoint", default=os.environ.get("OMLX_URL", "http://localhost:8000/v1"))
-    parser.add_argument("--api-key", default=os.environ.get("OMLX_KEY", "omlx-test"))
     args = parser.parse_args()
+    api_key = os.environ.get("OMLX_KEY", "omlx-test")
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     report_path = RESULTS_DIR / "improvement-loop-report.json"
@@ -151,7 +151,7 @@ def main() -> None:
         "schema_version": 1,
         "project": {"name": "improvement-loop", "registry_path": "/tmp/ase-registry", "trace_path": "/tmp/ase-traces.db"},
         "tasks": {"task_set_path": "", "batch_size": args.traces_per_iteration, "sample_floor": 10},
-        "llm": {"provider": "openai", "model": args.model, "api_key": args.api_key,
+        "llm": {"provider": "openai", "model": args.model, "api_key": api_key,
                 "base_url": args.endpoint, "temperature": 0.0, "max_tokens": 4096, "timeout": 60},
         "ab_test": {"n_resamples": 100, "n_permutations": 100, "confidence_level": 0.95, "min_effect_size": 0.05, "cost_ceiling_usd": 0.50},
         "gate": {"max_edit_distance": 20, "drift_threshold": 0.3, "near_miss_threshold": 0.5},
