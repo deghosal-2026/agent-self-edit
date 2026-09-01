@@ -6,7 +6,9 @@ into the AgentSelfEdit Trace schema.
 
 from __future__ import annotations
 
+import hashlib
 import json
+import random
 import sys
 from pathlib import Path
 
@@ -16,6 +18,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent.parent / "s
 from agent_self_edit.types import utc_now_iso
 
 OUTPUT = Path(__file__).resolve().parent.parent / "v0.1.0" / "corpus" / "real-life" / "real-traces"
+
+
+def _unique_task_id(prefix: str, counter: int) -> str:
+    """Generate a unique task_id using a prefix and monotonic counter."""
+    unique = hashlib.md5(f"{prefix}-{counter}-{random.random()}".encode()).hexdigest()[:12]
+    return f"{prefix}_{unique}"
 
 
 def convert_agent_observatory_telemetry(input_path: str, output_name: str = "agent-observatory-traces.jsonl") -> int:
@@ -45,12 +53,11 @@ def convert_agent_observatory_telemetry(input_path: str, output_name: str = "age
                 continue
 
             detector = raw.get("detector", "unknown")
-            # Detectors that indicate failure
             failure_detectors = {"semantic_loop", "hallucination", "quality_degradation", "confusion_pattern", "failure"}
             success = detector not in failure_detectors
 
             trace = {
-                "task_id": raw.get("trace_id", f"obs-{count}"),
+                "task_id": _unique_task_id("obs", count),
                 "task_input": f"Agent task with detector {detector}",
                 "final_output": str(raw.get("content_chars", "0")) + " chars produced",
                 "expected_output": "no hallucination, no loop, no degradation",
@@ -105,7 +112,7 @@ def convert_evalforge_failures(results_dir: str, output_name: str = "evalforge-f
             reason = data.get("reason", "failed")
 
             trace = {
-                "task_id": f"{agent}-{scenario}",
+                "task_id": _unique_task_id(f"{agent}", count),
                 "task_input": f"Scenario: {scenario} for agent {agent}",
                 "final_output": f"Agent {agent} failed scenario {scenario}",
                 "expected_output": f"Scenario {scenario} should pass",

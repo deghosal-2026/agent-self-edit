@@ -17,8 +17,8 @@
 | M7 | Feedback Analyzer | F-02 | CUJ 1, CUJ 2 | [#45–#51](https://github.com/deghosal-2026/agent-self-edit/issues/44) | [part4](wbs-v0.1.0-part4-intelligence.md) | ✅ Done |
 | M8 | Diff Visualization | F-08 | CUJ 1, CUJ 3 | [#52–#55](https://github.com/deghosal-2026/agent-self-edit/issues/51) | [part4](wbs-v0.1.0-part4-intelligence.md) | ✅ Done |
 | M9 | CLI | F-09 | CUJ 5, CUJ 4 | [#56–#63](https://github.com/deghosal-2026/agent-self-edit/issues/55) | [part5](wbs-v0.1.0-part5-cli.md) | ✅ Done |
-| M10 | Field Test | F-14 | CUJ 1, CUJ 2, CUJ 4 | [#64–#69](https://github.com/deghosal-2026/agent-self-edit/issues/63) | [part6](wbs-v0.1.0-part6-field-test.md) | ⬜ Pending |
-| M11 | Release | — | all P0 | [#70–#75](https://github.com/deghosal-2026/agent-self-edit/issues/69) | [part7](wbs-v0.1.0-part7-release.md) | ⬜ Pending |
+| M10 | Field Test | F-14 | CUJ 1, CUJ 2, CUJ 4 | [#64–#69](https://github.com/deghosal-2026/agent-self-edit/issues/63) | [part6](wbs-v0.1.0-part6-field-test.md) | ✅ Done |
+| M11 | Release | — | all P0 | [#70–#75](https://github.com/deghosal-2026/agent-self-edit/issues/69) | [part7](wbs-v0.1.0-part7-release.md) | ✅ Done |
 
 ## 2. Dependency Graph
 

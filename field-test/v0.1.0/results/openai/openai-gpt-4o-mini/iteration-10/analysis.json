@@ -1,0 +1,49 @@
+{
+  "n_proposals": 3,
+  "cost_usd": 0.0042603,
+  "tokens_used": 1291,
+  "proposals": [
+    {
+      "section": "classification criteria",
+      "old_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other.",
+      "new_text": "Classify the input into one or more of: urgent, billing, technical, feature, security, other.",
+      "hypothesis": "Changing 'exactly one of' to 'one or more of' allows for multiple classifications, which is necessary for inputs that can belong to more than one category.",
+      "expected_improvement": "This change should help the model correctly classify inputs that require multiple categories, reducing the number of classification failures.",
+      "evidence_traces": [
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    },
+    {
+      "section": "classification criteria",
+      "old_text": "Output ONLY the category name.",
+      "new_text": "Output the category name(s).",
+      "hypothesis": "Changing 'ONLY the category name' to 'the category name(s)' clarifies that multiple categories can be outputted, aligning with the expected outputs in several traces.",
+      "expected_improvement": "This change should help the model understand that it can output multiple categories, thus improving accuracy in classification.",
+      "evidence_traces": [
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    },
+    {
+      "section": "classification criteria",
+      "old_text": "No explanation. No reasoning.",
+      "new_text": "No explanation. No reasoning. If multiple categories apply, separate them with a comma.",
+      "hypothesis": "Adding guidance on how to format multiple categories will help the model produce outputs that match the expected format when multiple classifications are needed.",
+      "expected_improvement": "This change should help the model format its output correctly when multiple categories are applicable, reducing classification errors.",
+      "evidence_traces": [
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    }
+  ]
+}

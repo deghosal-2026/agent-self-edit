@@ -1,0 +1,22 @@
+{
+  "n_proposals": 1,
+  "cost_usd": 0.004356,
+  "tokens_used": 1320,
+  "proposals": [
+    {
+      "section": "Classification Logic / Priority Handling",
+      "old_text": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. Output ONLY the category name. Nothing else. No explanation. No reasoning.",
+      "new_text": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other. \n\nPriority Rules:\n1. If the input contains 'urgent' keywords (e.g., 'urgent', 'immediate', 'blocked', 'down AND', 'hacked', 'stolen') AND relates to security or billing, prioritize 'urgent' over 'security' or 'billing'.\n2. If the input describes a service outage, login failure, or inability to use a paid service, prioritize 'technical' over 'feature' or 'security' unless explicitly a security breach.\n3. If the input describes a specific bug in a feature (e.g., 'bug in search', 'ignores filters'), classify as 'technical' if it blocks functionality, otherwise 'feature'.\n4. If multiple issues are present (e.g., 'hacked' AND 'billing'), include all relevant categories separated by a comma (e.g., 'security, billing').\n\nOutput ONLY the category name(s). Nothing else. No explanation. No reasoning.",
+      "hypothesis": "The model is failing because the original prompt lacks explicit tie-breaking rules for ambiguous or multi-issue inputs. Traces show conflicts between 'urgent' vs 'security', 'technical' vs 'feature', and single vs multiple categories. Adding explicit priority rules and handling for multiple issues will guide the model to prioritize urgency and distinguish functional bugs from feature requests.",
+      "expected_improvement": "Reduce misclassifications in urgent/security conflicts and single/multi-category cases by providing explicit decision logic.",
+      "evidence_traces": [
+        "Trace 2 (security vs urgent)",
+        "Trace 3 (technical vs urgent)",
+        "Trace 5 (feature vs technical)",
+        "Trace 6 (technical vs urgent)",
+        "Trace 8 (single vs multiple categories)",
+        "Trace 9 (single vs multiple categories)"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,141 @@
+{
+  "winner": "b",
+  "mean_delta": 0.30000000000000004,
+  "ci_low": 0.1,
+  "ci_high": 0.6,
+  "p_value": 0.15,
+  "effect_size": 3.0000000000000004,
+  "n_trials": 10,
+  "cost_usd": 0.009424799999999999,
+  "token_count": 2856,
+  "per_task": [
+    {
+      "task_id": "classify-001",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "billing",
+      "output_b": "billing"
+    },
+    {
+      "task_id": "classify-010",
+      "score_a": 0.0,
+      "score_b": 1.0,
+      "delta": 1.0,
+      "output_a": "security",
+      "output_b": "urgent"
+    },
+    {
+      "task_id": "classify-011",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "technical",
+      "output_b": "urgent, technical"
+    },
+    {
+      "task_id": "classify-015",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "urgent",
+      "output_b": "urgent"
+    },
+    {
+      "task_id": "classify-019",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "technical",
+      "output_b": "technical"
+    },
+    {
+      "task_id": "classify-021",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "security",
+      "output_b": "urgent, billing, security"
+    },
+    {
+      "task_id": "classify-022",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "urgent",
+      "output_b": "urgent, billing"
+    },
+    {
+      "task_id": "classify-023",
+      "score_a": 0.0,
+      "score_b": 1.0,
+      "delta": 1.0,
+      "output_a": "urgent",
+      "output_b": "urgent, security"
+    },
+    {
+      "task_id": "classify-024",
+      "score_a": 0.0,
+      "score_b": 1.0,
+      "delta": 1.0,
+      "output_a": "other",
+      "output_b": "feature, billing"
+    },
+    {
+      "task_id": "classify-025",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "security",
+      "output_b": "urgent, security"
+    }
+  ],
+  "gate": {
+    "decision": "near_miss",
+    "reason": "5/6 checks passed; near-miss (>= 83%)",
+    "checks": [
+      {
+        "name": "sample_floor",
+        "passed": true,
+        "value": 10.0,
+        "threshold": 5.0,
+        "details": "n_trials (10) >= sample floor (5)"
+      },
+      {
+        "name": "effect_size",
+        "passed": true,
+        "value": 3.0000000000000004,
+        "threshold": 0.05,
+        "details": "effect size (300.0%) >= min (5.0%)"
+      },
+      {
+        "name": "confidence",
+        "passed": true,
+        "value": 0.15,
+        "threshold": 0.95,
+        "details": "p-value (0.1500) < confidence level (0.9500)"
+      },
+      {
+        "name": "frozen_sections",
+        "passed": true,
+        "value": 0.0,
+        "threshold": 0.0,
+        "details": "no frozen lines modified"
+      },
+      {
+        "name": "edit_distance",
+        "passed": true,
+        "value": 11.0,
+        "threshold": 20.0,
+        "details": "11 changed lines <= max (20)"
+      },
+      {
+        "name": "drift",
+        "passed": false,
+        "value": 0.6143882945576455,
+        "threshold": 0.5,
+        "details": "drift (0.614) > threshold (0.500)"
+      }
+    ]
+  }
+}

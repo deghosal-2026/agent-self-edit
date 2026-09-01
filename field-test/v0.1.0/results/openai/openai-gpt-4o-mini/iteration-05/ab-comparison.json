@@ -1,0 +1,141 @@
+{
+  "winner": "inconclusive",
+  "mean_delta": 0.09999999999999998,
+  "ci_low": 0.0,
+  "ci_high": 0.3,
+  "p_value": 0.45,
+  "effect_size": 0.4999999999999999,
+  "n_trials": 10,
+  "cost_usd": 0.0053823,
+  "token_count": 1631,
+  "per_task": [
+    {
+      "task_id": "classify-001",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "billing",
+      "output_b": "billing"
+    },
+    {
+      "task_id": "classify-010",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "security",
+      "output_b": "security"
+    },
+    {
+      "task_id": "classify-011",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "urgent",
+      "output_b": "urgent"
+    },
+    {
+      "task_id": "classify-015",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "urgent",
+      "output_b": "urgent"
+    },
+    {
+      "task_id": "classify-019",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "technical",
+      "output_b": "technical"
+    },
+    {
+      "task_id": "classify-021",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "security",
+      "output_b": "urgent"
+    },
+    {
+      "task_id": "classify-022",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "urgent",
+      "output_b": "urgent"
+    },
+    {
+      "task_id": "classify-023",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "urgent",
+      "output_b": "urgent"
+    },
+    {
+      "task_id": "classify-024",
+      "score_a": 0.0,
+      "score_b": 1.0,
+      "delta": 1.0,
+      "output_a": "feature",
+      "output_b": "feature, billing"
+    },
+    {
+      "task_id": "classify-025",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "security",
+      "output_b": "security"
+    }
+  ],
+  "gate": {
+    "decision": "near_miss",
+    "reason": "5/6 checks passed; near-miss (>= 83%)",
+    "checks": [
+      {
+        "name": "sample_floor",
+        "passed": true,
+        "value": 10.0,
+        "threshold": 5.0,
+        "details": "n_trials (10) >= sample floor (5)"
+      },
+      {
+        "name": "effect_size",
+        "passed": true,
+        "value": 0.4999999999999999,
+        "threshold": 0.05,
+        "details": "effect size (50.0%) >= min (5.0%)"
+      },
+      {
+        "name": "confidence",
+        "passed": true,
+        "value": 0.45,
+        "threshold": 0.95,
+        "details": "p-value (0.4500) < confidence level (0.9500)"
+      },
+      {
+        "name": "frozen_sections",
+        "passed": true,
+        "value": 0.0,
+        "threshold": 0.0,
+        "details": "no frozen lines modified"
+      },
+      {
+        "name": "edit_distance",
+        "passed": true,
+        "value": 1.0,
+        "threshold": 20.0,
+        "details": "1 changed lines <= max (20)"
+      },
+      {
+        "name": "drift",
+        "passed": false,
+        "value": 0.7801512742302883,
+        "threshold": 0.5,
+        "details": "drift (0.780) > threshold (0.500)"
+      }
+    ]
+  }
+}

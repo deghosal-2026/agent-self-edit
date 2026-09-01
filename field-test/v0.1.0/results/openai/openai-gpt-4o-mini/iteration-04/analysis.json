@@ -1,0 +1,49 @@
+{
+  "n_proposals": 3,
+  "cost_usd": 0.0042074999999999994,
+  "tokens_used": 1275,
+  "proposals": [
+    {
+      "section": "system prompt",
+      "old_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other.",
+      "new_text": "Classify the input into one or more of: urgent, billing, technical, feature, security, other.",
+      "hypothesis": "Changing 'exactly one of' to 'one or more of' allows for multiple categories to be returned, which is necessary for inputs that clearly fit into more than one category.",
+      "expected_improvement": "This change should help the model correctly classify inputs that belong to multiple categories, reducing the number of classification errors.",
+      "evidence_traces": [
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    },
+    {
+      "section": "system prompt",
+      "old_text": "Output ONLY the category name.",
+      "new_text": "Output the category name(s) as a comma-separated list.",
+      "hypothesis": "Specifying that the output can be a comma-separated list will guide the model to provide multiple categories when applicable.",
+      "expected_improvement": "This change should help the model understand that it can output multiple categories, aligning with the expected outputs in the failed traces.",
+      "evidence_traces": [
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    },
+    {
+      "section": "system prompt",
+      "old_text": "No explanation. No reasoning.",
+      "new_text": "No explanation. No reasoning. If multiple categories apply, list them all.",
+      "hypothesis": "Clarifying that if multiple categories apply, they should all be listed will reinforce the model's understanding of the task requirements.",
+      "expected_improvement": "This change should help the model avoid omitting relevant categories in its output, thus improving classification accuracy.",
+      "evidence_traces": [
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    }
+  ]
+}

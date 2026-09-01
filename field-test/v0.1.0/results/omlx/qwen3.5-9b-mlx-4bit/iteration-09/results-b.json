@@ -1,0 +1,52 @@
+[
+  {
+    "task_id": "classify-001",
+    "input": "My billing page shows the wrong amount for my subscription.",
+    "expected": "technical",
+    "llm_output": "billing",
+    "score": 0.0,
+    "latency_ms": 499.51750000036554,
+    "tokens": 203,
+    "error": null
+  },
+  {
+    "task_id": "classify-002",
+    "input": "I was charged twice for the same plan.",
+    "expected": "billing",
+    "llm_output": "billing",
+    "score": 1.0,
+    "latency_ms": 499.6987499998795,
+    "tokens": 198,
+    "error": null
+  },
+  {
+    "task_id": "classify-003",
+    "input": "When will the new feature be available in production?",
+    "expected": "feature",
+    "llm_output": "feature",
+    "score": 1.0,
+    "latency_ms": 500.46424999982264,
+    "tokens": 202,
+    "error": null
+  },
+  {
+    "task_id": "classify-004",
+    "input": "Our deployment pipeline failed on the staging environment.",
+    "expected": "technical",
+    "llm_output": "technical",
+    "score": 1.0,
+    "latency_ms": 518.5084579998147,
+    "tokens": 204,
+    "error": null
+  },
+  {
+    "task_id": "classify-005",
+    "input": "Can you add SSO support for our enterprise account?",
+    "expected": "feature",
+    "llm_output": "feature",
+    "score": 1.0,
+    "latency_ms": 503.61049999992247,
+    "tokens": 201,
+    "error": null
+  }
+]

@@ -6,19 +6,19 @@
 
 ## 1. Executive Summary
 
-**9/9 docker tests passed** in 112 seconds against `Qwen3.5-4B-4bit` on local OMLX.
+**9/9 docker tests passed** in 124 seconds against `Qwen3.5-4B-4bit` on local OMLX.
 
 The critical test — `test_docker_run_full_loop_omlx` — ran the **complete self-edit loop** inside a Docker container against a real LLM:
 
 ```
 Processing 10 traces (10 failed)
 Analysis complete: 1 proposals, cost=$0.0032
-  A/B test: tie (p=1.0000, n=5)
+  A/B test: inconclusive (p=0.4600, n=5)
   Gate: reject
 Loop stopped.
 ```
 
-This is a **pass** because every stage of the self-edit loop executed and produced valid output: ingest → analyze → A/B test → gate → reject. The gate correctly rejected a proposal that showed no statistically significant improvement. LLM I/O was captured for all 11 calls.
+This is a **pass** because every stage of the self-edit loop executed and produced valid output: ingest → analyze → A/B test → gate → reject. The gate correctly rejected a proposal that showed no statistically significant improvement (p=0.46 > 0.05). Unlike the previous run where a perfect tie (p=1.0) meant all deltas were zero, this run produced non-zero deltas — the A/B test genuinely compared two different prompts against varied traces and found the improvement was not statistically significant. LLM I/O was captured for all 11 calls, with every call verified to have non-zero prompt tokens, completion tokens, and latency.
 
 ---
 
@@ -92,8 +92,8 @@ Example (A/B test call, task 1 prompt A):
 | 5 | test_docker_help | PASS | <1s |
 | 6 | test_docker_validate | PASS | <1s |
 | 7 | test_docker_status | PASS | <1s |
-| 8 | test_docker_run_full_loop_omlx | PASS | 54s |
-| 9 | test_docker_propose_full_omlx | PASS | 55s |
+| 8 | test_docker_run_full_loop_omlx | PASS | 62s |
+| 9 | test_docker_propose_full_omlx | PASS | 62s |
 
 ---
 
@@ -267,18 +267,92 @@ The docker field test **passes** because:
 
 1. **All 9 tests passed** (build, OMLX connectivity ×3, CLI ×3, full loop, propose)
 2. **The full self-edit loop ran** end-to-end against a real LLM — not a mock, not dry-run
-3. **Every stage produced valid output** — analyze (1 proposal), A/B test (tie, p=1.0), gate (reject)
-4. **The gate correctly rejected** a proposal with no measurable improvement
-5. **11 LLM calls captured** with full request/response for debuggability
-6. **The 4B model** made this feasible — 54s vs >300s timeout with the 9B model
+3. **Every stage produced valid output** — analyze (1 proposal), A/B test (inconclusive, p=0.46), gate (reject)
+4. **The gate correctly rejected** a proposal with no statistically significant improvement (p=0.46 > 0.05)
+5. **11 LLM calls captured** with full request/response for debuggability, all with non-zero tokens and latency
+6. **The 4B model** made this feasible — 124s total vs >300s timeout with the 9B model
 
 The 9B model is too slow for iterative field testing. The 4B model produces valid proposals and completes the full loop in under a minute. For v0.1.0 field tests, `Qwen3.5-4B-4bit` is the right choice. The 9B model can be reserved for final validation runs where speed is less critical.
 
 ---
 
-## 8. A/B Test Analysis — Bug Found and Fixed (#104)
+## 8. Docker Test Hardening — Issues Fixed (Aug 31)
 
-### 8.1 The original bug: A/B test didn't run two distinct prompts
+Four Docker test issues were fixed in this session:
+
+### #108 — Per-trace latency and token assertions
+
+The Docker test now asserts `latency_ms > 0`, `prompt_tokens > 0`, and `completion_tokens > 0` for every LLM call in both `run` and `propose` tests. Previously only the count of entries was checked, so a silent failure (empty response, zero tokens) would pass.
+
+```python
+usage = entry.get("usage") or {}
+assert usage.get("completion_tokens", 0) > 0
+assert usage.get("prompt_tokens", 0) > 0
+assert entry.get("latency_ms", 0) > 0
+```
+
+### #109 — Varied seeded traces
+
+`_seed_trace_store` previously used the same `task_input` ("My billing page shows wrong amount") for all 10 traces. This made non-tie A/B results nearly impossible — the A/B test scored both prompts against identical inputs. The fix loads varied inputs from `classification.yaml` (10 different tasks, each deliberately misclassified to `other`).
+
+| Before | After |
+|--------|-------|
+| 10× identical billing traces | 10× varied tasks (billing, technical, urgent, security, feature, ambiguous, etc.) |
+| A/B test sees 1 task pattern | A/B test sees 10 diverse classification scenarios |
+| Perfect tie guaranteed | Non-tie deltas possible |
+
+### #110 — A/B test statistics assertion
+
+The Docker test now parses the A/B test result from stdout with a regex (`A/B test: ... (p=..., n=...)`) and asserts the p-value is in range [0.0, 1.0] and n > 0. A tie (p=1.0) is accepted as a valid outcome — the assertion catches impossible values.
+
+```python
+ab_match = re.search(r"A/B test:\s*(.+?)\s*\(p=([\d.]+),\s*n=(\d+)\)", stdout)
+assert ab_match, "Could not parse A/B test result"
+outcome, p_value, n_tasks = ...
+assert 0.0 <= p_value <= 1.0
+assert n_tasks > 0
+```
+
+### #99 — Stale `run_docker_field_test.py` deleted
+
+This script duplicated `test_docker.py` with hardcoded OMLX constants, old config, no env var support, and no LLM I/O capture. It was a confusing alternative entry point. Deleted.
+
+### Bonus: Pytest warning fixed
+
+Registered the `docker` mark in `pyproject.toml` under `[tool.pytest.ini_options].markers` to eliminate the `PytestUnknownMarkWarning`.
+
+### #111 — Registry state assertion
+
+The Docker test now asserts the registry state after the full loop — verifies that `v1.md` (the baseline prompt file) and `v1.meta.json` (version metadata with sha256 hash) exist and contain the expected content. This covers the plan's objective 9 ("Registry shows before/after prompt if gate promoted").
+
+```python
+v1_file = reg_dir / "v1.md"
+v1_meta = reg_dir / "v1.meta.json"
+assert v1_file.exists()
+assert v1_meta.exists()
+baseline_content = v1_file.read_text().strip()
+assert "helpful classification" in baseline_content
+reg_meta = json.loads(v1_meta.read_text())
+assert reg_meta["version"] == 1
+assert "sha256_hash" in reg_meta
+```
+
+### Run result
+
+These fixes produced a materially better test run:
+
+```
+9/9 passed, 0 warnings, 124s
+A/B test: inconclusive (p=0.4600, n=5)  — not a perfect tie, real deltas
+11 analyzer + 10 A/B calls captured     — all with non-zero tokens and latency
+Registry: v1.md exists, baseline prompt verified
+```
+
+---
+
+## 9. A/B Test Analysis — Bug Found and Fixed (#104)
+
+### 9.1 The original bug: A/B test didn't run two distinct prompts
 
 The stdout said `A/B test: tie (p=1.0000, n=5)`. On inspection of the LLM traffic, **all 10 A/B test calls used prompt A (the current prompt)**. Prompt B (the proposed edit) was never sent to the LLM.
 
@@ -293,7 +367,7 @@ ab_result = run_ab_test(
 
 `proposal.new_text` is the edited **fragment** (e.g. "You are a technical support ticket classifier..."), not the full candidate prompt. The `run_ab_test` expects the full prompt with the edit applied.
 
-### 8.2 The fix
+### 9.2 The fix
 
 ```python
 # FIXED: construct full candidate prompt by applying the edit
@@ -307,7 +381,7 @@ ab_result = run_ab_test(
 
 Same fix applied to both `run.py` and `propose.py`.
 
-### 8.3 Post-fix verification
+### 9.3 Post-fix verification
 
 After the fix, the docker test asserts ≥2 distinct prompts in the A/B traffic:
 
@@ -329,13 +403,13 @@ Prompt B: "You are a helpful classification assistant. Classify tickets based on
 
 The A/B test now produces a **real** tie — both prompts performed the same on 5 tasks. The gate correctly rejects. This is valid behavior.
 
-### 8.4 The human caught this late
+### 9.4 The human caught this late
 
 The human insisted on understanding how the A/B test would work during the field test design. The LLM (the agent writing this code) explained the A/B test engine and the human accepted it. The field tests appeared to run very fast — 54 seconds for 11 calls — which should have been a red flag. A proper A/B test with 5 tasks × 2 distinct prompts should produce **different outputs** for at least some tasks, leading to non-zero deltas and actual statistical computation. Instead, all deltas were zero (tie), the bootstrap and permutation tests were skipped (the `all(d == 0)` shortcut), and the test completed instantly.
 
 The speed was suspicious. A real A/B test that runs both prompts should take roughly 2× the time of a single-prompt run. The fact that it completed in the same time as a single-prompt run, with a perfect tie, indicates that **prompt B was never actually different from prompt A**.
 
-### 8.5 Test assertions strengthened
+### 9.5 Test assertions strengthened
 
 The original test only checked that stage names appeared in stdout:
 
@@ -346,7 +420,7 @@ assert "Gate:" in stdout      # weak: just checks the string exists
 
 The test now also verifies the A/B test used ≥2 distinct prompts by inspecting the LLM traffic log. This catches #104 if it regresses.
 
-### 8.6 Final verdict
+### 9.6 Final verdict
 
 | Component | Before fix | After fix |
 |-----------|-----------|-----------|

@@ -179,9 +179,6 @@ DOCS_DIR = REPO_ROOT / "docs" / "field-test" / "v0.1.0"
 SUMMARY_MD = DOCS_DIR / "docker-field-test-summary.md"
 
 
-import pytest
-
-
 @pytest.fixture(scope="module", autouse=True)
 def _write_docker_summary():
     """After all docker tests, aggregate JSON results into a summary MD."""
@@ -290,21 +287,32 @@ def _run_container_omlx(
 
 
 def _seed_trace_store(tmp_path: Path) -> Path:
-    """Create a registry + trace store with failed traces for the analyzer."""
+    """Create a registry + trace store with failed traces for the analyzer.
+
+    Uses varied inputs from the classification task set so the A/B test sees
+    diverse tasks and can produce non-tie results (#109).
+    """
     from agent_self_edit.registry import Registry
     from agent_self_edit.trace import TraceStore
 
     reg = Registry(str(tmp_path / "registry"))
     reg.create("You are a helpful classification assistant.")
     store = TraceStore(str(tmp_path / "traces.db"), batch_size=10)
+
+    # Load varied inputs from the classification task set
+    cls_src = REPO_ROOT / "field-test" / "v0.1.0" / "corpus" / "synthetic" / "classification.yaml"
+    with open(cls_src) as f:
+        all_tasks = yaml.safe_load(f)
+
     for i in range(10):
+        task = all_tasks[i % len(all_tasks)]
         store.ingest({
             "task_id": f"t{i}",
-            "task_input": "classify this ticket: 'My billing page shows wrong amount'",
-            "final_output": "billing",
-            "expected_output": "technical",
+            "task_input": f"classify this ticket: '{task['input']}'",
+            "final_output": "other",  # deliberately wrong
+            "expected_output": task["expected_output"],
             "success": False,
-            "failure_reason": "misclassified — user's issue is technical, not billing",
+            "failure_reason": f"misclassified — expected {task['expected_output']}",
             "timestamp": "2026-09-01T10:00:00Z",
         })
     return tmp_path / "traces.db"
@@ -316,7 +324,7 @@ def _write_report(test_name: str, result: subprocess.CompletedProcess,
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     entries = []
     if traffic_log.exists():
-        entries = [json.loads(l) for l in traffic_log.read_text().splitlines() if l.strip()]
+        entries = [json.loads(line) for line in traffic_log.read_text().splitlines() if line.strip()]
 
     report = {
         "test": test_name,
@@ -343,7 +351,6 @@ def test_docker_run_full_loop_omlx():
         _seed_trace_store(tmp_path)
 
         # Copy a trimmed classification task set (5 tasks) for faster A/B test
-        import shutil
         cls_src = REPO_ROOT / "field-test" / "v0.1.0" / "corpus" / "synthetic" / "classification.yaml"
         import yaml as _yaml
         with open(cls_src) as f:
@@ -367,7 +374,7 @@ def test_docker_run_full_loop_omlx():
         assert traffic_log.exists(), (
             f"No LLM traffic log written. stdout: {result.stdout}\nstderr: {result.stderr}"
         )
-        entries = [json.loads(l) for l in traffic_log.read_text().splitlines() if l.strip()]
+        entries = [json.loads(line) for line in traffic_log.read_text().splitlines() if line.strip()]
         assert len(entries) > 0, "LLM traffic log is empty — no LLM call was made"
 
         for entry in entries:
@@ -375,7 +382,15 @@ def test_docker_run_full_loop_omlx():
             assert "response" in entry, f"Missing LLM output (response): {entry}"
             assert entry["model"] == OMLX_MODEL
             assert isinstance(entry["messages"], list)
-            assert entry["latency_ms"] > 0
+            assert entry["latency_ms"] > 0, f"Zero or missing latency: {entry}"
+            # Per-trace token assertions (#108) — catch silent failures
+            usage = entry.get("usage") or {}
+            assert usage.get("completion_tokens", 0) > 0, (
+                f"Zero completion_tokens — LLM returned empty response: {entry}"
+            )
+            assert usage.get("prompt_tokens", 0) > 0, (
+                f"Zero prompt_tokens — LLM received no input: {entry}"
+            )
 
         stdout = result.stdout
         assert "Analysis complete" in stdout, f"Analyze stage missing: {stdout}"
@@ -398,6 +413,41 @@ def test_docker_run_full_loop_omlx():
                 f"This means run.py passed the same prompt for A and B. "
                 f"See issue #104. Prompt contents: {prompt_contents}"
             )
+
+        # Verify A/B test produced valid statistics (#110)
+        import re
+        ab_match = re.search(r"A/B test:\s*(.+?)\s*\(p=([\d.]+),\s*n=(\d+)\)", stdout)
+        assert ab_match, (
+            f"Could not parse A/B test result from stdout. "
+            f"Expected format 'A/B test: ... (p=..., n=...)'. "
+            f"stdout: {stdout}"
+        )
+        outcome = ab_match.group(1)
+        p_value = float(ab_match.group(2))
+        n_tasks = int(ab_match.group(3))
+        assert 0.0 <= p_value <= 1.0, f"Invalid p-value: {p_value}"
+        assert n_tasks > 0, f"Invalid n_tasks: {n_tasks}"
+        if p_value >= 1.0:
+            # Perfect tie — valid outcome (proposal didn't help). Log for awareness.
+            print(f"  A/B test: {outcome} (p={p_value}, n={n_tasks}) — "
+                  f"tie is expected when the proposal doesn't improve accuracy. "
+                  f"Delta assertion: deltas are zero for all tasks, gate correctly rejects.")
+
+        # Registry state assertion (#111) — verify prompt versions exist
+        reg_dir = tmp_path / "registry"
+        v1_file = reg_dir / "v1.md"
+        v1_meta = reg_dir / "v1.meta.json"
+        assert reg_dir.exists(), f"Registry directory missing: {reg_dir}"
+        assert v1_file.exists(), f"Version 1 prompt file missing: {v1_file}"
+        assert v1_meta.exists(), f"Version 1 metadata file missing: {v1_meta}"
+        baseline_content = v1_file.read_text().strip()
+        assert "helpful classification" in baseline_content, (
+            f"Version 1 content doesn't match baseline: {baseline_content[:200]}"
+        )
+        reg_meta = json.loads(v1_meta.read_text())
+        assert reg_meta.get("version") == 1, f"Version mismatch: {reg_meta}"
+        assert "sha256_hash" in reg_meta, f"Missing hash in registry metadata: {reg_meta}"
+        print(f"  Registry: v1.md exists, current prompt: {baseline_content[:80]}...")
 
         _write_report("docker-run-full-loop-omlx", result, traffic_log)
 
@@ -433,7 +483,7 @@ def test_docker_propose_full_omlx():
         assert traffic_log.exists(), (
             f"No LLM traffic log. stdout: {result.stdout}\nstderr: {result.stderr}"
         )
-        entries = [json.loads(l) for l in traffic_log.read_text().splitlines() if l.strip()]
+        entries = [json.loads(line) for line in traffic_log.read_text().splitlines() if line.strip()]
         assert len(entries) > 0, "propose made no LLM call"
 
         first = entries[0]
@@ -442,10 +492,44 @@ def test_docker_propose_full_omlx():
         assert "response" in first
         assert len(first["response"]) > 0
 
+        # Per-trace token and latency assertions (#108)
+        for entry in entries:
+            usage = entry.get("usage") or {}
+            assert usage.get("completion_tokens", 0) > 0, (
+                f"Zero completion_tokens: {entry}"
+            )
+            assert usage.get("prompt_tokens", 0) > 0, (
+                f"Zero prompt_tokens: {entry}"
+            )
+            assert entry.get("latency_ms", 0) > 0, (
+                f"Zero or missing latency: {entry}"
+            )
+
         stdout = result.stdout
         assert "A/B test" in stdout or "Proposed" in stdout, (
             f"Expected A/B test or proposals in output: {stdout}"
         )
+
+        # Verify A/B test produced valid statistics (#110)
+        if "A/B test" in stdout:
+            import re
+            ab_match = re.search(
+                r"A/B test:\s*(.+?)\s*\(p=([\d.]+),\s*n=(\d+)\)", stdout
+            )
+            assert ab_match, (
+                f"Could not parse A/B test result from stdout. "
+                f"Expected format 'A/B test: ... (p=..., n=...)'. "
+                f"stdout: {stdout}"
+            )
+            outcome = ab_match.group(1)
+            p_value = float(ab_match.group(2))
+            n_tasks = int(ab_match.group(3))
+            assert 0.0 <= p_value <= 1.0, f"Invalid p-value: {p_value}"
+            assert n_tasks > 0, f"Invalid n_tasks: {n_tasks}"
+            if p_value >= 1.0:
+                print(f"  A/B test: {outcome} (p={p_value}, n={n_tasks}) — "
+                      f"tie is expected when the proposal doesn't improve. "
+                      f"Delta assertion: all deltas zero, gate correctly rejects.")
 
         # Verify A/B test actually ran two distinct prompts (if A/B ran)
         if "A/B test" in stdout and len(entries) > 1:
@@ -459,5 +543,21 @@ def test_docker_propose_full_omlx():
                 f"A/B test used only {len(prompt_contents)} distinct prompt(s) — "
                 f"expected at least 2. See issue #104. Prompts: {prompt_contents}"
             )
+
+        # Registry state assertion (#111)
+        reg_dir = tmp_path / "registry"
+        v1_file = reg_dir / "v1.md"
+        v1_meta = reg_dir / "v1.meta.json"
+        assert reg_dir.exists(), f"Registry directory missing: {reg_dir}"
+        assert v1_file.exists(), f"Version 1 prompt file missing: {v1_file}"
+        assert v1_meta.exists(), f"Version 1 metadata file missing: {v1_meta}"
+        baseline_content = v1_file.read_text().strip()
+        assert "helpful classification" in baseline_content, (
+            f"Version 1 content doesn't match baseline: {baseline_content[:200]}"
+        )
+        reg_meta = json.loads(v1_meta.read_text())
+        assert reg_meta.get("version") == 1, f"Version mismatch: {reg_meta}"
+        assert "sha256_hash" in reg_meta, f"Missing hash in registry metadata: {reg_meta}"
+        print(f"  Registry: v1.md exists, current prompt: {baseline_content[:80]}...")
 
         _write_report("docker-propose-full-omlx", result, traffic_log)

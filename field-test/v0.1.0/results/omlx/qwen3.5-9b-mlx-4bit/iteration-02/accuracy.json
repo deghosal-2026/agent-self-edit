@@ -1,0 +1,52 @@
+{
+  "accuracy": 60.0,
+  "correct": 3,
+  "total": 5,
+  "results": [
+    {
+      "task_id": "classify-006",
+      "input": "I think my account was compromised \u2014 someone logged in from an unknown IP.",
+      "expected": "security",
+      "actual": "security",
+      "passed": true,
+      "score": 1.0,
+      "error": null
+    },
+    {
+      "task_id": "classify-011",
+      "input": "I'm paying for a service I can't use because the login page is down.",
+      "expected": "urgent",
+      "actual": "billing, technical",
+      "passed": false,
+      "score": 0.0,
+      "error": null
+    },
+    {
+      "task_id": "classify-015",
+      "input": "When will the maintenance window end? Our team is blocked.",
+      "expected": "urgent",
+      "actual": "urgent",
+      "passed": true,
+      "score": 1.0,
+      "error": null
+    },
+    {
+      "task_id": "classify-019",
+      "input": "I'm getting a 403 Forbidden error on endpoints I used to access.",
+      "expected": "security",
+      "actual": "technical, security",
+      "passed": false,
+      "score": 0.0,
+      "error": null
+    },
+    {
+      "task_id": "classify-024",
+      "input": "I want to request a new integration feature and also report that the billing page is broken.",
+      "expected": "feature, billing",
+      "actual": "feature, billing",
+      "passed": true,
+      "score": 1.0,
+      "error": null
+    }
+  ]
+}

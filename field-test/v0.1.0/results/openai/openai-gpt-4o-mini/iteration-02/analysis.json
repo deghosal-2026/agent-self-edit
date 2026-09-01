@@ -1,0 +1,49 @@
+{
+  "n_proposals": 3,
+  "cost_usd": 0.0041613,
+  "tokens_used": 1261,
+  "proposals": [
+    {
+      "section": "classification criteria",
+      "old_text": "Classify the input into exactly one of: urgent, billing, technical, feature, security, other.",
+      "new_text": "Classify the input into one or more of: urgent, billing, technical, feature, security, other.",
+      "hypothesis": "Changing 'exactly one of' to 'one or more of' allows for multiple classifications, which is necessary for inputs that can belong to more than one category.",
+      "expected_improvement": "This change should reduce the number of classification failures where multiple categories are expected.",
+      "evidence_traces": [
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    },
+    {
+      "section": "classification criteria",
+      "old_text": "Output ONLY the category name.",
+      "new_text": "Output the category name(s).",
+      "hypothesis": "Changing 'ONLY the category name' to 'the category name(s)' clarifies that multiple categories can be outputted, aligning with the expected outputs in several traces.",
+      "expected_improvement": "This change should help the model understand that it can output multiple categories when necessary.",
+      "evidence_traces": [
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    },
+    {
+      "section": "classification criteria",
+      "old_text": "No explanation. No reasoning.",
+      "new_text": "No explanation. No reasoning unless multiple categories are provided.",
+      "hypothesis": "Allowing for reasoning only when multiple categories are provided may help the model justify its classification when it outputs more than one category.",
+      "expected_improvement": "This change should help the model provide more accurate classifications when multiple outputs are expected.",
+      "evidence_traces": [
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    }
+  ]
+}
