@@ -4,7 +4,7 @@
 [![Python](https://img.shields.io/pypi/pyversions/agent-self-edit.svg)](https://pypi.org/project/agent-self-edit/)
 [![Tests](https://img.shields.io/badge/tests-443%20passing-brightgreen)](https://github.com/deghosal-2026/agent-self-edit/actions)
 [![License](https://img.shields.io/pypi/l/agent-self-edit.svg)](https://github.com/deghosal-2026/agent-self-edit/blob/main/LICENSE)
-[![Docker](https://img.shields.io/badge/docker-9%2F9%20tests%20passing-brightgreen)](https://github.com/deghosal-2026/agent-self-edit/pkgs/container/agent-self-edit)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/14386/badge)](https://www.bestpractices.dev/projects/14386)
 
 **An agent that rewrites its own system prompt from execution feedback — proposing edits, A/B testing them against a held-out task set, and promoting only statistically-proven winners under deterministic guardrails.**
 

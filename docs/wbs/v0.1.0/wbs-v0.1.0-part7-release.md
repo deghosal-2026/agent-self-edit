@@ -81,7 +81,7 @@
 - [x] CHANGELOG.md complete
 - [x] Release notes written
 - [x] Security audit clean (bandit: low severity only — expected for subprocess/SQLite, no secrets)
-- [ ] OpenSSF Best Practices Passing badge earned (pending registration)
+- [x] OpenSSF Best Practices Passing badge earned (https://www.bestpractices.dev/projects/14386)
 - [x] GitHub Release v0.1.0 created
 - [ ] Main branch protected (CI required, 1 review, signed commits)
 - [x] Repo public and discoverable
