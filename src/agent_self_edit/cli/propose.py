@@ -1,9 +1,17 @@
 """propose command: analyze failed traces and propose prompt edits via LLM."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import click
 
+if TYPE_CHECKING:
+    from ..config import Config
+    from ..llm.base import LLMProvider
 
-def _build_llm(config):
+
+def _build_llm(config: Config) -> LLMProvider:
     """Build the LLM provider from config file settings."""
     from ..llm.base import ProviderError
     from ..llm.mock import MockProvider
@@ -71,6 +79,9 @@ def propose(config_path: str, dry_run: bool) -> None:
     from ..tasks import load_task_set
 
     task_set = load_task_set(config.tasks.task_set_path) if config.tasks.task_set_path else None
+    if task_set is None:
+        click.echo("No task set configured — skipping A/B test.", err=True)
+        return
     scorer = ExactMatchScorer()
 
     for proposal in result.proposals:

@@ -12,7 +12,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "src"))
 
-OUTPUT_DIR = Path(__file__).resolve().parent.parent / "v0.1.0" / "corpus" / "real-life" / "real-traces"
+OUTPUT_DIR = (Path(__file__).resolve().parent.parent
+              / "v0.1.0" / "corpus" / "real-life" / "real-traces")
 REPO = "MaxDevv/real-pi-coding-agent-traces-sessions"
 
 
@@ -29,13 +30,14 @@ def download_pi_agent_traces(max_sessions: int = 200) -> int:
         return 0
 
     try:
-        from huggingface_hub import list_repo_files, hf_hub_download
+        from huggingface_hub import hf_hub_download, list_repo_files
     except ImportError:
         print("pip install huggingface-hub first")
         return 0
 
     print(f"Listing files in {REPO}...")
-    files = [f for f in list_repo_files(REPO, repo_type="dataset") if f.endswith(".jsonl") and f != "manifest.jsonl"]
+    files = [f for f in list_repo_files(REPO, repo_type="dataset")
+             if f.endswith(".jsonl") and f != "manifest.jsonl"]
     print(f"  Found {len(files)} session files. Processing up to {max_sessions}...")
 
     count = 0
@@ -88,9 +90,9 @@ def download_pi_agent_traces(max_sessions: int = 200) -> int:
 
             trace = {
                 "task_id": session_id,
-                "task_input": prompt or f"Pi coding agent session",
+                "task_input": prompt or "Pi coding agent session",
                 "final_output": f"Completed {tool_calls} tool calls, {user_msgs} user messages",
-                "expected_output": f"Successful coding session",
+                "expected_output": "Successful coding session",
                 "success": success,
                 "failure_reason": failure_reason,
                 "timestamp": events[0].get("timestamp", ""),

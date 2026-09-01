@@ -14,7 +14,8 @@ from pathlib import Path
 # Add src to path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "src"))
 
-OUTPUT_DIR = Path(__file__).resolve().parent.parent / "v0.1.0" / "corpus" / "real-life" / "real-traces"
+OUTPUT_DIR = (Path(__file__).resolve().parent.parent
+              / "v0.1.0" / "corpus" / "real-life" / "real-traces")
 
 
 def _skip_if_exists(path: Path) -> bool:

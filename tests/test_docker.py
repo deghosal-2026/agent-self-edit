@@ -179,9 +179,6 @@ DOCS_DIR = REPO_ROOT / "docs" / "field-test" / "v0.1.0"
 SUMMARY_MD = DOCS_DIR / "docker-field-test-summary.md"
 
 
-import pytest
-
-
 @pytest.fixture(scope="module", autouse=True)
 def _write_docker_summary():
     """After all docker tests, aggregate JSON results into a summary MD."""
@@ -327,7 +324,7 @@ def _write_report(test_name: str, result: subprocess.CompletedProcess,
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     entries = []
     if traffic_log.exists():
-        entries = [json.loads(l) for l in traffic_log.read_text().splitlines() if l.strip()]
+        entries = [json.loads(line) for line in traffic_log.read_text().splitlines() if line.strip()]
 
     report = {
         "test": test_name,
@@ -354,7 +351,6 @@ def test_docker_run_full_loop_omlx():
         _seed_trace_store(tmp_path)
 
         # Copy a trimmed classification task set (5 tasks) for faster A/B test
-        import shutil
         cls_src = REPO_ROOT / "field-test" / "v0.1.0" / "corpus" / "synthetic" / "classification.yaml"
         import yaml as _yaml
         with open(cls_src) as f:
@@ -378,7 +374,7 @@ def test_docker_run_full_loop_omlx():
         assert traffic_log.exists(), (
             f"No LLM traffic log written. stdout: {result.stdout}\nstderr: {result.stderr}"
         )
-        entries = [json.loads(l) for l in traffic_log.read_text().splitlines() if l.strip()]
+        entries = [json.loads(line) for line in traffic_log.read_text().splitlines() if line.strip()]
         assert len(entries) > 0, "LLM traffic log is empty — no LLM call was made"
 
         for entry in entries:
@@ -487,7 +483,7 @@ def test_docker_propose_full_omlx():
         assert traffic_log.exists(), (
             f"No LLM traffic log. stdout: {result.stdout}\nstderr: {result.stderr}"
         )
-        entries = [json.loads(l) for l in traffic_log.read_text().splitlines() if l.strip()]
+        entries = [json.loads(line) for line in traffic_log.read_text().splitlines() if line.strip()]
         assert len(entries) > 0, "propose made no LLM call"
 
         first = entries[0]

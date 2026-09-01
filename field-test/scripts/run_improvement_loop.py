@@ -21,13 +21,11 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import os
 import sys
 import tempfile
 import time
-from dataclasses import asdict
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "src"))
@@ -57,8 +55,13 @@ def _provider_from_endpoint(endpoint: str) -> str:
 
 def _build_config(model: str, api_key: str, endpoint: str, registry_path: str, trace_path: str, task_set_path: str) -> object:
     from agent_self_edit.config import (
-        ABTestConfig, AnalyzerConfig, Config, GateConfig,
-        LLMConfig, ProjectConfig, TasksConfig,
+        ABTestConfig,
+        AnalyzerConfig,
+        Config,
+        GateConfig,
+        LLMConfig,
+        ProjectConfig,
+        TasksConfig,
     )
     return Config(
         project=ProjectConfig(name="improvement-loop", registry_path=registry_path, trace_path=trace_path),
@@ -83,6 +86,7 @@ def _build_llm(config):
 
 def _load_task_set(path: str):
     import yaml
+
     from agent_self_edit.tasks import Task, TaskSet
     with open(path) as f:
         raw = yaml.safe_load(f)
@@ -100,8 +104,9 @@ def _seed_trace_store(trace_path: str, task_set_path: str, n: int, current_promp
     as final_output, not a fabricated "other".
     """
     import yaml
-    from agent_self_edit.trace import TraceStore
+
     from agent_self_edit.scorers import ExactMatchScorer
+    from agent_self_edit.trace import TraceStore
 
     db_path = Path(trace_path)
     if db_path.exists():
@@ -185,11 +190,10 @@ def _run_iteration(
     registry,
 ) -> dict:
     """Run one full self-edit iteration using the internal API directly."""
-    from agent_self_edit.analyzer import analyze_batch
     from agent_self_edit.ab_test import run_ab_test
+    from agent_self_edit.analyzer import analyze_batch
     from agent_self_edit.gate import check_all
     from agent_self_edit.scorers import ExactMatchScorer
-    from agent_self_edit.trace import TraceStore
 
     iteration_dir.mkdir(parents=True, exist_ok=True)
 
@@ -381,9 +385,9 @@ def main() -> None:
     registry = Registry(str(persist_registry_path))
     try:
         registry.create(BASELINE_PROMPT)
-        print(f"Registry initialized with baseline prompt")
+        print("Registry initialized with baseline prompt")
     except Exception:
-        print(f"Registry already exists")
+        print("Registry already exists")
 
     llm = _build_llm(config)
 
@@ -430,7 +434,7 @@ def main() -> None:
 
         # Measure accuracy on held-out set
         current_prompt = registry.current_prompt
-        print(f"  Measuring accuracy...", flush=True)
+        print("  Measuring accuracy...", flush=True)
         accuracy = measure_accuracy(current_prompt, llm, HELD_OUT_TASKS)
         (iteration_dir / "accuracy.json").write_text(json.dumps(accuracy, indent=2) + "\n")
 
@@ -480,7 +484,7 @@ def main() -> None:
     report_path.write_text(json.dumps(final_report, indent=2, default=str) + "\n")
 
     # Final summary
-    print(f"\n=== Summary ===")
+    print("\n=== Summary ===")
     print(f"  Baseline: {baseline['accuracy']}%")
     print(f"  Final:    {iterations[-1].get('accuracy', 0)}%")
     print(f"  Delta:    {final_report['meta']['improvement']}%")

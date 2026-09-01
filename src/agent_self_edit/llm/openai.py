@@ -68,7 +68,7 @@ class OpenAIProvider(LLMProvider):
             ]
         return [{"role": "user", "content": prompt}]
 
-    def _log_traffic(self, entry: dict) -> None:
+    def _log_traffic(self, entry: dict[str, Any]) -> None:
         if not self._traffic_log:
             return
         try:

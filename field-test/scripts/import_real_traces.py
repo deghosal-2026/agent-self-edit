@@ -22,8 +22,6 @@ OUTPUT = Path(__file__).resolve().parent.parent / "v0.1.0" / "corpus" / "real-li
 
 def _unique_task_id(prefix: str, counter: int) -> str:
     """Generate a unique task_id using a prefix and monotonic counter."""
-    import hashlib
-    import random
     unique = hashlib.md5(f"{prefix}-{counter}-{random.random()}".encode()).hexdigest()[:12]
     return f"{prefix}_{unique}"
 
