@@ -171,7 +171,7 @@ def download_hf_eval_traces() -> int:
                     final_output=model_output,
                     expected_output=expected,
                     success=False,
-                    failure_reason=f"wrong answer — model picked incorrect choice",
+                    failure_reason="wrong answer — model picked incorrect choice",
                     source="truthfulqa",
                     domain="classification",
                 )
