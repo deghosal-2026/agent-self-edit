@@ -1,0 +1,22 @@
+# Ambiguous classification — 5 tasks, SingleLabelScorer
+# Tasks where the correct answer is "other": ambiguous, non-actionable, praise, general info.
+- id: "classify-ambig-026"
+  input: "I can't log in and I think my payment failed. Which team should handle this?"
+  expected_output: "other"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "hard", tags: [ambiguous, boundary]}
+- id: "classify-ambig-027"
+  input: "The system is slow after the last update. Is this a bug or a feature regression?"
+  expected_output: "other"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "hard", tags: [ambiguous, boundary]}
+- id: "classify-ambig-028"
+  input: "I'm not sure if this is a billing issue or a technical one — the invoice is wrong AND the portal crashes when I try to view it."
+  expected_output: "other"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "hard", tags: [ambiguous, boundary]}
+- id: "classify-ambig-029"
+  input: "Hi, I just wanted to say the new UI looks great! Keep up the good work."
+  expected_output: "other"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "easy", tags: [other, feedback]}
+- id: "classify-ambig-030"
+  input: "Can you tell me about your company's sustainability initiatives?"
+  expected_output: "other"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "easy", tags: [other, general]}

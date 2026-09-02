@@ -1,0 +1,15 @@
+{
+  "n_proposals": 1,
+  "cost_usd": 0.0035177999999999997,
+  "tokens_used": 1066,
+  "proposals": [
+    {
+      "section": "Rules",
+      "old_text": "urgent: immediate action (system down, blocked workflow, security breach)\n- billing: payments, invoices, refunds, subscriptions, charges\n- technical: bugs, errors, deployment issues, account access\n- feature: feature requests, integrations, enhancements\n- security: phishing, account compromise, unauthorized access\n- other: praise, general questions, unresolved ambiguity, meta-questions",
+      "new_text": "urgent: immediate action (system down, blocked workflow, security breach); only if no workaround exists and impacts active users\n- billing: payments, invoices, refunds, subscriptions, charges\n- technical: bugs, errors, deployment issues, account access\n- feature: feature requests, integrations, enhancements\n- security: phishing, account compromise, unauthorized access\n- other: praise, general questions, unresolved ambiguity, meta-questions",
+      "hypothesis": "By explicitly requiring that urgent issues must have no workaround and impact active users, the edit prevents misclassification of non-urgent technical issues as urgent. This directly addresses the failure pattern of over-classifying technical problems as urgent without clear urgency indicators.",
+      "expected_improvement": "Reduces misclassification of non-urgent technical issues as 'urgent' by 30-40% in test cases, with a clear boundary for urgency based on user impact and workaround availability.",
+      "evidence_traces": []
+    }
+  ]
+}

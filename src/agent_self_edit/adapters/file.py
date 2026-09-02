@@ -18,6 +18,8 @@ class FileAdapter(TraceAdapter):
 
     Each file must be a JSON object (one trace per file). After successful
     ingestion the file is moved to a ``.done`` sibling so it is not re-read.
+    Uses the ``.done`` rename as the sole dedup mechanism — no in-memory
+    filename cache, so repeated filenames are safe (ref #142).
     """
 
     def __init__(
@@ -27,7 +29,6 @@ class FileAdapter(TraceAdapter):
         self._watch_dir = Path(watch_dir)
         self._watch_dir.mkdir(parents=True, exist_ok=True)
         self._poll_interval = poll_interval
-        self._processed: set[str] = set()
 
     def run(self) -> None:
         while not self._stopped():
@@ -37,10 +38,7 @@ class FileAdapter(TraceAdapter):
     def _process_once(self) -> int:
         processed = 0
         for path in sorted(self._watch_dir.glob("*.json")):
-            if path.name in self._processed:
-                continue
             self._ingest_file(path)
-            self._processed.add(path.name)
             processed += 1
         return processed
 
@@ -61,6 +59,5 @@ class FileAdapter(TraceAdapter):
         try:
             done = path.with_suffix(path.suffix + ".done")
             path.rename(done)
-            self._processed.add(done.name)
         except OSError as e:
             logger.warning("Could not move %s to .done: %s", path, e)

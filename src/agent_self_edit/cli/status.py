@@ -16,22 +16,27 @@ def status(config_path: str, json_flag: bool) -> None:
     try:
         config = load_config(config_path)
     except Exception as e:
-        click.echo(f"Error loading config: {e}", err=True)
-        return
+        raise click.ClickException(str(e)) from e
 
     registry = Registry(config.project.registry_path)
     version = registry.current_version
 
-    total_edits = version
+    # Count real edits: exclude version 1 (seed) and rollback-created copies
+    lineage = registry.lineage()
+    total_edits = sum(
+        1 for m in lineage
+        if m.version > 1 and m.rollback_target is None
+    )
+
     total_cost = sum(
-        m.token_cost or 0.0 for m in registry.lineage() if m.token_cost is not None
+        m.token_cost or 0.0 for m in lineage if m.token_cost is not None
     )
 
     last_edit = None
     if version > 0:
         _, meta = registry.get(version)
         last_edit = {
-            "edit_id": meta.version,
+            "version": meta.version,
             "decision": meta.gate_result.get("decision") if meta.gate_result else None,
             "timestamp": meta.timestamp,
             "hypothesis": meta.hypothesis,
@@ -45,8 +50,12 @@ def status(config_path: str, json_flag: bool) -> None:
         alog = GateAuditLog(audit_path)
         entries = alog.list()
         if entries:
-            passed = sum(1 for e in entries if e.get("decision") == "promote")
-            guardrail_pass_rate = passed / len(entries)
+            # Guardrail pass rate = promoted / (promoted + rejected)
+            # near_miss is excluded as it's an intermediate state
+            promoted = sum(1 for e in entries if e.get("decision") == "promote")
+            rejected = sum(1 for e in entries if e.get("decision") == "reject")
+            denominator = promoted + rejected
+            guardrail_pass_rate = promoted / denominator if denominator > 0 else 0.0
 
     if json_flag:
         data = {
@@ -60,7 +69,8 @@ def status(config_path: str, json_flag: bool) -> None:
     else:
         click.echo(f"Prompt version: {version}")
         if last_edit:
-            click.echo(f"Last edit: {last_edit.get('decision') or 'none'} (v{version})")
+            decision = last_edit.get("decision") or "none"
+            click.echo(f"Last edit: {decision} (v{version})")
         click.echo(f"Guardrail pass rate: {guardrail_pass_rate:.0%}")
         click.echo(f"Total edits: {total_edits}")
         click.echo(f"Total cost: ${total_cost:.4f}")

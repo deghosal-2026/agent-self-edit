@@ -1,0 +1,9 @@
+.git/
+__pycache__/
+*.pyc
+.coverage
+htmlcov/
+venv/
+.venv/
+.env
+field-test/v0.1.0/results/

@@ -1,0 +1,82 @@
+# Single-label classification — 20 tasks, SingleLabelScorer
+# Each task maps to exactly one category. No ambiguous/multi-label cases.
+- id: "classify-single-001"
+  input: "My billing page shows the wrong amount for my subscription."
+  expected_output: "technical"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "easy", tags: [billing, boundary]}
+- id: "classify-single-002"
+  input: "I was charged twice for the same plan."
+  expected_output: "billing"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "easy", tags: [billing]}
+- id: "classify-single-003"
+  input: "When will the new feature be available in production?"
+  expected_output: "feature"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "easy", tags: [feature]}
+- id: "classify-single-004"
+  input: "Our deployment pipeline failed on the staging environment."
+  expected_output: "technical"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "easy", tags: [technical, deployment]}
+- id: "classify-single-005"
+  input: "Can you add SSO support for our enterprise account?"
+  expected_output: "feature"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "easy", tags: [feature, enterprise]}
+- id: "classify-single-006"
+  input: "I think my account was compromised — someone logged in from an unknown IP."
+  expected_output: "security"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "medium", tags: [security]}
+- id: "classify-single-007"
+  input: "The checkout button is grayed out and I can't complete my purchase."
+  expected_output: "technical"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "medium", tags: [technical, billing]}
+- id: "classify-single-008"
+  input: "I need to downgrade my plan before the next billing cycle."
+  expected_output: "billing"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "medium", tags: [billing]}
+- id: "classify-single-009"
+  input: "The API returns a 500 error on the /v2/users endpoint."
+  expected_output: "technical"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "easy", tags: [technical, api]}
+- id: "classify-single-010"
+  input: "This is a critical security vulnerability that needs immediate attention."
+  expected_output: "urgent"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "easy", tags: [security, urgent]}
+- id: "classify-single-011"
+  input: "I'm paying for a service I can't use because the login page is down."
+  expected_output: "urgent"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "medium", tags: [billing, technical, boundary]}
+- id: "classify-single-012"
+  input: "Can you help me reset my password?"
+  expected_output: "technical"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "easy", tags: [technical]}
+- id: "classify-single-013"
+  input: "The refund for order #12345 hasn't appeared in my account."
+  expected_output: "billing"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "easy", tags: [billing]}
+- id: "classify-single-014"
+  input: "I found a bug in the search functionality — it ignores filters."
+  expected_output: "technical"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "easy", tags: [technical, bug]}
+- id: "classify-single-015"
+  input: "When will the maintenance window end? Our team is blocked."
+  expected_output: "urgent"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "medium", tags: [urgent, technical]}
+- id: "classify-single-016"
+  input: "I want to report a phishing email that appears to be from your company."
+  expected_output: "security"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "medium", tags: [security]}
+- id: "classify-single-017"
+  input: "The new dashboard feature is confusing — can you add a tutorial?"
+  expected_output: "feature"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "medium", tags: [feature, feedback]}
+- id: "classify-single-018"
+  input: "Our team needs a higher rate limit for the API."
+  expected_output: "feature"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "easy", tags: [feature, api]}
+- id: "classify-single-019"
+  input: "I'm getting a 403 Forbidden error on endpoints I used to access."
+  expected_output: "security"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "medium", tags: [security, technical]}
+- id: "classify-single-020"
+  input: "The invoice shows a different amount than what I agreed to in the contract."
+  expected_output: "billing"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "medium", tags: [billing, boundary]}

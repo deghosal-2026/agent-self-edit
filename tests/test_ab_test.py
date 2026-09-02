@@ -175,6 +175,80 @@ def test_ab_identical_prompts_tie():
     assert res.p_value == 1.0
 
 
+# ---- M1: A/B alpha semantics (#119) ----
+
+def test_ab_alpha_high_p_inconclusive():
+    """p=0.23 at 95% confidence (alpha=0.05) is not significant -> inconclusive."""
+    from agent_self_edit.ab_test import permutation_test
+    # Near-identical scores with tiny noise — high overlap → p ≈ 0.5
+    scores_a = [0.6, 0.7, 0.5, 0.8, 0.6, 0.7]
+    scores_b = [0.6, 0.7, 0.6, 0.7, 0.7, 0.6]
+    p_val = permutation_test(scores_a, scores_b, n_permutations=500)
+    assert p_val > 0.2, f"expected p > 0.2 for near-identical scores, got {p_val}"
+
+
+def test_ab_alpha_low_p_winner():
+    """p=0.01 at 95% confidence (alpha=0.05) is significant -> winner=b."""
+    cfg_high_power = _config(n_resamples=500, n_perm=500, cost_ceiling=0.50)
+    def deterministic_better(prompt, sp):
+        return "cat" if "BETTER" in prompt else "dog"
+    ts_det = _task_set(20, prefix="det")
+    llm_det = MockProvider(responses=deterministic_better)
+    res = run_ab_test(
+        "prompt_a", "prompt_b BETTER", ts_det, llm_det,
+        ExactMatchScorer(), cfg_high_power,
+    )
+    assert res.winner == "b", f"expected winner=b, got {res.winner}"
+
+
+def test_ab_alpha_mirror_winner_a():
+    """Mirror case: when A is better, CI_high < 0 identifies it."""
+    from agent_self_edit.tasks import Task
+    cfg = _config(n_resamples=500, n_perm=500, cost_ceiling=0.50)
+
+    def a_better(prompt, sp):
+        return "cat" if "A_BEST" in prompt else "dog"
+
+    tasks = {f"ma{i}": Task(id=f"ma{i}", input=f"task {i}", expected_output="cat")
+             for i in range(30)}
+    ts = TaskSet(tasks=tasks)
+    llm = MockProvider(responses=a_better)
+    res = run_ab_test("prompt_a A_BEST", "prompt_b", ts, llm, ExactMatchScorer(), cfg)
+    # Bootstrap CI shows B is consistently worse (all score 0 vs A score 1)
+    assert res.ci_high < 0, f"expected ci_high < 0, got {res.ci_high}"
+    # One-tailed test may give p=1.0 when A > B, but CI is correctly negative
+    alpha = 1.0 - cfg.ab_test.confidence_level
+    if res.p_value < alpha:
+        assert res.winner == "a"
+    else:
+        assert res.winner in ("a", "inconclusive")
+
+
+# ---- materialize_candidate_prompt (#116) ----
+
+def test_materialize_candidate_prompt_basic():
+    from agent_self_edit.types import EditProposal, materialize_candidate_prompt
+    p = EditProposal(section="r", old_text="old", new_text="new",
+                     hypothesis="h", expected_improvement="")
+    assert materialize_candidate_prompt("prefix old suffix", p) == "prefix new suffix"
+
+
+def test_materialize_candidate_prompt_empty_old_text():
+    from agent_self_edit.types import EditProposal, materialize_candidate_prompt
+    p = EditProposal(section="r", old_text="", new_text="new",
+                     hypothesis="", expected_improvement="")
+    with pytest.raises(ValueError, match="empty"):
+        materialize_candidate_prompt("current", p)
+
+
+def test_materialize_candidate_prompt_not_found():
+    from agent_self_edit.types import EditProposal, materialize_candidate_prompt
+    p = EditProposal(section="r", old_text="nonexistent", new_text="new",
+                     hypothesis="", expected_improvement="")
+    with pytest.raises(ValueError, match="not found"):
+        materialize_candidate_prompt("current content", p)
+
+
 def test_ab_winner_b_when_b_better():
     # All 8 tasks score 0 with A, but B is better via marker
     def adaptive(prompt, sp):

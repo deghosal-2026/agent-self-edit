@@ -1,0 +1,82 @@
+# Boundary-heavy classification — 20 tasks focused on ambiguous edges
+# benchmark_role: promotion_ab, scorer: exact
+- id: "boundary-001"
+  input: "My account was charged but I can't access the premium features."
+  expected_output: "urgent"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "hard", tags: [billing, technical, boundary]}
+- id: "boundary-002"
+  input: "Is this a security issue or just a bug? The login page shows an SSL error but also has a typo."
+  expected_output: "other"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "hard", tags: [ambiguous, boundary]}
+- id: "boundary-003"
+  input: "The new feature doesn't work on mobile and I'm getting charged for it."
+  expected_output: "urgent"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "hard", tags: [feature, billing, boundary]}
+- id: "boundary-004"
+  input: "Someone tried to reset my password. Is this a security breach or just spam?"
+  expected_output: "security"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "hard", tags: [security, boundary]}
+- id: "boundary-005"
+  input: "The API rate limit is too low for our enterprise plan. We need this fixed urgently."
+  expected_output: "urgent"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "hard", tags: [technical, feature, boundary]}
+- id: "boundary-006"
+  input: "I reported a bug two weeks ago and it's still not fixed. Can you escalate?"
+  expected_output: "technical"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "medium", tags: [technical, boundary]}
+- id: "boundary-007"
+  input: "Our entire team is blocked because the deployment pipeline is down."
+  expected_output: "urgent"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "medium", tags: [urgent, technical]}
+- id: "boundary-008"
+  input: "I need to cancel my subscription but there's no cancel button in the UI."
+  expected_output: "billing"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "medium", tags: [billing, technical]}
+- id: "boundary-009"
+  input: "The security scan found a vulnerability in the payment module. Is this critical?"
+  expected_output: "security"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "hard", tags: [security, billing]}
+- id: "boundary-010"
+  input: "The dashboard shows incorrect data since the last update. Is this a bug or a feature regression?"
+  expected_output: "technical"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "hard", tags: [technical, ambiguous, boundary]}
+- id: "boundary-011"
+  input: "I want to report a problem but I'm not sure if it's billing or technical — the invoice is wrong AND the payment portal crashes."
+  expected_output: "other"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "hard", tags: [ambiguous, boundary]}
+- id: "boundary-012"
+  input: "The SLA for our premium support says 1 hour response but it's been 4 hours."
+  expected_output: "urgent"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "medium", tags: [urgent, boundary]}
+- id: "boundary-013"
+  input: "Can you add more RAM to my server? The current 16GB is not enough for our workload."
+  expected_output: "feature"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "medium", tags: [feature, technical, boundary]}
+- id: "boundary-014"
+  input: "I think my account was hacked because I see unfamiliar logins, and also my last payment was refunded without explanation."
+  expected_output: "security, billing"
+  metadata: {benchmark_role: promotion_ab, scorer: "exactset", difficulty: "hard", tags: [multi-label, security, billing, boundary]}
+- id: "boundary-015"
+  input: "The deployment failed halfway through and now some users see the old version and some see the new version."
+  expected_output: "urgent"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "hard", tags: [urgent, technical]}
+- id: "boundary-016"
+  input: "We need a custom integration with Salesforce. Is this a feature request or should I talk to sales?"
+  expected_output: "feature"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "medium", tags: [feature, boundary]}
+- id: "boundary-017"
+  input: "The SSO login is broken since the security update yesterday."
+  expected_output: "technical"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "medium", tags: [technical, security]}
+- id: "boundary-018"
+  input: "I'm being charged for a plan I downgraded from last month. The billing page shows the old amount."
+  expected_output: "billing"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "medium", tags: [billing]}
+- id: "boundary-019"
+  input: "The search feature returns results that violate our security policies."
+  expected_output: "security"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "hard", tags: [security, technical, boundary]}
+- id: "boundary-020"
+  input: "Just wanted to say your support team is amazing! Quick question — do you have a mobile app?"
+  expected_output: "other"
+  metadata: {benchmark_role: promotion_ab, scorer: "exact", difficulty: "easy", tags: [other, feedback]}

@@ -1,0 +1,402 @@
+[
+  {
+    "task_id": "promote-001",
+    "input": "I can't log in after the security update. Is this a bug or a security issue?",
+    "expected": "technical",
+    "llm_output": "technical",
+    "score": 1.0,
+    "latency_ms": 274.5220840006368,
+    "tokens": 294,
+    "error": null
+  },
+  {
+    "task_id": "promote-002",
+    "input": "The payment failed with error 'card declined'. I need help urgently.",
+    "expected": "urgent",
+    "llm_output": "urgent",
+    "score": 1.0,
+    "latency_ms": 221.58491700247396,
+    "tokens": 291,
+    "error": null
+  },
+  {
+    "task_id": "promote-003",
+    "input": "My invoice doesn't show the discount I was promised. Can you fix this?",
+    "expected": "billing",
+    "llm_output": "billing",
+    "score": 1.0,
+    "latency_ms": 1031.5087080016383,
+    "tokens": 291,
+    "error": null
+  },
+  {
+    "task_id": "promote-004",
+    "input": "The API endpoint /v2/users returns 500 errors intermittently.",
+    "expected": "technical",
+    "llm_output": "technical",
+    "score": 1.0,
+    "latency_ms": 259.2477090001921,
+    "tokens": 290,
+    "error": null
+  },
+  {
+    "task_id": "promote-005",
+    "input": "Can we get a webhook for new user signups? This is blocking our integration.",
+    "expected": "feature",
+    "llm_output": "urgent",
+    "score": 0.0,
+    "latency_ms": 410.2970829990227,
+    "tokens": 293,
+    "error": null
+  },
+  {
+    "task_id": "promote-006",
+    "input": "Our production database is down and we're losing customers by the minute.",
+    "expected": "urgent",
+    "llm_output": "urgent",
+    "score": 1.0,
+    "latency_ms": 283.14529199997196,
+    "tokens": 292,
+    "error": null
+  },
+  {
+    "task_id": "promote-007",
+    "input": "The two-factor authentication keeps sending codes to my old phone number.",
+    "expected": "technical",
+    "llm_output": "technical",
+    "score": 1.0,
+    "latency_ms": 325.4311249984312,
+    "tokens": 293,
+    "error": null
+  },
+  {
+    "task_id": "promote-008",
+    "input": "I was charged for a plan upgrade I didn't authorize. Please investigate.",
+    "expected": "security",
+    "llm_output": "billing",
+    "score": 0.0,
+    "latency_ms": 673.3559999993304,
+    "tokens": 292,
+    "error": null
+  },
+  {
+    "task_id": "promote-009",
+    "input": "The export feature generates empty CSV files for large datasets.",
+    "expected": "technical",
+    "llm_output": "technical",
+    "score": 1.0,
+    "latency_ms": 583.9480419999745,
+    "tokens": 291,
+    "error": null
+  },
+  {
+    "task_id": "promote-010",
+    "input": "We need role-based access control for the admin panel. This is a must-have for compliance.",
+    "expected": "feature",
+    "llm_output": "feature",
+    "score": 1.0,
+    "latency_ms": 192.30325000171433,
+    "tokens": 296,
+    "error": null
+  },
+  {
+    "task_id": "promote-011",
+    "input": "My account shows a negative balance. How is that possible?",
+    "expected": "billing",
+    "llm_output": "billing",
+    "score": 1.0,
+    "latency_ms": 511.4189999985683,
+    "tokens": 288,
+    "error": null
+  },
+  {
+    "task_id": "promote-012",
+    "input": "The monitoring alert says disk usage is at 98%. Should I be worried?",
+    "expected": "urgent",
+    "llm_output": "urgent",
+    "score": 1.0,
+    "latency_ms": 212.1013750002021,
+    "tokens": 291,
+    "error": null
+  },
+  {
+    "task_id": "promote-013",
+    "input": "I can't find the dark mode toggle. Is this feature available yet?",
+    "expected": "feature",
+    "llm_output": "feature",
+    "score": 1.0,
+    "latency_ms": 303.14358299801825,
+    "tokens": 290,
+    "error": null
+  },
+  {
+    "task_id": "promote-014",
+    "input": "The auto-renewal didn't work and my service was suspended. Fix this now.",
+    "expected": "urgent",
+    "llm_output": "urgent",
+    "score": 1.0,
+    "latency_ms": 964.6374170006311,
+    "tokens": 292,
+    "error": null
+  },
+  {
+    "task_id": "promote-015",
+    "input": "A former employee still has access to our production systems.",
+    "expected": "security",
+    "llm_output": "security",
+    "score": 1.0,
+    "latency_ms": 502.68891700034146,
+    "tokens": 290,
+    "error": null
+  },
+  {
+    "task_id": "promote-016",
+    "input": "The search results are not showing results from the last 24 hours.",
+    "expected": "technical",
+    "llm_output": "technical",
+    "score": 1.0,
+    "latency_ms": 357.2082919999957,
+    "tokens": 291,
+    "error": null
+  },
+  {
+    "task_id": "promote-017",
+    "input": "I need a detailed breakdown of charges for my expense report.",
+    "expected": "billing",
+    "llm_output": "billing",
+    "score": 1.0,
+    "latency_ms": 384.9393329983286,
+    "tokens": 289,
+    "error": null
+  },
+  {
+    "task_id": "promote-018",
+    "input": "The SSL certificate renewal failed and users see a security warning.",
+    "expected": "urgent",
+    "llm_output": "urgent",
+    "score": 1.0,
+    "latency_ms": 637.5354170013452,
+    "tokens": 291,
+    "error": null
+  },
+  {
+    "task_id": "promote-019",
+    "input": "Can you add a bulk delete option to the admin panel?",
+    "expected": "feature",
+    "llm_output": "feature",
+    "score": 1.0,
+    "latency_ms": 408.57825000057346,
+    "tokens": 287,
+    "error": null
+  },
+  {
+    "task_id": "promote-020",
+    "input": "The notification system is sending duplicate emails for every event.",
+    "expected": "technical",
+    "llm_output": "technical",
+    "score": 1.0,
+    "latency_ms": 453.3108750001702,
+    "tokens": 292,
+    "error": null
+  },
+  {
+    "task_id": "promote-021",
+    "input": "I see a charge from your company that I don't recognize. Please investigate.",
+    "expected": "security",
+    "llm_output": "billing",
+    "score": 0.0,
+    "latency_ms": 414.0491670004849,
+    "tokens": 293,
+    "error": null
+  },
+  {
+    "task_id": "promote-022",
+    "input": "The CI pipeline is failing because of a flaky test in the auth module.",
+    "expected": "technical",
+    "llm_output": "technical",
+    "score": 1.0,
+    "latency_ms": 187.24058299994795,
+    "tokens": 292,
+    "error": null
+  },
+  {
+    "task_id": "promote-023",
+    "input": "How do I downgrade my plan? The billing portal doesn't have this option.",
+    "expected": "billing",
+    "llm_output": "billing",
+    "score": 1.0,
+    "latency_ms": 649.5700830018905,
+    "tokens": 292,
+    "error": null
+  },
+  {
+    "task_id": "promote-024",
+    "input": "The production website is showing a 502 Bad Gateway error.",
+    "expected": "urgent",
+    "llm_output": "urgent",
+    "score": 1.0,
+    "latency_ms": 511.73479199860594,
+    "tokens": 288,
+    "error": null
+  },
+  {
+    "task_id": "promote-025",
+    "input": "We need an audit log for all admin actions. Compliance requirement.",
+    "expected": "feature",
+    "llm_output": "feature",
+    "score": 1.0,
+    "latency_ms": 292.26845799712464,
+    "tokens": 290,
+    "error": null
+  },
+  {
+    "task_id": "promote-026",
+    "input": "The SQL query timeout is affecting our reporting dashboard.",
+    "expected": "technical",
+    "llm_output": "technical",
+    "score": 1.0,
+    "latency_ms": 313.6656669994409,
+    "tokens": 289,
+    "error": null
+  },
+  {
+    "task_id": "promote-027",
+    "input": "I found a way to access another user's data through the API. This is a security flaw.",
+    "expected": "security",
+    "llm_output": "security",
+    "score": 1.0,
+    "latency_ms": 398.95820899982937,
+    "tokens": 296,
+    "error": null
+  },
+  {
+    "task_id": "promote-028",
+    "input": "The mobile app crashes when I try to upload a profile picture.",
+    "expected": "technical",
+    "llm_output": "technical",
+    "score": 1.0,
+    "latency_ms": 271.67308400021284,
+    "tokens": 290,
+    "error": null
+  },
+  {
+    "task_id": "promote-029",
+    "input": "Can we get a report of all API usage by customer? Sales needs this for quarterly reviews.",
+    "expected": "feature",
+    "llm_output": "feature",
+    "score": 1.0,
+    "latency_ms": 561.9917080002779,
+    "tokens": 296,
+    "error": null
+  },
+  {
+    "task_id": "promote-030",
+    "input": "The invoice for last quarter is missing line items. I need an updated copy.",
+    "expected": "billing",
+    "llm_output": "billing",
+    "score": 1.0,
+    "latency_ms": 1766.7019170003186,
+    "tokens": 292,
+    "error": null
+  },
+  {
+    "task_id": "promote-031",
+    "input": "A critical security patch needs to be deployed immediately.",
+    "expected": "urgent",
+    "llm_output": "urgent",
+    "score": 1.0,
+    "latency_ms": 527.325250001013,
+    "tokens": 288,
+    "error": null
+  },
+  {
+    "task_id": "promote-032",
+    "input": "The email templates are not rendering correctly in Outlook.",
+    "expected": "technical",
+    "llm_output": "technical",
+    "score": 1.0,
+    "latency_ms": 929.517249998753,
+    "tokens": 289,
+    "error": null
+  },
+  {
+    "task_id": "promote-033",
+    "input": "I'm seeing unauthorized charges from a third party on my account. Did you share my data?",
+    "expected": "security",
+    "llm_output": "security",
+    "score": 1.0,
+    "latency_ms": 593.2826669995848,
+    "tokens": 297,
+    "error": null
+  },
+  {
+    "task_id": "promote-034",
+    "input": "The data export feature should support JSON format, not just CSV.",
+    "expected": "feature",
+    "llm_output": "feature",
+    "score": 1.0,
+    "latency_ms": 498.9927090027777,
+    "tokens": 290,
+    "error": null
+  },
+  {
+    "task_id": "promote-035",
+    "input": "My subscription was renewed at a higher price without notification.",
+    "expected": "billing",
+    "llm_output": "billing",
+    "score": 1.0,
+    "latency_ms": 459.71704099792987,
+    "tokens": 290,
+    "error": null
+  },
+  {
+    "task_id": "promote-036",
+    "input": "The load balancer is misconfigured and traffic is going to unhealthy instances.",
+    "expected": "urgent",
+    "llm_output": "urgent",
+    "score": 1.0,
+    "latency_ms": 287.0347499992931,
+    "tokens": 293,
+    "error": null
+  },
+  {
+    "task_id": "promote-037",
+    "input": "The password reset flow is broken. Users can't reset their passwords.",
+    "expected": "technical",
+    "llm_output": "technical",
+    "score": 1.0,
+    "latency_ms": 221.888250001939,
+    "tokens": 292,
+    "error": null
+  },
+  {
+    "task_id": "promote-038",
+    "input": "We need the ability to tag and filter incidents by severity and team.",
+    "expected": "feature",
+    "llm_output": "feature",
+    "score": 1.0,
+    "latency_ms": 236.4480000032927,
+    "tokens": 291,
+    "error": null
+  },
+  {
+    "task_id": "promote-039",
+    "input": "I was double-charged for the same invoice. This is the third time this month.",
+    "expected": "billing",
+    "llm_output": "billing",
+    "score": 1.0,
+    "latency_ms": 249.5252500011702,
+    "tokens": 293,
+    "error": null
+  },
+  {
+    "task_id": "promote-040",
+    "input": "The database migration script is corrupting data in the users table.",
+    "expected": "urgent",
+    "llm_output": "urgent",
+    "score": 1.0,
+    "latency_ms": 181.76516699895728,
+    "tokens": 291,
+    "error": null
+  }
+]

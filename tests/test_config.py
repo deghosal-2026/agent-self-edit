@@ -123,9 +123,18 @@ def test_confidence_level_out_of_range():
 def test_confidence_level_lower_bound():
     config = Config(
         project=ProjectConfig(name="x"),
-        ab_test=ABTestConfig(confidence_level=0.5),
+        ab_test=ABTestConfig(confidence_level=0.9),
     )
     assert validate_config(config) == []
+
+
+def test_confidence_level_too_low():
+    config = Config(
+        project=ProjectConfig(name="x"),
+        ab_test=ABTestConfig(confidence_level=0.5),
+    )
+    errors = validate_config(config)
+    assert any("0.9" in e for e in errors)
 
 
 def test_confidence_level_upper_bound():

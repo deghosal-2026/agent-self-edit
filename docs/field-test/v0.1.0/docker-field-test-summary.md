@@ -1,6 +1,8 @@
-# Docker Field Test Summary — AgentSelfEdit v0.1.0
+# Docker Field Test Summary — AgentSelfEdit v0.1.0 (HISTORICAL)
 
-**Date:** 2026-09-01T02:46:31Z
+> This document is preserved from the v0.1.0 release. For v0.2.0 results, see `docs/field-test/v0.2.0/docker-field-test-summary.md`.
+
+**Date:** 2026-09-02T02:30:28Z
 **Image:** `agent-self-edit:test`
 **OMLX Model:** `Qwen3.5-4B-4bit`
 **OMLX Endpoint:** `http://localhost:8000/v1`

@@ -1,0 +1,102 @@
+# Held-out classification — 25 tasks scored manually
+# benchmark_role: held_out — never used for A/B test or seeding
+- id: "classify-006"
+  input: "I think my account was compromised — someone logged in from an unknown IP."
+  expected_output: "security"
+  metadata: {benchmark_role: held_out, scorer: "exact", difficulty: "medium", tags: [security]}
+- id: "classify-011"
+  input: "I'm paying for a service I can't use because the login page is down."
+  expected_output: "urgent"
+  metadata: {benchmark_role: held_out, scorer: "exact", difficulty: "medium", tags: [billing, technical, boundary]}
+- id: "classify-015"
+  input: "When will the maintenance window end? Our team is blocked."
+  expected_output: "urgent"
+  metadata: {benchmark_role: held_out, scorer: "exact", difficulty: "medium", tags: [urgent, technical]}
+- id: "classify-019"
+  input: "I'm getting a 403 Forbidden error on endpoints I used to access."
+  expected_output: "security"
+  metadata: {benchmark_role: held_out, scorer: "exact", difficulty: "medium", tags: [security, technical]}
+- id: "classify-024"
+  input: "I want to request a new integration feature and also report that the billing page is broken."
+  expected_output: "feature, billing"
+  metadata: {benchmark_role: held_out, scorer: "exactset", difficulty: "hard", tags: [multi-label, feature, billing]}
+- id: "classify-single-001"
+  input: "My billing page shows the wrong amount for my subscription."
+  expected_output: "technical"
+  metadata: {benchmark_role: held_out, scorer: "exact", difficulty: "easy", tags: [billing, boundary]}
+- id: "classify-single-003"
+  input: "When will the new feature be available in production?"
+  expected_output: "feature"
+  metadata: {benchmark_role: held_out, scorer: "exact", difficulty: "easy", tags: [feature]}
+- id: "classify-single-005"
+  input: "Can you add SSO support for our enterprise account?"
+  expected_output: "feature"
+  metadata: {benchmark_role: held_out, scorer: "exact", difficulty: "easy", tags: [feature, enterprise]}
+- id: "classify-single-008"
+  input: "I need to downgrade my plan before the next billing cycle."
+  expected_output: "billing"
+  metadata: {benchmark_role: held_out, scorer: "exact", difficulty: "medium", tags: [billing]}
+- id: "classify-single-010"
+  input: "This is a critical security vulnerability that needs immediate attention."
+  expected_output: "urgent"
+  metadata: {benchmark_role: held_out, scorer: "exact", difficulty: "easy", tags: [security, urgent]}
+- id: "classify-single-012"
+  input: "Can you help me reset my password?"
+  expected_output: "technical"
+  metadata: {benchmark_role: held_out, scorer: "exact", difficulty: "easy", tags: [technical]}
+- id: "classify-single-014"
+  input: "I found a bug in the search functionality — it ignores filters."
+  expected_output: "technical"
+  metadata: {benchmark_role: held_out, scorer: "exact", difficulty: "easy", tags: [technical, bug]}
+- id: "classify-single-016"
+  input: "I want to report a phishing email that appears to be from your company."
+  expected_output: "security"
+  metadata: {benchmark_role: held_out, scorer: "exact", difficulty: "medium", tags: [security]}
+- id: "classify-single-018"
+  input: "Our team needs a higher rate limit for the API."
+  expected_output: "feature"
+  metadata: {benchmark_role: held_out, scorer: "exact", difficulty: "easy", tags: [feature, api]}
+- id: "classify-single-020"
+  input: "The invoice shows a different amount than what I agreed to in the contract."
+  expected_output: "billing"
+  metadata: {benchmark_role: held_out, scorer: "exact", difficulty: "medium", tags: [billing, boundary]}
+- id: "classify-ambig-026"
+  input: "I can't log in and I think my payment failed. Which team should handle this?"
+  expected_output: "other"
+  metadata: {benchmark_role: held_out, scorer: "exact", difficulty: "hard", tags: [ambiguous, boundary]}
+- id: "classify-ambig-027"
+  input: "The system is slow after the last update. Is this a bug or a feature regression?"
+  expected_output: "other"
+  metadata: {benchmark_role: held_out, scorer: "exact", difficulty: "hard", tags: [ambiguous, boundary]}
+- id: "classify-ambig-029"
+  input: "Hi, I just wanted to say the new UI looks great! Keep up the good work."
+  expected_output: "other"
+  metadata: {benchmark_role: held_out, scorer: "exact", difficulty: "easy", tags: [other, feedback]}
+- id: "classify-ambig-030"
+  input: "Can you tell me about your company's sustainability initiatives?"
+  expected_output: "other"
+  metadata: {benchmark_role: held_out, scorer: "exact", difficulty: "easy", tags: [other, general]}
+- id: "classify-multi-022"
+  input: "The API is down AND I'm being charged for premium tier that I can't use."
+  expected_output: "technical, billing"
+  metadata: {benchmark_role: held_out, scorer: "exactset", difficulty: "hard", tags: [multi-label, technical, billing]}
+- id: "classify-multi-023"
+  input: "Someone is using my stolen credit card on your platform and I need urgent help."
+  expected_output: "urgent, security"
+  metadata: {benchmark_role: held_out, scorer: "exactset", difficulty: "hard", tags: [multi-label, urgent, security]}
+- id: "classify-multi-025"
+  input: "The deployment failed and it exposed a security vulnerability in the auth module."
+  expected_output: "technical, security"
+  metadata: {benchmark_role: held_out, scorer: "exactset", difficulty: "hard", tags: [multi-label, technical, security]}
+- id: "boundary-002"
+  input: "Is this a security issue or just a bug? The login page shows an SSL error but also has a typo."
+  expected_output: "other"
+  metadata: {benchmark_role: held_out, scorer: "exact", difficulty: "hard", tags: [ambiguous, boundary]}
+- id: "boundary-008"
+  input: "I need to cancel my subscription but there's no cancel button in the UI."
+  expected_output: "billing"
+  metadata: {benchmark_role: held_out, scorer: "exact", difficulty: "medium", tags: [billing, technical]}
+- id: "boundary-015"
+  input: "The deployment failed halfway through and now some users see the old version and some see the new version."
+  expected_output: "urgent"
+  metadata: {benchmark_role: held_out, scorer: "exact", difficulty: "hard", tags: [urgent, technical]}

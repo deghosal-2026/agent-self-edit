@@ -2,7 +2,7 @@
 
 [![PyPI version](https://img.shields.io/pypi/v/agent-self-edit.svg)](https://pypi.org/project/agent-self-edit/)
 [![Python](https://img.shields.io/pypi/pyversions/agent-self-edit.svg)](https://pypi.org/project/agent-self-edit/)
-[![Tests](https://img.shields.io/badge/tests-443%20passing-brightgreen)](https://github.com/deghosal-2026/agent-self-edit/actions)
+[![Tests](https://img.shields.io/badge/tests-489%20passing-brightgreen)](https://github.com/deghosal-2026/agent-self-edit/actions)
 [![License](https://img.shields.io/pypi/l/agent-self-edit.svg)](https://github.com/deghosal-2026/agent-self-edit/blob/main/LICENSE)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/14386/badge)](https://www.bestpractices.dev/projects/14386)
 
@@ -76,14 +76,15 @@ Agent executes task ──▶ Execution trace stored (SQLite)
 ## Core Components
 
 | Component | What it does |
-|---|---|
-| **Feedback Analyzer** | An LLM that reviews execution traces and produces structured failure diagnoses plus concrete prompt-edit proposals, each with a written hypothesis. **It has no authority** — it only proposes; every proposal goes through A/B test + gate. |
-| **A/B Test Engine** | Compares a candidate prompt against the current one on a held-out task set. Reports win rate, bootstrap confidence intervals, effect size, permutation p-value, and per-task breakdown. |
-| **Promotion Gate** | The safety-critical component. Six deterministic checks in fail-fast order: sample floor, effect size, confidence interval, frozen sections, edit-distance, drift. Outcomes: **promote**, **reject**, or **near-miss** (logged for human review). The gate is **code, not prompts** — verifiable, testable, non-negotiable. |
+|---|---|---|
+| **Feedback Analyzer** | An LLM that reviews execution traces and produces structured failure diagnoses plus concrete prompt-edit proposals, each with a written hypothesis. **It has no authority** — it only proposes; every proposal goes through A/B test + gate. v0.2.0 adds a **staged 4-pipeline analyzer** (summarize → select → synthesize → score) with rejection-context feedback. |
+| **A/B Test Engine** | Compares a candidate prompt against the current one on a held-out task set. Reports win rate, bootstrap confidence intervals, effect size, permutation p-value, and per-task breakdown. v0.2.0 uses a **40-task promotion corpus** for statistical power. |
+| **Promotion Gate** | The safety-critical component. Six deterministic checks in fail-first order: sample floor, effect size, confidence interval, frozen sections, edit-distance, drift. Outcomes: **promote**, **reject**, or **near-miss** (logged for human review). The gate is **code, not prompts** — verifiable, testable, non-negotiable. |
 | **Prompt Registry** | File-based versioned store of every prompt with full lineage: diff from previous version, the analyzer's hypothesis, A/B test results, guardrail results, timestamp, model version, trigger trace IDs. Supports `diff`, `rollback`, `lineage`. SHA-256 integrity per version. |
 | **Guardrail Module** | Frozen section annotations, edit-distance calculation, and TF-IDF drift detection. |
 | **Diff Visualization** | Side-by-side or inline diff showing exactly what changed between prompt versions, what stayed the same (frozen core), and why (guardrail evidence). |
-| **CLI** | `agent-self-edit` with `init`, `run`, `status`, `diff`, `rollback`, `guardrails`, `lineage`, `propose`, `ingest`, `validate`. |
+| **Scorers** | Runtime-selectable scorers — ExactMatch for classification, StructuredExtraction for extraction, LLMJudge for generation — with label-set-aware comparison and multi-domain support. |
+| **CLI** | `agent-self-edit` with `init`, `run`, `status`, `diff`, `rollback`, `guardrails`, `lineage`, `propose`, `ingest`, `validate`. Exit codes deterministic. |
 
 ## The Promotion Gate
 
@@ -96,7 +97,7 @@ The gate is the real product. It is deterministic — never LLM-judged — and r
 5. **Edit-distance limit** — maximum lines changed per cycle (configurable)
 6. **Drift detection** — semantic similarity to the original prompt, alerts on divergence
 
-### Field test result
+### Field test result (v0.1.0)
 
 The gate was validated in a 15-iteration field test against a real LLM (Qwen3.5-4B-4bit, local). Every edit was correctly rejected because the improvement was real but statistically underpowered (p=0.23 >= 0.05).
 
@@ -108,7 +109,22 @@ The gate was validated in a 15-iteration field test against a real LLM (Qwen3.5-
 | Total wall time | 37 minutes |
 | Cost | **$0.00** (local 4B on Apple Silicon) |
 
-The gate rejecting is the success condition, not the failure condition. The system is mechanically sound. The current analyzer strategy does not yet produce statistically significant improvement — a valid finding, not a bug.
+### Field test result (v0.2.0)
+
+v0.2.0 expanded validation across 4 domains (classification, extraction, generation, mixed), 5+ adversarial edit checks, real-trace ingestion, and Docker integration. The strongest analyzer tested was Mistral Small 24B via OpenRouter, producing directional gains but no promotable edit. The central finding: the framework is mechanically sound, safety-gated, and multi-domain capable — but analyzer quality remains the unsolved problem.
+
+| Metric | Result |
+|--------|--------|
+| False positive rate (bad edits promoted) | **0%** |
+| False negative rate (good edits rejected) | not observed |
+| Multi-domain suites executed | 4/4 |
+| Adversarial edits caught | 5/5 (0 FN) |
+| Docker tests passed | ✅ classification, extraction, generation, staged analyzer |
+| Strongest analyzer | mistralai/mistral-small-3.2-24b-instruct |
+| Coverage | 81% (target: 92%) |
+| Cost | $0.00 (local 4B) + OpenRouter variable |
+
+The gate rejecting is the success condition, not the failure condition. The system is mechanically sound. The current analyzer strategy does not yet produce statistically significant improvement — a valid finding, not a bug. See the [v0.2.0 field test report](docs/field-test/v0.2.0/FIELD_TEST_REPORT.md) for complete analysis.
 
 ## Trigger Modes
 
@@ -129,18 +145,24 @@ Any agent that repeats a similar task type and sees execution feedback beats its
 
 ## Status
 
-✅ **v0.1.0 released on PyPI.** All 11 milestones complete.
+✅ **v0.2.0 released on PyPI.** All 9 milestones complete (M1–M9).
 
 | Area | Status |
 |------|--------|
 | Core loop (trace → analyze → A/B test → gate → promote) | ✅ complete |
-| CLI (10 commands) | ✅ complete |
-| Docker support | ✅ 9/9 tests pass |
-| All tests | ✅ 443/443 pass |
-| Ruff + mypy | ✅ clean |
-| Security audit | ✅ clean (bandit: low severity only) |
-| LLM field test | ✅ 15 iterations, gate validated, honest result |
-| Coverage | ⬜ 89% (target 92%) — tracked in #113 |
+| Model role separation (executor, analyzer, judge) | ✅ complete |
+| Staged analyzer (4-stage pipeline with rejection context) | ✅ complete |
+| Multi-domain support (classification, extraction, generation, mixed) | ✅ complete |
+| Runtime scorer selection | ✅ complete |
+| Adversarial edit rejection | ✅ 5/5 caught |
+| Real-trace ingestion | ✅ validated |
+| CLI (10 commands, deterministic exit codes) | ✅ complete |
+| Docker support | ✅ multi-domain tests pass |
+| All tests | ✅ 489/489 pass |
+| Ruff + mypy strict | ✅ clean |
+| Security audit | ✅ clean (bandit, gitleaks, trufflehog — 0 findings) |
+| LLM field test | ✅ multi-model, multi-domain; gate validated |
+| Coverage | ⬜ 81% (target 92%) — tracked in #183 |
 
 ## Field Test Results
 
@@ -158,14 +180,14 @@ The full 15-iteration improvement loop was run against Qwen3.5-4B-4bit on Apple 
 | Average latency | 540ms/call |
 | Cost | $0.00 (local 4B) |
 
-See [final field test report](docs/field-test/v0.1.0/final-field-test-report.md) for the complete analysis.
+See [v0.1.0 field test report](docs/field-test/v0.1.0/final-field-test-report.md) and [v0.2.0 field test report](docs/field-test/v0.2.0/FIELD_TEST_REPORT.md) for complete analysis.
 
 ## Roadmap
 
 | Version | Focus |
-|---|---|
+|---|---|---|
 | **v0.1.0** | ✅ Released — core loop, statistical gate, CLI, Docker, field test validated |
-| **v0.2.0** | Rejection-aware analyzer, cumulative evidence, larger A/B task sets, multi-domain support |
+| **v0.2.0** | ✅ Released — rejection-aware analyzer, cumulative evidence, larger A/B task sets, multi-domain support, staged analyzer, model roles |
 | **v0.3.0** | Framework adapters, multi-failure clustering, adaptive sample floors, evals integration |
 | **v0.4.0** | Fleet-wide shared-rules learning, cost-aware improvement, promotion analytics |
 | **v1.0.0** | General availability — stable API, production deployment guide |

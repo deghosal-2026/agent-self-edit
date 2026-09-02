@@ -23,7 +23,7 @@ def lineage(from_version: int | None, fmt: str, config_path: str) -> None:
         return
 
     if fmt == "json":
-        click.echo(json.dumps([m.__dict__ for m in metas], indent=2, default=str))
+        click.echo(json.dumps([m.to_dict() for m in metas], indent=2, default=str))
     else:
         click.echo(f"{'Ver':<5} {'Timestamp':<22} {'Hypothesis/Reason':<40} {'Hash':<10}")
         click.echo("-" * 80)

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
-from .base import LLMProvider
+from .base import LLMProvider, ProviderError
 
 
 class MockProvider(LLMProvider):
@@ -23,6 +23,8 @@ class MockProvider(LLMProvider):
         responses: Any = "mock output",
         model: str = "mock-model",
     ) -> None:
+        if isinstance(responses, list) and not responses:
+            raise ProviderError("MockProvider requires at least one response when using a list")
         self._responses = responses
         self.model = model
         self.calls: list[dict[str, str]] = []

@@ -10,58 +10,65 @@ from ..registry import Registry
 from ..trace import TraceStore
 
 
-def _run_once(config_path: str, batch_size: int | None, dry_run: bool) -> None:
+def _run_once(config_path: str, batch_size: int | None, dry_run: bool,
+              rejection_context: str = "") -> tuple[bool, str]:
+    """Run one self-edit cycle. Returns ``(had_work, new_rejection_context)``."""
     config = load_config(config_path)
     store = TraceStore(config.project.trace_path, batch_size=batch_size or config.tasks.batch_size)
     registry = Registry(config.project.registry_path)
 
     if not store.batch_ready():
         click.echo("No pending traces ready for analysis.")
-        return
+        return (False, rejection_context)
 
     batch = store.get_batch(min(batch_size or config.tasks.batch_size, store.count_pending()))
     if not batch:
-        return
+        return (False, rejection_context)
 
     failed = [t for t in batch if not t.success]
     click.echo(f"Processing {len(batch)} traces ({len(failed)} failed)")
 
     if not failed:
-        store.acknowledge([t.task_id for t in batch])
+        store.acknowledge_rows(batch)
         click.echo("All traces succeeded; no analysis needed.")
-        return
+        return (True, rejection_context)
 
     from ..analyzer import analyze_batch
-    from .propose import _build_llm
+    from .propose import _build_llm_for_role
 
-    llm = _build_llm(config)
+    analyzer_llm = _build_llm_for_role(config, config.analyzer_role)
     result = analyze_batch(
-        failed, registry.current_prompt, None, llm,
+        failed, registry.current_prompt, None, analyzer_llm,
         max_proposals=config.analyzer.max_proposals_per_batch,
         config=config,
+        rejection_context=rejection_context,
     )
 
     click.echo(f"Analysis complete: {len(result.proposals)} proposals, cost=${result.cost_usd:.4f}")
 
     if dry_run or not result.proposals:
-        store.acknowledge([t.task_id for t in batch])
-        return
+        store.acknowledge_rows(batch)
+        return (True, rejection_context)
+
+    rejection_context_lines: list[str] = []
+    if rejection_context:
+        rejection_context_lines.append(rejection_context)
 
     for proposal in result.proposals:
         from ..ab_test import run_ab_test
         from ..gate import PromotionGate, check_all
-        from ..scorers import ExactMatchScorer
-
-        task_set = None  # would need config.tasks.task_set_path
+        from ..scorers import resolve_scorer
         from ..tasks import load_task_set
-        task_set = load_task_set(config.tasks.task_set_path)
 
-        scorer = ExactMatchScorer()
+        task_set = load_task_set(config.tasks.task_set_path)
+        executor_llm = _build_llm_for_role(config, config.executor_role)
+        judge_llm = _build_llm_for_role(config, config.judge_role)
+        scorer = resolve_scorer(task_set, judge_llm=judge_llm)
         candidate_prompt = registry.current_prompt.replace(
             proposal.old_text, proposal.new_text
         )
         ab_result = run_ab_test(
-            registry.current_prompt, candidate_prompt, task_set, llm, scorer, config
+            registry.current_prompt, candidate_prompt, task_set, executor_llm, scorer, config
         )
         click.echo(
             f"  A/B test: {ab_result.winner} "
@@ -74,9 +81,15 @@ def _run_once(config_path: str, batch_size: int | None, dry_run: bool) -> None:
         )
         click.echo(f"  Gate: {gate_result.decision}")
 
+        if gate_result.decision in ("reject", "near_miss"):
+            rejection_context_lines.append(
+                f"Previous edit '{proposal.hypothesis}' was {gate_result.decision}: "
+                f"{gate_result.reason}"
+            )
+
         if gate_result.decision == "promote":
             registry.create(
-                proposal.new_text,
+                candidate_prompt,
                 hypothesis=proposal.hypothesis,
                 ab_results={
                     "winner": ab_result.winner,
@@ -89,9 +102,12 @@ def _run_once(config_path: str, batch_size: int | None, dry_run: bool) -> None:
             )
             click.echo(f"  Promoted to version {registry.current_version}")
 
-        gate.check(proposal, ab_result, registry.current_prompt, registry.current_prompt, config)
+        gate.log_result(gate_result, edit=proposal)
 
-    store.acknowledge([t.task_id for t in batch])
+    store.acknowledge_rows(batch)
+
+    new_rejection_context = "\n".join(rejection_context_lines)
+    return (True, new_rejection_context)
 
 
 @click.command()
@@ -102,6 +118,7 @@ def _run_once(config_path: str, batch_size: int | None, dry_run: bool) -> None:
 def run(config_path: str, batch_size: int | None, once_flag: bool, dry_run: bool) -> None:
     """Start the self-improvement loop."""
     shutdown = False
+    rejection_context = ""
 
     def _handler(signum: int, frame: object) -> None:
         nonlocal shutdown
@@ -113,7 +130,7 @@ def run(config_path: str, batch_size: int | None, once_flag: bool, dry_run: bool
 
     while not shutdown:
         try:
-            _run_once(config_path, batch_size, dry_run)
+            _, rejection_context = _run_once(config_path, batch_size, dry_run, rejection_context)
         except Exception as e:
             click.echo(f"Error in cycle: {e}", err=True)
 

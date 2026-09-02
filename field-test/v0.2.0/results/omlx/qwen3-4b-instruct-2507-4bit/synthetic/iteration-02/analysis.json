@@ -1,0 +1,15 @@
+{
+  "n_proposals": 1,
+  "cost_usd": 0.0035177999999999997,
+  "tokens_used": 1066,
+  "proposals": [
+    {
+      "section": "Rules",
+      "old_text": "urgent: immediate action (system down, blocked workflow, security breach)\n- billing: payments, invoices, refunds, subscriptions, charges\n- technical: bugs, errors, deployment issues, account access\n- feature: feature requests, integrations, enhancements\n- security: phishing, account compromise, unauthorized access\n- other: praise, general questions, unresolved ambiguity, meta-questions",
+      "new_text": "urgent: immediate action ONLY for system downtime or security breaches; do NOT assign urgent to general technical issues\n- billing: payments, invoices, refunds, subscriptions, charges\n- technical: bugs, errors, deployment issues, account access\n- feature: feature requests, integrations, enhancements\n- security: phishing, account compromise, unauthorized access\n- other: praise, general questions, unresolved ambiguity, meta-questions",
+      "hypothesis": "By explicitly restricting 'urgent' to only system downtime or security breaches and explicitly excluding general technical issues, the prompt prevents misclassification of non-urgent technical problems as urgent, directly addressing the failure pattern of over-assigning urgency without context.",
+      "expected_improvement": "Reduces misclassification of non-urgent technical issues as urgent by 30-50% in multi-issue and single-issue cases, as validated by trace IDs like classify-single-004 and classify-multi-022.",
+      "evidence_traces": []
+    }
+  ]
+}

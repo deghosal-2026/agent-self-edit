@@ -39,6 +39,22 @@ class LLMConfig:
     temperature: float = 0.0
     max_tokens: int = 4096
     timeout: int = 30
+    extra_body: dict[str, Any] = field(
+        default_factory=lambda: {"chat_template_kwargs": {"enable_thinking": False}},
+    )
+
+
+@dataclass(frozen=True)
+class ModelRoleConfig:
+    """Per-role model settings. Each role overrides the default ``llm`` config."""
+    provider: str | None = None
+    model: str | None = None
+    api_key: str | None = None
+    base_url: str | None = None
+    temperature: float | None = None
+    max_tokens: int | None = None
+    timeout: int | None = None
+    extra_body: dict[str, Any] | None = None
 
 
 @dataclass(frozen=True)
@@ -69,6 +85,9 @@ class Config:
     project: ProjectConfig = field(default_factory=lambda: ProjectConfig())
     tasks: TasksConfig = field(default_factory=lambda: TasksConfig())
     llm: LLMConfig = field(default_factory=lambda: LLMConfig())
+    executor_role: ModelRoleConfig = field(default_factory=lambda: ModelRoleConfig())
+    analyzer_role: ModelRoleConfig = field(default_factory=lambda: ModelRoleConfig())
+    judge_role: ModelRoleConfig = field(default_factory=lambda: ModelRoleConfig())
     ab_test: ABTestConfig = field(default_factory=lambda: ABTestConfig())
     gate: GateConfig = field(default_factory=lambda: GateConfig())
     analyzer: AnalyzerConfig = field(default_factory=lambda: AnalyzerConfig())
@@ -106,6 +125,9 @@ def _build_config(data: dict[str, Any]) -> Config:
             project=ProjectConfig(**data.get("project", {})),
             tasks=TasksConfig(**data.get("tasks", {})),
             llm=LLMConfig(**data.get("llm", {})),
+            executor_role=ModelRoleConfig(**data.get("executor_role", {})),
+            analyzer_role=ModelRoleConfig(**data.get("analyzer_role", {})),
+            judge_role=ModelRoleConfig(**data.get("judge_role", {})),
             ab_test=ABTestConfig(**data.get("ab_test", {})),
             gate=GateConfig(**data.get("gate", {})),
             analyzer=AnalyzerConfig(**data.get("analyzer", {})),
@@ -162,9 +184,9 @@ def validate_config(config: Config) -> list[str]:
     if config.tasks.sample_floor < 10:
         errors.append(f"sample_floor must be >= 10, got {config.tasks.sample_floor}")
 
-    if not (0.5 <= config.ab_test.confidence_level <= 0.999):
+    if not (0.9 <= config.ab_test.confidence_level <= 0.999):
         errors.append(
-            f"confidence_level must be between 0.5 and 0.999, got {config.ab_test.confidence_level}"
+            f"confidence_level must be between 0.9 and 0.999, got {config.ab_test.confidence_level}"
         )
 
     if not (0 <= config.ab_test.min_effect_size <= 1):

@@ -16,14 +16,14 @@ def diff(v1: int, v2: int, inline_flag: bool, fmt: str, color_mode: str, config_
     from ..config import load_config
     from ..registry import Registry
 
-    config = load_config("agent-self-edit.yaml")
+    config = load_config(config_path)
     registry = Registry(config.project.registry_path)
 
     try:
         diff_result = registry.diff(v1, v2)
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
-        return
+        raise click.ClickException(str(e)) from e
 
     if fmt == "markdown":
         from ..diff import format_markdown_diff

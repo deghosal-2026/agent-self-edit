@@ -313,7 +313,7 @@ def git_reg(tmp_path):
 
 def test_git_backed_detected(tmp_path):
     _git_init(tmp_path)
-    r = Registry(tmp_path / "registry")
+    r = Registry(tmp_path / "registry", git_backed=True)
     assert r.git_backed is True
 
 
@@ -328,7 +328,7 @@ def test_git_disabled_flag(reg):
 
 def test_git_commit_on_create(tmp_path):
     _git_init(tmp_path)
-    r = Registry(tmp_path / "registry")
+    r = Registry(tmp_path / "registry", git_backed=True)
     r.create("prompt v1 content")
     # the registry directory must contain committed prompt file
     result = subprocess.run(
@@ -342,7 +342,7 @@ def test_git_commit_on_create(tmp_path):
 
 def test_git_commit_each_version(tmp_path):
     _git_init(tmp_path)
-    r = Registry(tmp_path / "registry")
+    r = Registry(tmp_path / "registry", git_backed=True)
     r.create("one")
     r.create("two")
     r.create("three")
@@ -357,7 +357,7 @@ def test_git_commit_each_version(tmp_path):
 
 def test_git_meta_commit_sha_stored(tmp_path):
     _git_init(tmp_path)
-    r = Registry(tmp_path / "registry")
+    r = Registry(tmp_path / "registry", git_backed=True)
     r.create("content", hypothesis="h1")
     _, meta = r.get(1)
     assert meta.commit_sha
@@ -366,7 +366,7 @@ def test_git_meta_commit_sha_stored(tmp_path):
 
 def test_git_integrity_still_works(tmp_path):
     _git_init(tmp_path)
-    r = Registry(tmp_path / "registry")
+    r = Registry(tmp_path / "registry", git_backed=True)
     r.create("a")
     r.create("b")
     assert r.verify_integrity() == []
@@ -374,7 +374,7 @@ def test_git_integrity_still_works(tmp_path):
 
 def test_git_rollback_commit(tmp_path):
     _git_init(tmp_path)
-    r = Registry(tmp_path / "registry")
+    r = Registry(tmp_path / "registry", git_backed=True)
     r.create("alpha")
     r.create("beta")
     v3 = r.rollback(1, "revert to alpha")

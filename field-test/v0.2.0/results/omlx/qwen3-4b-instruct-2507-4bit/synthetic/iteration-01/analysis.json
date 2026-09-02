@@ -1,0 +1,15 @@
+{
+  "n_proposals": 1,
+  "cost_usd": 0.0033924,
+  "tokens_used": 1028,
+  "proposals": [
+    {
+      "section": "Rules",
+      "old_text": "urgent: immediate action (system down, blocked workflow, security breach)\n- billing: payments, invoices, refunds, subscriptions, charges\n- technical: bugs, errors, deployment issues, account access\n- feature: feature requests, integrations, enhancements\n- security: phishing, account compromise, unauthorized access\n- other: praise, general questions, unresolved ambiguity, meta-questions",
+      "new_text": "urgent: immediate action (system down, blocked workflow, security breach)\n- billing: payments, invoices, refunds, subscriptions, charges; billing is a distinct concern and should not be conflated with technical or security issues.\n- technical: bugs, errors, deployment issues, account access\n- feature: feature requests, integrations, enhancements\n- security: phishing, account compromise, unauthorized access\n- other: praise, general questions, unresolved ambiguity, meta-questions",
+      "hypothesis": "The added sentence explicitly reinforces billing as a distinct and independent concern, preventing conflation with technical or security issues. This directly addresses the failure pattern where billing is incorrectly grouped under technical or security categories.",
+      "expected_improvement": "Reduction in misclassification of billing-related issues as technical or security by 70% in test cases involving payments, subscriptions, or charges, as validated by trace IDs like classify-single-004 and classify-multi-024.",
+      "evidence_traces": []
+    }
+  ]
+}

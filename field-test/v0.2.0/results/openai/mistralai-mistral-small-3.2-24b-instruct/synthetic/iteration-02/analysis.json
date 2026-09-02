@@ -1,0 +1,15 @@
+{
+  "n_proposals": 1,
+  "cost_usd": 0.0034881,
+  "tokens_used": 1057,
+  "proposals": [
+    {
+      "section": "Rules",
+      "old_text": "- urgent: immediate action (system down, blocked workflow, security breach)",
+      "new_text": "- urgent: immediate action (system down, blocked workflow, security breach) - only if critical to business continuity",
+      "hypothesis": "Adding a clarifying clause helps prevent overgeneralization to 'urgent' by emphasizing that only critical issues should be labeled as such, not all technical or security issues.",
+      "expected_improvement": "Reduction in overgeneralization to 'urgent' by 15-20% in failure cases, as the model will be more selective in applying this label.",
+      "evidence_traces": []
+    }
+  ]
+}

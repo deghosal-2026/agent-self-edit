@@ -289,13 +289,14 @@ def run_ab_test(
             n_permutations=ab_config.n_permutations,
         )
         effect = effect_size(scores_a, scores_b)
+        alpha = 1.0 - ab_config.confidence_level
         if (
             ci.ci_low > 0
-            and p_value < ab_config.confidence_level
+            and p_value < alpha
             and effect >= ab_config.min_effect_size
         ):
             winner = "b"
-        elif ci.ci_high < 0 and p_value < ab_config.confidence_level:
+        elif ci.ci_high < 0 and p_value < alpha:
             winner = "a"
         else:
             winner = "inconclusive"

@@ -6,5 +6,6 @@ def test_import():
 
 
 def test_package_has_version():
-    import agent_self_edit  # noqa: F401
-    assert hasattr(agent_self_edit, "__version__") or True  # no version attr yet
+    import agent_self_edit
+    assert hasattr(agent_self_edit, "__version__")
+    assert isinstance(agent_self_edit.__version__, str)

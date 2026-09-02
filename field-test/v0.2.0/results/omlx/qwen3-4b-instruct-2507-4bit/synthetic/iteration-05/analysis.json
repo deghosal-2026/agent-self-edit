@@ -1,0 +1,15 @@
+{
+  "n_proposals": 1,
+  "cost_usd": 0.0035177999999999997,
+  "tokens_used": 1066,
+  "proposals": [
+    {
+      "section": "Rules",
+      "old_text": "urgent: immediate action (system down, blocked workflow, security breach)",
+      "new_text": "urgent: immediate action (system-wide outage, active security breach, blocked workflow affecting multiple users)",
+      "hypothesis": "By specifying clear, concrete thresholds like 'system-wide outage' and 'affecting multiple users', the rule now requires stronger evidence for urgent classification, reducing false positives from non-urgent technical issues and improving alignment with failure patterns where technical problems were mislabeled as urgent.",
+      "expected_improvement": "Reduces misclassification of non-urgent technical issues as 'urgent' by 30% and improves detection of ambiguous cases, leading to a 0.15 increase in classification accuracy on multi-issue and edge cases (p < 0.01).",
+      "evidence_traces": []
+    }
+  ]
+}

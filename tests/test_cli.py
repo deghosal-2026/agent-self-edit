@@ -1,7 +1,7 @@
 """Tests for the CLI commands (hermetic — no real LLM calls)."""
 
 import json
-import os
+from pathlib import Path
 
 import pytest
 import yaml
@@ -56,55 +56,51 @@ def test_help(runner):
     assert "validate" in result.output
 
 
-def test_init_creates_registry(runner, tmp_path):
-    os.chdir(tmp_path)
-    init_prompt = tmp_path / "prompt.md"
-    init_prompt.write_text("You are a classifier.")
-    result = runner.invoke(main, ["init", "--prompt", str(init_prompt)])
-    assert result.exit_code in (0, None)
-    assert (tmp_path / "registry").exists()
+def test_init_creates_registry(runner):
+    with runner.isolated_filesystem():
+        init_prompt = Path("prompt.md")
+        init_prompt.write_text("You are a classifier.")
+        result = runner.invoke(main, ["init", "--prompt", str(init_prompt)])
+        assert result.exit_code in (0, None)
+        assert Path("registry").exists()
 
 
-def test_validate_no_config(runner, tmp_path):
-    os.chdir(tmp_path)
-    result = runner.invoke(main, ["validate"])
-    # Should handle missing config gracefully
-    assert result.exit_code in (0, 1, 2)
+def test_validate_no_config(runner):
+    with runner.isolated_filesystem():
+        result = runner.invoke(main, ["validate"])
+        assert result.exit_code in (0, 1, 2)
 
 
 def test_validate_with_config(runner, cfg_dir):
-    os.chdir(cfg_dir.parent)
-    result = runner.invoke(main, ["validate"])
+    result = runner.invoke(main, ["validate", "--config", str(cfg_dir)])
     assert result.exit_code in (0, 2)
 
 
-def test_ingest_invalid_file(runner, tmp_path):
-    os.chdir(tmp_path)
-    result = runner.invoke(main, ["ingest", "/nonexistent/traces.json"])
-    assert result.exit_code > 0
+def test_ingest_invalid_file(runner):
+    with runner.isolated_filesystem():
+        result = runner.invoke(main, ["ingest", "/nonexistent/traces.json"])
+        assert result.exit_code > 0
 
 
-def test_rollback_error(runner, tmp_path):
-    os.chdir(tmp_path)
-    result = runner.invoke(main, ["rollback", "99"])
-    assert result.exit_code in (0, 1, 2)
+def test_rollback_error(runner):
+    with runner.isolated_filesystem():
+        result = runner.invoke(main, ["rollback", "99"])
+        assert result.exit_code in (0, 1, 2)
 
 
-def test_diff_error(runner, tmp_path):
-    os.chdir(tmp_path)
-    result = runner.invoke(main, ["diff", "1", "99"])
-    assert result.exit_code in (0, 1, 2)
+def test_diff_error(runner):
+    with runner.isolated_filesystem():
+        result = runner.invoke(main, ["diff", "1", "99"])
+        assert result.exit_code in (0, 1, 2)
 
 
-def test_status_empty(runner, tmp_path):
-    os.chdir(tmp_path)
-    result = runner.invoke(main, ["status"])
-    # Should handle empty state gracefully
-    assert result.exit_code in (0, 1)
+def test_status_empty(runner):
+    with runner.isolated_filesystem():
+        result = runner.invoke(main, ["status"])
+        assert result.exit_code in (0, 1)
 
 
 def test_propose_no_traces(runner, cfg_dir):
-    os.chdir(cfg_dir.parent)
     Registry(cfg_dir.parent / "reg")
     result = runner.invoke(main, ["propose", "--config", str(cfg_dir)])
     assert result.exit_code in (0, 1)
@@ -140,30 +136,27 @@ def test_validate_help(runner):
     assert result.exit_code == 0
 
 
-
-
 def test_rollback_help(runner):
     result = runner.invoke(main, ["rollback", "--help"])
     assert result.exit_code == 0
     assert "VERSION" in result.output
 
 
-def test_init_with_prompt_and_tasks(runner, tmp_path):
-    os.chdir(tmp_path)
-    prompt_file = tmp_path / "prompt.md"
-    prompt_file.write_text("You are a classifier.")
-    tasks_file = tmp_path / "tasks.yaml"
-    with open(tasks_file, "w") as f:
-        yaml.dump([{"id": "t1", "input": "x", "expected_output": "y"}], f)
-    result = runner.invoke(main, ["init", "--prompt", str(prompt_file), "--tasks", str(tasks_file)])
-    assert result.exit_code in (0, None)
-    assert (tmp_path / "registry").exists()
-    assert (tmp_path / "registry" / "v1.md").exists()
+def test_init_with_prompt_and_tasks(runner):
+    with runner.isolated_filesystem():
+        prompt_file = Path("prompt.md")
+        prompt_file.write_text("You are a classifier.")
+        tasks_file = Path("tasks.yaml")
+        with open(tasks_file, "w") as f:
+            yaml.dump([{"id": "t1", "input": "x", "expected_output": "y"}], f)
+        result = runner.invoke(main, ["init", "--prompt", str(prompt_file), "--tasks", str(tasks_file)])
+        assert result.exit_code in (0, None)
+        assert Path("registry").exists()
+        assert (Path("registry") / "v1.md").exists()
 
 
 def test_validate_json_output(runner, cfg_dir):
-    os.chdir(cfg_dir.parent)
-    result = runner.invoke(main, ["validate", "--json"])
+    result = runner.invoke(main, ["validate", "--json", "--config", str(cfg_dir)])
     assert result.exit_code in (0, 2)
     if result.exit_code == 0:
         data = json.loads(result.output)
@@ -171,32 +164,31 @@ def test_validate_json_output(runner, cfg_dir):
         assert "checks" in data
 
 
-def test_status_json_empty(runner, tmp_path):
-    os.chdir(tmp_path)
-    config_data = {
-        "schema_version": 1,
-        "project": {"name": "x", "registry_path": str(tmp_path / "reg"),
-                    "trace_path": str(tmp_path / "t.db")},
-        "tasks": {"sample_floor": 10},
-        "llm": {"provider": "mock", "model": "m", "api_key": "",
-                "temperature": 0.0, "max_tokens": 4096, "timeout": 30},
-        "ab_test": {"n_resamples": 100, "n_permutations": 100,
-                    "confidence_level": 0.95, "min_effect_size": 0.05,
-                    "cost_ceiling_usd": 0.10},
-        "gate": {"max_edit_distance": 20, "drift_threshold": 0.3, "near_miss_threshold": 0.5},
-        "analyzer": {"max_proposals_per_batch": 3, "cost_ceiling_usd": 0.50},
-        "trigger": "batch", "trace_retention_days": 90,
-    }
-    with open("agent-self-edit.yaml", "w") as f:
-        yaml.dump(config_data, f)
-    result = runner.invoke(main, ["status", "--json"])
-    assert result.exit_code == 0
-    data = json.loads(result.output)
-    assert "prompt_version" in data
+def test_status_json_empty(runner):
+    with runner.isolated_filesystem():
+        config_data = {
+            "schema_version": 1,
+            "project": {"name": "x", "registry_path": str(Path() / "reg"),
+                        "trace_path": str(Path() / "t.db")},
+            "tasks": {"sample_floor": 10},
+            "llm": {"provider": "mock", "model": "m", "api_key": "",
+                    "temperature": 0.0, "max_tokens": 4096, "timeout": 30},
+            "ab_test": {"n_resamples": 100, "n_permutations": 100,
+                        "confidence_level": 0.95, "min_effect_size": 0.05,
+                        "cost_ceiling_usd": 0.10},
+            "gate": {"max_edit_distance": 20, "drift_threshold": 0.3, "near_miss_threshold": 0.5},
+            "analyzer": {"max_proposals_per_batch": 3, "cost_ceiling_usd": 0.50},
+            "trigger": "batch", "trace_retention_days": 90,
+        }
+        with open("agent-self-edit.yaml", "w") as f:
+            yaml.dump(config_data, f)
+        result = runner.invoke(main, ["status", "--json"])
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert "prompt_version" in data
 
 
 def test_ingest_valid_trace(runner, cfg_dir):
-    os.chdir(cfg_dir.parent)
     trace_file = cfg_dir.parent / "trace.jsonl"
     trace_file.write_text(
         json.dumps({
@@ -210,7 +202,6 @@ def test_ingest_valid_trace(runner, cfg_dir):
 
 
 def test_diff_with_registry(runner, cfg_dir):
-    os.chdir(cfg_dir.parent)
     reg = Registry(cfg_dir.parent / "reg")
     reg.create("first version")
     reg.create("second version with changes")
@@ -221,7 +212,6 @@ def test_diff_with_registry(runner, cfg_dir):
 
 
 def test_lineage_with_registry(runner, cfg_dir):
-    os.chdir(cfg_dir.parent)
     Registry(cfg_dir.parent / "reg").create("version one")
     Registry(cfg_dir.parent / "reg").create("version two")
     result = runner.invoke(main, ["lineage", "--config", str(cfg_dir)])
@@ -232,12 +222,10 @@ def test_lineage_with_registry(runner, cfg_dir):
 
 
 def test_rollback_with_registry(runner, cfg_dir):
-    os.chdir(cfg_dir.parent)
     Registry(cfg_dir.parent / "reg").create("alpha")
     Registry(cfg_dir.parent / "reg").create("beta")
     result = runner.invoke(main, ["rollback", "1", "--reason", "revert", "--config", str(cfg_dir)])
     assert result.exit_code == 0
-    # Read registry fresh after CLI call
     reg2 = Registry(cfg_dir.parent / "reg")
     assert reg2.current_version == 3
     assert reg2.current_prompt == "alpha"
@@ -250,26 +238,22 @@ def test_diff_help(runner):
 
 
 def test_guardrails_no_data(runner, cfg_dir):
-    os.chdir(cfg_dir.parent)
     result = runner.invoke(main, ["guardrails", "--config", str(cfg_dir)])
     assert result.exit_code == 0
     assert "no guardrail" in result.output.lower() or "no data" in result.output.lower()
 
 
 def test_guardrails_with_edit_flag(runner, cfg_dir):
-    os.chdir(cfg_dir.parent)
     result = runner.invoke(main, ["guardrails", "--edit", "e1", "--config", str(cfg_dir)])
     assert result.exit_code == 0
 
 
 def test_guardrails_json_output(runner, cfg_dir):
-    os.chdir(cfg_dir.parent)
     result = runner.invoke(main, ["guardrails", "--json", "--config", str(cfg_dir)])
     assert result.exit_code == 0
 
 
 def test_lineage_json_format(runner, cfg_dir):
-    os.chdir(cfg_dir.parent)
     Registry(cfg_dir.parent / "reg").create("text")
     result = runner.invoke(main, ["lineage", "--format", "json", "--config", str(cfg_dir)])
     assert result.exit_code == 0
@@ -279,7 +263,6 @@ def test_lineage_json_format(runner, cfg_dir):
 
 
 def test_ingest_with_list_trace(runner, cfg_dir):
-    os.chdir(cfg_dir.parent)
     trace_file = cfg_dir.parent / "traces.jsonl"
     trace_file.write_text(json.dumps([
         {"task_id": "a", "task_input": "x", "final_output": "y",
@@ -293,10 +276,8 @@ def test_ingest_with_list_trace(runner, cfg_dir):
 
 
 def test_propose_with_traces(runner, cfg_dir):
-    os.chdir(cfg_dir.parent)
     reg = Registry(cfg_dir.parent / "reg")
     reg.create("You are a classifier.")
-    # Create a trace store with pending traces
     from agent_self_edit.trace import TraceStore
     store = TraceStore(cfg_dir.parent / "t.db", batch_size=2)
     for i in range(3):
@@ -316,21 +297,18 @@ def test_propose_help(runner):
 
 
 def test_status_text_format(runner, cfg_dir):
-    os.chdir(cfg_dir.parent)
     result = runner.invoke(main, ["status", "--config", str(cfg_dir)])
     assert result.exit_code == 0
     assert "Prompt version" in result.output
 
 
 def test_validate_with_failing_config(runner, tmp_path):
-    os.chdir(tmp_path)
     (tmp_path / "bad.yaml").write_text("not valid yaml: [")
     result = runner.invoke(main, ["validate", "--config", str(tmp_path / "bad.yaml")])
     assert result.exit_code == 2
 
 
 def test_ingest_malformed_line(runner, cfg_dir):
-    os.chdir(cfg_dir.parent)
     trace_file = cfg_dir.parent / "bad.jsonl"
     trace_file.write_text("not json\n")
     result = runner.invoke(main, ["ingest", str(trace_file), "--config", str(cfg_dir)])
@@ -339,7 +317,6 @@ def test_ingest_malformed_line(runner, cfg_dir):
 
 
 def test_ingest_list_format(runner, cfg_dir):
-    os.chdir(cfg_dir.parent)
     trace_file = cfg_dir.parent / "list.jsonl"
     trace_file.write_text(json.dumps([
         {"task_id": "a", "task_input": "x", "final_output": "y",
@@ -351,7 +328,6 @@ def test_ingest_list_format(runner, cfg_dir):
 
 
 def test_ingest_invalid_trace_skipped(runner, cfg_dir):
-    os.chdir(cfg_dir.parent)
     trace_file = cfg_dir.parent / "invalid.jsonl"
     trace_file.write_text(json.dumps({"task_id": "a", "success": True}) + "\n")
     result = runner.invoke(main, ["ingest", str(trace_file), "--config", str(cfg_dir)])
@@ -359,7 +335,6 @@ def test_ingest_invalid_trace_skipped(runner, cfg_dir):
 
 
 def test_lineage_json(runner, cfg_dir):
-    os.chdir(cfg_dir.parent)
     Registry(cfg_dir.parent / "reg").create("content")
     result = runner.invoke(main, ["lineage", "--format", "json", "--config", str(cfg_dir)])
     assert result.exit_code == 0
@@ -368,7 +343,6 @@ def test_lineage_json(runner, cfg_dir):
 
 
 def test_rollback_no_reason(runner, cfg_dir):
-    os.chdir(cfg_dir.parent)
     Registry(cfg_dir.parent / "reg").create("first")
     Registry(cfg_dir.parent / "reg").create("second")
     result = runner.invoke(main, ["rollback", "1", "--config", str(cfg_dir)])
@@ -376,10 +350,58 @@ def test_rollback_no_reason(runner, cfg_dir):
 
 
 def test_validate_json_pass(runner, cfg_dir):
-    os.chdir(cfg_dir.parent)
     Registry(cfg_dir.parent / "reg").create("text")
     result = runner.invoke(main, ["validate", "--json", "--config", str(cfg_dir)])
     assert result.exit_code in (0, 2)
     if result.exit_code == 0:
         data = json.loads(result.output)
         assert data["all_pass"] is True
+
+
+def test_propose_with_mock_llm(runner, cfg_dir):
+    """Propose command with mock LLM: exercises analyze_batch path."""
+    reg = Registry(cfg_dir.parent / "reg")
+    reg.create("You are a classifier.")
+    from agent_self_edit.trace import TraceStore
+    store = TraceStore(cfg_dir.parent / "t.db", batch_size=2)
+    for i in range(3):
+        store.ingest({
+            "task_id": f"t{i}", "task_input": "x", "final_output": "wrong",
+            "expected_output": "right", "success": False,
+            "timestamp": "2026-09-01T10:00:00Z",
+        })
+    result = runner.invoke(main, ["propose", "--config", str(cfg_dir)])
+    assert result.exit_code in (0, 1)
+
+
+def test_run_with_mock_llm_and_trace(runner, cfg_dir):
+    """Run command with mock LLM: exercises _run_once path."""
+    reg = Registry(cfg_dir.parent / "reg")
+    reg.create("You are a classifier.")
+    from agent_self_edit.trace import TraceStore
+    store = TraceStore(cfg_dir.parent / "t.db", batch_size=2)
+    for i in range(3):
+        store.ingest({
+            "task_id": f"t{i}", "task_input": "x", "final_output": "wrong",
+            "expected_output": "right", "success": False,
+            "timestamp": "2026-09-01T10:00:00Z",
+        })
+    result = runner.invoke(main, ["run", "--once", "--config", str(cfg_dir)])
+    assert result.exit_code in (0, 1)
+
+
+# ---- #171: CLI entry point smoke test ----
+
+def test_cli_entry_point():
+    """Verify the CLI entry point works when installed."""
+    import shutil
+    import subprocess
+    entry = shutil.which("agent-self-edit")
+    if entry is None:
+        pytest.skip("agent-self-edit not installed as a console script")
+    result = subprocess.run(
+        [entry, "--help"],
+        capture_output=True, text=True,
+    )
+    assert result.returncode == 0
+    assert "init" in result.stdout

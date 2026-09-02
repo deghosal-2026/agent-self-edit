@@ -1,0 +1,353 @@
+{
+  "winner": "inconclusive",
+  "mean_delta": -0.025000000000000022,
+  "ci_low": -0.125,
+  "ci_high": 0.05,
+  "p_value": 0.71,
+  "effect_size": -0.03125000000000003,
+  "n_trials": 40,
+  "cost_usd": 0.0736428,
+  "token_count": 22316,
+  "per_task": [
+    {
+      "task_id": "promote-001",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "security",
+      "output_b": "security"
+    },
+    {
+      "task_id": "promote-002",
+      "score_a": 1.0,
+      "score_b": 0.0,
+      "delta": -1.0,
+      "output_a": "urgent",
+      "output_b": "billing"
+    },
+    {
+      "task_id": "promote-003",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "billing",
+      "output_b": "billing"
+    },
+    {
+      "task_id": "promote-004",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "technical",
+      "output_b": "technical"
+    },
+    {
+      "task_id": "promote-005",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "feature",
+      "output_b": "feature"
+    },
+    {
+      "task_id": "promote-006",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "urgent",
+      "output_b": "urgent"
+    },
+    {
+      "task_id": "promote-007",
+      "score_a": 0.0,
+      "score_b": 1.0,
+      "delta": 1.0,
+      "output_a": "security",
+      "output_b": "technical"
+    },
+    {
+      "task_id": "promote-008",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "billing",
+      "output_b": "billing"
+    },
+    {
+      "task_id": "promote-009",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "feature",
+      "output_b": "feature"
+    },
+    {
+      "task_id": "promote-010",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "feature",
+      "output_b": "feature"
+    },
+    {
+      "task_id": "promote-011",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "billing",
+      "output_b": "billing"
+    },
+    {
+      "task_id": "promote-012",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "technical",
+      "output_b": "technical"
+    },
+    {
+      "task_id": "promote-013",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "feature",
+      "output_b": "feature"
+    },
+    {
+      "task_id": "promote-014",
+      "score_a": 1.0,
+      "score_b": 0.0,
+      "delta": -1.0,
+      "output_a": "urgent",
+      "output_b": "billing"
+    },
+    {
+      "task_id": "promote-015",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "security",
+      "output_b": "security"
+    },
+    {
+      "task_id": "promote-016",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "technical",
+      "output_b": "technical"
+    },
+    {
+      "task_id": "promote-017",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "billing",
+      "output_b": "billing"
+    },
+    {
+      "task_id": "promote-018",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "security",
+      "output_b": "security"
+    },
+    {
+      "task_id": "promote-019",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "feature",
+      "output_b": "feature"
+    },
+    {
+      "task_id": "promote-020",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "technical",
+      "output_b": "technical"
+    },
+    {
+      "task_id": "promote-021",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "billing",
+      "output_b": "billing"
+    },
+    {
+      "task_id": "promote-022",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "technical",
+      "output_b": "technical"
+    },
+    {
+      "task_id": "promote-023",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "billing",
+      "output_b": "billing"
+    },
+    {
+      "task_id": "promote-024",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "urgent",
+      "output_b": "urgent"
+    },
+    {
+      "task_id": "promote-025",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "feature",
+      "output_b": "feature"
+    },
+    {
+      "task_id": "promote-026",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "technical",
+      "output_b": "technical"
+    },
+    {
+      "task_id": "promote-027",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "security",
+      "output_b": "security"
+    },
+    {
+      "task_id": "promote-028",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "technical",
+      "output_b": "technical"
+    },
+    {
+      "task_id": "promote-029",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "feature",
+      "output_b": "feature"
+    },
+    {
+      "task_id": "promote-030",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "billing",
+      "output_b": "billing"
+    },
+    {
+      "task_id": "promote-031",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "urgent",
+      "output_b": "urgent"
+    },
+    {
+      "task_id": "promote-032",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "technical",
+      "output_b": "technical"
+    },
+    {
+      "task_id": "promote-033",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "security",
+      "output_b": "security"
+    },
+    {
+      "task_id": "promote-034",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "feature",
+      "output_b": "feature"
+    },
+    {
+      "task_id": "promote-035",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "billing",
+      "output_b": "billing"
+    },
+    {
+      "task_id": "promote-036",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "urgent",
+      "output_b": "urgent"
+    },
+    {
+      "task_id": "promote-037",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "technical",
+      "output_b": "technical"
+    },
+    {
+      "task_id": "promote-038",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "feature",
+      "output_b": "feature"
+    },
+    {
+      "task_id": "promote-039",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "billing",
+      "output_b": "billing"
+    },
+    {
+      "task_id": "promote-040",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "technical",
+      "output_b": "technical"
+    }
+  ],
+  "gate": {
+    "decision": "reject",
+    "reason": "1/6 checks passed; below near-miss threshold (50%)",
+    "checks": [
+      {
+        "name": "sample_floor",
+        "passed": true,
+        "value": 40.0,
+        "threshold": 5.0,
+        "details": "n_trials (40) >= sample floor (5)"
+      },
+      {
+        "name": "effect_size",
+        "passed": false,
+        "value": -0.03125000000000003,
+        "threshold": 0.05,
+        "details": "effect size (-3.1%) < min (5.0%)"
+      }
+    ]
+  }
+}

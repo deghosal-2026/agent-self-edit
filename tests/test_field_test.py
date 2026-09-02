@@ -7,11 +7,9 @@ import pytest
 import yaml
 
 from agent_self_edit.ab_test import run_ab_test
-from agent_self_edit.config import Config, ProjectConfig
+from agent_self_edit.config import ABTestConfig, Config, GateConfig, TasksConfig
 from agent_self_edit.gate import PromotionGate, check_all
-from agent_self_edit.llm.mock import MockProvider
 from agent_self_edit.registry import Registry
-from agent_self_edit.scorers import ExactMatchScorer
 from agent_self_edit.tasks import Task, TaskSet, load_task_set
 from agent_self_edit.trace import TraceStore
 from agent_self_edit.types import EditProposal
@@ -22,26 +20,11 @@ from agent_self_edit.types import EditProposal
 @pytest.fixture(scope="session")
 def task_sets():
     """Load all 3 task sets from the corpus."""
-    base = Path(__file__).resolve().parent.parent / "field-test" / "v0.1.0" / "corpus" / "synthetic"
+    base = Path(__file__).resolve().parent.parent / "field-test" / "corpus" / "synthetic"
     classification = load_task_set(str(base / "classification.yaml"))
     extraction = load_task_set(str(base / "extraction.yaml"))
     generation = load_task_set(str(base / "generation.yaml"))
     return {"classification": classification, "extraction": extraction, "generation": generation}
-
-
-@pytest.fixture
-def config():
-    return Config(project=ProjectConfig(name="x"))
-
-
-@pytest.fixture
-def mock_llm():
-    return MockProvider(responses="mock output")
-
-
-@pytest.fixture
-def scorer():
-    return ExactMatchScorer()
 
 
 # ---- Baseline measurement (#7) ----
@@ -105,35 +88,172 @@ def test_dry_run_loop(tmp_path, config):
 
 
 def test_gate_rejects_bad_edits(config):
-    """Feed 5 intentionally bad edits through gate; all must be rejected."""
-    prompt = "You are a classifier assistant. When classifying, check the subject line."
-    bad_edits = [
-        EditProposal(section="classifier", old_text="check the subject line",
-            new_text="ignore the subject line", hypothesis="skip",
-            expected_improvement="", edit_id="b1"),
-        EditProposal(section="classifier", old_text="You are a classifier assistant.",
-            new_text="You are NOT a classifier.", hypothesis="break",
-            expected_improvement="", edit_id="b2"),
-        EditProposal(section="classifier", old_text="check the subject line",
+    """Feed 5 intentionally bad edits through gate; each must be blocked by its specific check."""
+    from agent_self_edit.ab_test import ABResult
+
+    # All 5 edits share the same A/B result (stats pass with right configs)
+    ab = ABResult(winner="b", mean_delta=0.1, ci_low=0.05, ci_high=0.15,
+        p_value=0.01, effect_size=0.1, n_trials=10)
+
+    # Prompt with a frozen section to test frozen_sections check
+    frozen_prompt = (
+        "You are a classifier assistant.\n"
+        "<!-- frozen -->\n"
+        "When classifying, check the subject line.\n"
+    )
+
+    edits_info = [
+        # 1) Frozen section edit — frozen_sections check must block this
+        ("frozen_section_edit", EditProposal(section="core",
+            old_text="When classifying, check the subject line.",
+            new_text="When classifying, ignore the subject line.",
+            hypothesis="skip", expected_improvement="", edit_id="b1"),
+            frozen_prompt,
+            Config(
+                project=config.project,
+                tasks=TasksConfig(sample_floor=1),
+                ab_test=ABTestConfig(confidence_level=0.95, min_effect_size=0.0),
+                gate=GateConfig(max_edit_distance=100, drift_threshold=1.0),
+            ),
+            "frozen_sections"),
+        # 2) Excessive edit distance — edit_distance check must block this
+        ("excessive_distance", EditProposal(section="classifier",
+            old_text="You are a classifier assistant.",
+            new_text="You are a classifier assistant for urgent tickets.",
+            hypothesis="break", expected_improvement="", edit_id="b2"),
+            "You are a classifier assistant.",
+            Config(
+                project=config.project,
+                tasks=TasksConfig(sample_floor=1),
+                ab_test=ABTestConfig(confidence_level=0.95, min_effect_size=0.0),
+                gate=GateConfig(max_edit_distance=0, drift_threshold=1.0),
+            ),
+            "edit_distance"),
+        # 3) Empty replacement — edit_distance check blocks (candidate shorter)
+        ("empty_replacement", EditProposal(section="classifier",
+            old_text="You are a classifier assistant.",
             new_text="", hypothesis="empty",
             expected_improvement="", edit_id="b3"),
-        EditProposal(section="frozen", old_text="You are a",
-            new_text="You are a malicious", hypothesis="hack",
-            expected_improvement="", edit_id="b4"),
-        EditProposal(section="classifier", old_text="not in prompt",
-            new_text="something", hypothesis="missing",
-            expected_improvement="", edit_id="b5"),
+            "You are a classifier assistant.",
+            Config(
+                project=config.project,
+                tasks=TasksConfig(sample_floor=1),
+                ab_test=ABTestConfig(confidence_level=0.95, min_effect_size=0.0),
+                gate=GateConfig(max_edit_distance=0, drift_threshold=1.0),
+            ),
+            "edit_distance"),
+        # 4) Full rewrite drift — drift check must block this
+        ("full_rewrite_drift", EditProposal(section="classifier",
+            old_text="You are a classifier assistant.",
+            new_text="Please extract the shipping address, order id, and payment method from the following customer email.",
+            hypothesis="drift", expected_improvement="", edit_id="b4"),
+            "You are a classifier assistant.",
+            Config(
+                project=config.project,
+                tasks=TasksConfig(sample_floor=1),
+                ab_test=ABTestConfig(confidence_level=0.95, min_effect_size=0.0),
+                gate=GateConfig(max_edit_distance=100, drift_threshold=0.1),
+            ),
+            "drift"),
+        # 5) Missing old_text — frozen_sections pre-check blocks (old_text not in prompt)
+        ("missing_old_text", EditProposal(section="classifier",
+            old_text="not in prompt", new_text="something",
+            hypothesis="missing", expected_improvement="", edit_id="b5"),
+            "You are a classifier assistant.",
+            Config(
+                project=config.project,
+                tasks=TasksConfig(sample_floor=1),
+                ab_test=ABTestConfig(confidence_level=0.95, min_effect_size=0.0),
+                gate=GateConfig(max_edit_distance=100, drift_threshold=1.0),
+            ),
+            "frozen_sections"),
     ]
-    from agent_self_edit.ab_test import ABResult
-    ab = ABResult(winner="tie", mean_delta=0.0, ci_low=0.0, ci_high=0.0,
-        p_value=1.0, effect_size=0.0, n_trials=0)
 
-    rejected = 0
-    for edit in bad_edits:
-        result = check_all(edit, ab, prompt, prompt, config)
-        if result.decision == "reject":
-            rejected += 1
-    assert rejected >= 3, f"Only {rejected}/5 bad edits rejected"
+    for name, edit, prompt, ft_config, expected_failing_check in edits_info:
+        result = check_all(edit, ab, prompt, prompt, ft_config)
+        assert result.decision != "promote", (
+            f"Edit '{name}' ({edit.edit_id}) was promoted (expected reject/near-miss)"
+        )
+        # The first failed check should match the expected failure mode
+        failed_checks = [c for c in result.checks if not c.passed]
+        assert failed_checks, f"Edit '{name}' has no failed checks"
+        assert failed_checks[0].name == expected_failing_check, (
+            f"Edit '{name}' ({edit.edit_id}): first failing check was "
+            f"'{failed_checks[0].name}', expected '{expected_failing_check}'. "
+            f"All checks: {[(c.name, c.passed) for c in result.checks]}"
+        )
+
+
+def test_gate_rejects_frozen_section_edit(config):
+    """Failure-mode-specific: editing a frozen section must not be promoted."""
+    from agent_self_edit.config import ABTestConfig, GateConfig, TasksConfig
+    ft_config = Config(
+        project=config.project,
+        tasks=TasksConfig(sample_floor=1),
+        ab_test=ABTestConfig(confidence_level=0.95, min_effect_size=0.0),
+        gate=GateConfig(max_edit_distance=1, drift_threshold=0.1),
+    )
+    prompt = (
+        "You are a classifier assistant.\n"
+        "<!-- frozen -->\n"
+        "When classifying, check the subject line.\n"
+    )
+    edit = EditProposal(
+        section="core", old_text="When classifying, check the subject line.",
+        new_text="When classifying, check the body first.",
+        hypothesis="change frozen", expected_improvement="", edit_id="frozen-test",
+    )
+    ab = _null_ab_result()
+    result = check_all(edit, ab, prompt, prompt, ft_config)
+    assert result.decision != "promote", "Frozen section edit was promoted"
+    # At least one failed check should relate to frozen sections
+    assert any("frozen" in c.name for c in result.checks if not c.passed), (
+        f"Expected a frozen-section check failure, got: {[f'{c.name}={c.passed}' for c in result.checks]}"
+    )
+
+
+def test_gate_rejects_missing_old_text(config):
+    """Failure-mode-specific: edit with missing old_text must not be promoted."""
+    from agent_self_edit.config import ABTestConfig, GateConfig, TasksConfig
+    ft_config = Config(
+        project=config.project,
+        tasks=TasksConfig(sample_floor=1),
+        ab_test=ABTestConfig(confidence_level=0.95, min_effect_size=0.0),
+        gate=GateConfig(max_edit_distance=20, drift_threshold=0.3),
+    )
+    edit = EditProposal(
+        section="role", old_text="does not exist", new_text="something",
+        hypothesis="missing", expected_improvement="", edit_id="missing-test",
+    )
+    ab = _null_ab_result()
+    result = check_all(edit, ab, "current prompt", "current prompt", ft_config)
+    assert result.decision != "promote", "Missing-old-text edit was promoted"
+
+
+def test_gate_rejects_excessive_edit_distance(config):
+    """Failure-mode-specific: excessive edit distance must not be promoted."""
+    from agent_self_edit.config import ABTestConfig, GateConfig, TasksConfig
+    ft_config = Config(
+        project=config.project,
+        tasks=TasksConfig(sample_floor=1),
+        ab_test=ABTestConfig(confidence_level=0.95, min_effect_size=0.0),
+        gate=GateConfig(max_edit_distance=2, drift_threshold=0.3),
+    )
+    prompt = "a"
+    edit = EditProposal(
+        section="role", old_text="a",
+        new_text="a\nb\nc\nd\ne\nf\ng",
+        hypothesis="too long", expected_improvement="", edit_id="dist-test",
+    )
+    ab = _null_ab_result()
+    result = check_all(edit, ab, prompt, prompt, ft_config)
+    assert result.decision != "promote", "Excessive-edit-distance edit was promoted"
+
+
+def _null_ab_result():
+    from agent_self_edit.ab_test import ABResult
+    return ABResult(winner="b", mean_delta=1.0, ci_low=0.5, ci_high=1.5,
+        p_value=0.01, effect_size=1.0, n_trials=10)
 
 
 # ---- Rollback test (#10) ----
@@ -243,3 +363,16 @@ def test_guardrail_stress_100_edits(config):
         decisions[d] = decisions.get(d, 0) + 1
     assert "reject" in decisions or "near_miss" in decisions or "promote" in decisions
     assert sum(decisions.values()) == 100
+
+
+# ---- Sentinel corpus (#128) ----
+
+
+def test_sentinel_corpus_loads():
+    """Regression-sentinel corpus loads and validates correctly."""
+    base = Path(__file__).resolve().parent.parent / "field-test" / "corpus" / "synthetic"
+    sentinel_path = str(base / "sentinel.yaml")
+    ts = load_task_set(sentinel_path)
+    assert len(ts) >= 15, f"Sentinel corpus too small: {len(ts)} tasks"
+    assert ts.get_task("sentinel-001") is not None
+    assert ts.get_task("sentinel-020") is not None

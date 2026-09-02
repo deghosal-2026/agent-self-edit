@@ -1,0 +1,15 @@
+{
+  "n_proposals": 1,
+  "cost_usd": 0.0034649999999999998,
+  "tokens_used": 1050,
+  "proposals": [
+    {
+      "section": "Rules",
+      "old_text": "- urgent: immediate action (system down, blocked workflow, security breach)",
+      "new_text": "- urgent: immediate action (system down, blocked workflow, security breach) that requires immediate intervention (e.g., 'down', 'blocked', 'breach')",
+      "hypothesis": "Adding explicit urgency cues in parentheses helps the model distinguish between urgent and non-urgent technical/security issues by requiring specific keywords.",
+      "expected_improvement": "Reduction in overgeneralization to 'urgent' (pattern 1) by 20-30% and clearer distinction between 'urgent' and 'security' (pattern 2) by 15-25%.",
+      "evidence_traces": []
+    }
+  ]
+}

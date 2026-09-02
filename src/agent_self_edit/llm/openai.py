@@ -21,9 +21,9 @@ class OpenAIProvider(LLMProvider):
     The client is created lazily so the provider can be constructed in
     hermetic CI without an API key.
 
-    If the ``AGENT_SELF_EDIT_LLM_LOG`` environment variable points to a
-    writable file path, every request/response pair is appended there as
-    JSON-lines. This is how the Docker field test captures LLM traffic.
+    ``extra_body`` is configurable per-role (defaults to
+    ``{"chat_template_kwargs": {"enable_thinking": False}}`` for
+    backends that need it). Set to ``None`` or ``{}`` to omit.
     """
 
     def __init__(
@@ -33,12 +33,14 @@ class OpenAIProvider(LLMProvider):
         base_url: str | None = None,
         timeout: float = 30.0,
         max_tokens: int = 2048,
+        extra_body: dict[str, Any] | None = None,
     ) -> None:
         self.model = model
         self._api_key = api_key
         self._base_url = base_url
         self._timeout = timeout
         self._max_tokens = max_tokens
+        self._extra_body = extra_body
         self._client: Any | None = None
         self._traffic_log = os.environ.get("AGENT_SELF_EDIT_LLM_LOG")
 
@@ -88,14 +90,16 @@ class OpenAIProvider(LLMProvider):
         t0 = time.time()
         response = None
         try:
-            response = client.chat.completions.create(
+            kwargs: dict[str, Any] = dict(
                 model=self.model,
                 messages=messages,
                 temperature=temperature,
                 max_tokens=self._max_tokens,
-                extra_body={"chat_template_kwargs": {"enable_thinking": False}},
             )
-        except Exception as e:  # noqa: BLE001 - provider exceptions are opaque
+            if self._extra_body:
+                kwargs["extra_body"] = self._extra_body
+            response = client.chat.completions.create(**kwargs)
+        except Exception as e:
             self._log_traffic({
                 "model": self.model,
                 "base_url": self._base_url,

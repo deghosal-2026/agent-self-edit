@@ -5,6 +5,71 @@ All notable changes to AgentSelfEdit are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] — 2026-09-02
+
+### Added
+
+- **Runtime scorer selection** (M2): Scorers auto-selected based on task type — exact match, structural extraction, LLM judge — instead of hardcoded to exact match
+- **Classification subsets** (M2): Subset-aware scoring for multi-label, ambiguous, boundary, and legacy classification traces
+- **Label-set-aware scorers** (M2): Scorers that compare sets of labels rather than exact strings, capturing partial credit
+- **Staged analyzer pipeline** (M3): Four-stage analyzer — summarize, select, synthesize, score — with failure summarization and proposal diversification
+- **Regression sentinel** (M3): Held-out corpus scored at each iteration to detect regressions before promotion
+- **Multi-suite runner** (M3): Per-suite runner modes (classification, extraction, generation, mixed-domain)
+- **Extraction scorer** (M3): StructuredExtractionScorer for nested fields, null handling, and conflicting-source precedence
+- **Model role separation** (M4): executor, analyzer, and judge roles with per-role provider config
+- **Benchmark manifests** (M4): Benchmark-role manifests with disjointness validation and scorer compatibility
+- **Local-model comparison** (M4): 4B + 4B and 4B + 9B model role configurations with cost/latency comparison
+- **Optimizer-effectiveness metrics** (M4): Per-iteration improvement tracking, cost-per-iteration breakdown
+- **Larger A/B task sets** (M5): 40-task promotion corpus replacing the fragile 5-task set
+- **Prompt style for small models** (M5): Simplified prompt templates optimized for sub-9B models
+- **Canonical classification examples** (M5): Gold-labeled classification examples in corpus
+- **Missing corpus types** (M5): Extraction, generation, and mixed-domain corpus types
+- **Rejection-aware analyzer** (M5): Structured rejection feedback feeding into subsequent analyzer calls
+- **Row-identity trace acknowledgement** (M6): Immutable row-ID based ack, retry-safe batch processing
+- **In-flight reservation state** (M6): Atomic row reservation prevents concurrent duplicate fetch
+- **Benchmark validation** (M6): Validates benchmark-role compatibility, scorer selection
+- **CI/CD pipeline** (M7): GitHub Actions CI across Python 3.10–3.12 with ruff, mypy, coverage
+- **Hermetic test suite** (M7): Zero LLM call CI tests — mock providers used throughout
+- **Conftest fixture deduplication** (M7): Shared fixtures in conftest.py, reduced boilerplate
+- **Docker multi-domain tests** (M8): Classification, extraction, generation, staged analyzer Docker tests
+- **Adversarial edit field test** (M8): 5+ intentionally bad edits injected and rejected; 100+ random edit stress test
+- **Real-trace ingestion** (M8): Real-trace corpus with analyzer quality measurement
+- **LLM integration tests** (M8): 4B+4B and 4B+9B model role configurations tested
+
+### Fixed
+
+- **Gate edit-distance** (M1): #117 — measured against full candidate prompt instead of fragment
+- **Gate drift detection** (M1): #118 — measured against original prompt baseline, not current prompt
+- **A/B alpha semantics** (M1): #119 — `p < (1 - confidence_level)` instead of `p < confidence_level`
+- **Promotion persistence** (M1): #116 — candidate prompt materialized using full prompt, not just edited fragment
+- **Runtime scorer selection** (M2): Scorer resolved from benchmark manifest instead of hardcoded
+- **Hermetic bad-edit rejection** (M3): Gate correctly rejects intentionally bad edits in hermetic tests
+- **Per-suite runner modes** (M3): Suite selection driven by manifest/benchmark-role, no hardcoded task IDs
+- **Staged analyzer default wiring** (M7.5): Staged analyzer is now the default path
+- **Rejection context threading** (M7.5): rejection_context threaded into Stage 1/2/3 prompts
+- **Model role wiring** (M7.5): Executor, analyzer, and judge routes through separate provider configs
+- **CLI exit code determinism** (M7.5): All fatal CLI errors produce deterministic non-zero exit codes
+- **`init` writes runnable config** (M7.5): Starter config persisted to disk
+- **`validate` checks runnability** (M7.5): Validates end-to-end runnability, not just parseability
+- **CI coverage threshold** (M7.5): --cov-fail-under raised, lint scope covers whole repo
+- **Coverage**: 81% (v0.2.0 target 92% accepted at 81%; tracked for v0.2.1)
+
+### Changed
+
+- **Field-test corpora**: Consolidated under field-test/corpus/ with versioned paths
+- **Dockerfile**: Multi-stage build, reduced image size, pinned dependencies
+- **Scorer contract**: Scorer consistency enforced across task sets; mixed scorer sets fail fast
+- **Analyzer architecture**: Staged pipeline replaces monolithic analyzer as default
+- **CI**: Python 3.10–3.12 matrix, ruff covers full repo, coverage enforced
+
+### Known Issues
+
+- **Rejection context threading**: #205 — staged analyzer acceptance_context was not populated in all paths during field test; proposal-diversification conclusions are stale
+- **Coverage**: 81% (target: 92%) — gaps in analyzer, CLI propose/run, scorers, trace
+- **Improvement**: 0% over all v0.2.0 runs — the strongest analyzer (Mistral Small 24B) produced directional gains but no promotable edit
+- **GHCR Docker push**: Blocked by token permissions (write:packages scope needed)
+- **Verification coverage**: Acceptance criteria tests for M7.5 adjustments remain partially covered
+
 ## [0.1.0] — 2026-08-31
 
 ### Added

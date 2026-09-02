@@ -34,6 +34,8 @@ class Trace:
     steps: list[dict[str, Any]] = field(default_factory=list)
     failure_reason: str | None = None
     prompt_version: int | None = None
+    row_id: int | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         data: dict[str, Any] = {
@@ -50,6 +52,8 @@ class Trace:
             data["failure_reason"] = self.failure_reason
         if self.prompt_version is not None:
             data["prompt_version"] = self.prompt_version
+        if self.metadata:
+            data["metadata"] = self.metadata
         return data
 
 
@@ -65,8 +69,8 @@ def _validate_timestamp(value: str) -> None:
 def validate_trace(trace: dict[str, Any]) -> Trace:
     """Validate a trace dict and build a :class:`Trace`.
 
-    Extra fields are ignored. Required fields that are missing or of the
-    wrong type raise :class:`ValueError`.
+    Preserves ``metadata`` when present. Extra fields besides metadata
+    and required fields are ignored.
     """
     if not isinstance(trace, dict):
         raise ValueError(f"trace must be a dict, got {type(trace).__name__}")
@@ -75,7 +79,6 @@ def validate_trace(trace: dict[str, Any]) -> Trace:
         if field_name not in trace:
             raise ValueError(f"missing required field: {field_name}")
         value = trace[field_name]
-        # bool is a subclass of int; validate explicitly
         if expected_type is bool:
             if not isinstance(value, bool):
                 raise ValueError(
@@ -119,6 +122,7 @@ def validate_trace(trace: dict[str, Any]) -> Trace:
         steps=[dict(s) if isinstance(s, dict) else s for s in steps],
         failure_reason=failure_reason,
         prompt_version=prompt_version,
+        metadata=trace.get("metadata", {}),
     )
 
 
@@ -138,6 +142,23 @@ class EditProposal:
     expected_improvement: str
     evidence_traces: list[str] = field(default_factory=list)
     edit_id: str | None = None
+
+
+def materialize_candidate_prompt(current_prompt: str, proposal: EditProposal) -> str:
+    """Build the full candidate prompt by applying the edit proposal.
+
+    Replaces ``proposal.old_text`` with ``proposal.new_text`` inside
+    ``current_prompt``. Raises :class:`ValueError` if ``old_text`` is
+    empty or not found in ``current_prompt``.
+    """
+    if not proposal.old_text:
+        raise ValueError("proposal.old_text is empty; cannot materialize candidate")
+    if proposal.old_text not in current_prompt:
+        raise ValueError(
+            f"proposal.old_text not found in current_prompt\n"
+            f"  old_text={proposal.old_text!r}"
+        )
+    return current_prompt.replace(proposal.old_text, proposal.new_text)
 
 
 @dataclass(frozen=True)

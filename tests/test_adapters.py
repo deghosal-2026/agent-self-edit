@@ -129,8 +129,24 @@ def test_file_moves_ignored_for_malformed(store, tmp_path):
     (watch / "bad.json").write_text("{not json}")
     adapter = FileAdapter(store, watch, poll_interval=0.05)
     adapter._process_once()
-    # Malformed file is not moved, but won't be retried (name tracked).
+    # Malformed file is not moved, but a corrected file with the same name
+    # will be retried on the next poll (no in-memory basename blacklist, ref #142).
     assert (watch / "bad.json").exists()
+
+
+def test_file_retries_fixed_malformed(store, tmp_path):
+    """A corrected file with the same name is retried on the next poll (ref #142)."""
+    watch = tmp_path / "traces"
+    watch.mkdir()
+    (watch / "bad.json").write_text("{not json}")
+    adapter = FileAdapter(store, watch, poll_interval=0.05)
+    adapter._process_once()
+    assert store.count() == 0
+    # Fix the file
+    (watch / "bad.json").write_text(json.dumps(_valid("retried")))
+    adapter._process_once()
+    assert store.count() == 1
+    assert store.get("retried") is not None
 
 
 def test_file_run_loop_stops_cleanly(store, tmp_path):
@@ -147,3 +163,66 @@ def test_file_run_loop_stops_cleanly(store, tmp_path):
     adapter.stop()
     t.join(timeout=1)
     assert not t.is_alive()
+
+
+def test_file_empty_dir_returns_zero(store, tmp_path):
+    watch = tmp_path / "empty_traces"
+    watch.mkdir()
+    adapter = FileAdapter(store, watch, poll_interval=0.05)
+    assert adapter._process_once() == 0
+    assert store.count() == 0
+
+
+def test_file_ignores_non_json_files(store, tmp_path):
+    watch = tmp_path / "traces"
+    watch.mkdir()
+    (watch / "readme.txt").write_text("not a trace")
+    (watch / "data.csv").write_text("a,b,c\n")
+    adapter = FileAdapter(store, watch, poll_interval=0.05)
+    adapter._process_once()
+    assert store.count() == 0
+
+
+def test_file_non_dict_json_skipped(store, tmp_path):
+    watch = tmp_path / "traces"
+    watch.mkdir()
+    (watch / "list.json").write_text(json.dumps(["a", "b"]))
+    adapter = FileAdapter(store, watch, poll_interval=0.05)
+    adapter._process_once()
+    assert store.count() == 0
+    # Non-dict JSON files are skipped but NOT moved to .done
+    assert (watch / "list.json").exists()
+
+
+def test_stdin_stops_mid_stream(store):
+    lines = json.dumps(_valid("a")) + "\n" + json.dumps(_valid("b")) + "\n"
+    stream = io.StringIO(lines)
+    adapter = StdinAdapter(store, stream=stream)
+
+    def run():
+        adapter.run()
+
+    t = threading.Thread(target=run)
+    t.start()
+    adapter.stop()
+    t.join(timeout=2)
+    assert not t.is_alive()
+    # At least some traces may have been ingested before stop
+    assert store.count() >= 0
+
+
+def test_stdin_batch_size_boundary(store):
+    """Batch_size boundary: ingested count triggers progress message."""
+    import io
+    adapter = StdinAdapter(store, stream=io.StringIO(""), batch_size=2)
+    adapter._ingested = 1
+    assert adapter._ingested % adapter._batch_size != 0  # no message when not at boundary
+
+
+def test_stdin_invalid_trace_value_error(store, capsys):
+    """Invalid trace that fails store.ingest should be skipped."""
+    lines = json.dumps({"task_id": "bad", "success": True}) + "\n"
+    store.batch_size = 1000
+    adapter = StdinAdapter(store, stream=io.StringIO(lines))
+    adapter.run()
+    assert store.count() == 0

@@ -1,0 +1,466 @@
+{
+  "test": "docker-run-generation",
+  "date": "2026-09-02T04:30:50Z",
+  "image": "agent-self-edit:test",
+  "omlx_model": "Qwen3.5-4B-4bit",
+  "exit_code": 0,
+  "llm_calls_captured": 23,
+  "llm_traffic": [
+    {
+      "model": "Qwen3.5-4B-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "user",
+          "content": "You are analyzing execution traces where a prompt-based\nagent failed. Summarize the recurring failure patterns.\n\nFailed traces:\nTrace 1: task_id=t0, input=\"classify this ticket: 'Topic: outage postmortem. Constraints: 3 paragraphs, root cause section, action items.'\", output=\"other\", expected=\"Postmortem for the 2026-08-30 outage\", failure_reason=\"misclassified \u2014 expected Postmortem for the 2026-08-30 outage\"\nTrace 2: task_id=t1, input=\"classify this ticket: 'Topic: release notes for v2.1.0. Constraints: bullet points, list 3 new features, 2 bug fixes.'\", output=\"other\", expected=\"Release v2.1.0\", failure_reason=\"misclassified \u2014 expected Release v2.1.0\"\nTrace 3: task_id=t2, input=\"classify this ticket: 'Topic: security advisory. Constraints: professional tone, list affected versions, mitigation steps.'\", output=\"other\", expected=\"Security Advisory: CVE-2026-12345\", failure_reason=\"misclassified \u2014 expected Security Advisory: CVE-2026-12345\"\nTrace 4: task_id=t3, input=\"classify this ticket: 'Topic: team standup summary. Constraints: 2 sentences max, completed items, blockers.'\", output=\"other\", expected=\"Standup summary for 2026-09-01\", failure_reason=\"misclassified \u2014 expected Standup summary for 2026-09-01\"\nTrace 5: task_id=t4, input=\"classify this ticket: 'Topic: on-call handoff notes. Constraints: include active incidents, pending actions, next steps.'\", output=\"other\", expected=\"On-call handoff for 2026-09-01\", failure_reason=\"misclassified \u2014 expected On-call handoff for 2026-09-01\"\nTrace 6: task_id=t5, input=\"classify this ticket: 'Topic: architecture decision record. Constraints: context, decision, consequences.'\", output=\"other\", expected=\"ADR-014: Use PostgreSQL for audit storage\", failure_reason=\"misclassified \u2014 expected ADR-014: Use PostgreSQL for audit storage\"\nTrace 7: task_id=t6, input=\"classify this ticket: 'Topic: incident summary. Constraints: casual tone, 1 paragraph, customer impact, time to resolve.'\", output=\"other\", expected=\"Summary of incident INC-2026-09-01\", failure_reason=\"misclassified \u2014 expected Summary of incident INC-2026-09-01\"\nTrace 8: task_id=t7, input=\"classify this ticket: 'Topic: onboarding checklist for new SRE. Constraints: ordered list, 5 items, actionable.'\", output=\"other\", expected=\"SRE Onboarding Checklist\", failure_reason=\"misclassified \u2014 expected SRE Onboarding Checklist\"\nTrace 9: task_id=t8, input=\"classify this ticket: 'Topic: runbook for database failover. Constraints: step-by-step, verification steps, rollback instructions.'\", output=\"other\", expected=\"Runbook: Database Failover\", failure_reason=\"misclassified \u2014 expected Runbook: Database Failover\"\nTrace 10: task_id=t9, input=\"classify this ticket: 'Topic: quarterly OKR review. Constraints: 3 key results, progress status, next quarter focus.'\", output=\"other\", expected=\"Q3 2026 OKR Review\", failure_reason=\"misclassified \u2014 expected Q3 2026 OKR Review\"\n\nIdentify the top 2-3 distinct failure patterns. For each pattern, describe:\n- What went wrong (1 sentence)\n- Which traces exhibit this pattern\n- What the prompt likely lacks or misdirects\n\nRespond as a JSON array of objects with keys: pattern, description, trace_ids."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "```json\n[\n  {\n    \"pattern\": \"Overly specific constraint adherence causing loss of semantic context\",\n    \"description\": \"The model prioritized matching the exact format or count of constraints (e.g., '3 paragraphs', 'bullet points') over recognizing the underlying document type or semantic category of the input.\",\n    \"trace_ids\": [\n      \"t0\",\n      \"t1\",\n      \"t2\",\n      \"t3\",\n      \"t4\",\n      \"t5\",\n      \"t6\",\n      \"t7\",\n      \"t8\",\n      \"t9\"\n    ]\n  },\n  {\n    \"pattern\": \"Failure to map generic topic labels to specific domain entities\",\n    \"description\": \"The model failed to associate the high-level topic (e.g., 'outage postmortem', 'security advisory') with the corresponding specific entity or identifier (e.g., 'Postmortem for 2026-08-30', 'CVE-2026-12345') provided in the context.\",\n    \"trace_ids\": [\n      \"t0\",\n      \"t1\",\n      \"t2\",\n      \"t3\",\n      \"t4\",\n      \"t5\",\n      \"t6\",\n      \"t7\",\n      \"t8\",\n      \"t9\"\n    ]\n  },\n  {\n    \"pattern\": \"Inability to handle compound classification tasks with conflicting constraints\",\n    \"description\": \"When the input required both a specific structural format (e.g., '2 sentences max') and a specific content category (e.g., 'casual tone'), the model defaulted to a generic 'other' label instead of attempting the correct classification.\",\n    \"trace_ids\": [\n      \"t3\",\n      \"t4\",\n      \"t6\",\n      \"t7\",\n      \"t8\",\n      \"t9\"\n    ]\n  }\n]\n```",
+      "usage": {
+        "prompt_tokens": 869,
+        "completion_tokens": 438,
+        "total_tokens": 1307
+      },
+      "latency_ms": 11978
+    },
+    {
+      "model": "Qwen3.5-4B-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "user",
+          "content": "You are choosing which part of a prompt to edit.\n\nCurrent prompt (frozen sections marked with [FROZEN]):\nYou are a helpful classification assistant.\n\nFailure patterns identified in the traces:\n[\n  {\n    \"pattern\": \"Overly specific constraint adherence causing loss of semantic context\",\n    \"description\": \"The model prioritized matching the exact format or count of constraints (e.g., '3 paragraphs', 'bullet points') over recognizing the underlying document type or semantic category of the input.\",\n    \"trace_ids\": [\n      \"t0\",\n      \"t1\",\n      \"t2\",\n      \"t3\",\n      \"t4\",\n      \"t5\",\n      \"t6\",\n      \"t7\",\n      \"t8\",\n      \"t9\"\n    ]\n  },\n  {\n    \"pattern\": \"Failure to map generic topic labels to specific domain entities\",\n    \"description\": \"The model failed to associate the high-level topic (e.g., 'outage postmortem', 'security advisory') with the corresponding specific entity or identifier (e.g., 'Postmortem for 2026-08-30', 'CVE-2026-12345') provided in the context.\",\n    \"trace_ids\": [\n      \"t0\",\n      \"t1\",\n      \"t2\",\n      \"t3\",\n      \"t4\",\n      \"t5\",\n      \"t6\",\n      \"t7\",\n      \"t8\",\n      \"t9\"\n    ]\n  },\n  {\n    \"pattern\": \"Inability to handle compound classification tasks with conflicting constraints\",\n    \"description\": \"When the input required both a specific structural format (e.g., '2 sentences max') and a specific content category (e.g., 'casual tone'), the model defaulted to a generic 'other' label instead of attempting the correct classification.\",\n    \"trace_ids\": [\n      \"t3\",\n      \"t4\",\n      \"t6\",\n      \"t7\",\n      \"t8\",\n      \"t9\"\n    ]\n  }\n]\n\nSelect exactly ONE section of the prompt to modify. Choose the section whose\nchange would address the most failure patterns with the smallest edit.\n\nRespond as JSON: {\"section\": \"...\", \"rationale\": \"...\"}"
+        }
+      ],
+      "temperature": 0.0,
+      "response": "{\n  \"section\": \"You are a helpful classification assistant.\",\n  \"rationale\": \"The failure patterns indicate the model is failing to balance structural constraints with semantic understanding. The current role definition ('You are a helpful classification assistant') is too generic and lacks explicit instructions to prioritize semantic categorization over rigid formatting. By expanding this section to explicitly instruct the model to 'prioritize identifying the underlying document type and semantic category over strict adherence to format or count constraints,' we directly address the 'Overly specific constraint adherence' and 'Failure to map generic topic labels' patterns. This also implicitly resolves the 'conflicting constraints' issue by establishing a hierarchy of importance (semantic > structural), guiding the model to attempt classification even when constraints seem contradictory.\"\n}",
+      "usage": {
+        "prompt_tokens": 531,
+        "completion_tokens": 153,
+        "total_tokens": 684
+      },
+      "latency_ms": 4595
+    },
+    {
+      "model": "Qwen3.5-4B-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "user",
+          "content": "You are making a minimal edit to a prompt.\n\nCurrent prompt (frozen sections marked with [FROZEN]):\nYou are a helpful classification assistant.\n\nTarget section: You are a helpful classification assistant.\nRationale: The failure patterns indicate the model is failing to balance structural constraints with semantic understanding. The current role definition ('You are a helpful classification assistant') is too generic and lacks explicit instructions to prioritize semantic categorization over rigid formatting. By expanding this section to explicitly instruct the model to 'prioritize identifying the underlying document type and semantic category over strict adherence to format or count constraints,' we directly address the 'Overly specific constraint adherence' and 'Failure to map generic topic labels' patterns. This also implicitly resolves the 'conflicting constraints' issue by establishing a hierarchy of importance (semantic > structural), guiding the model to attempt classification even when constraints seem contradictory.\n\nFailure patterns to address:\n[\n  {\n    \"pattern\": \"Overly specific constraint adherence causing loss of semantic context\",\n    \"description\": \"The model prioritized matching the exact format or count of constraints (e.g., '3 paragraphs', 'bullet points') over recognizing the underlying document type or semantic category of the input.\",\n    \"trace_ids\": [\n      \"t0\",\n      \"t1\",\n      \"t2\",\n      \"t3\",\n      \"t4\",\n      \"t5\",\n      \"t6\",\n      \"t7\",\n      \"t8\",\n      \"t9\"\n    ]\n  },\n  {\n    \"pattern\": \"Failure to map generic topic labels to specific domain entities\",\n    \"description\": \"The model failed to associate the high-level topic (e.g., 'outage postmortem', 'security advisory') with the corresponding specific entity or identifier (e.g., 'Postmortem for 2026-08-30', 'CVE-2026-12345') provided in the context.\",\n    \"trace_ids\": [\n      \"t0\",\n      \"t1\",\n      \"t2\",\n      \"t3\",\n      \"t4\",\n      \"t5\",\n      \"t6\",\n      \"t7\",\n      \"t8\",\n      \"t9\"\n    ]\n  },\n  {\n    \"pattern\": \"Inability to handle compound classification tasks with conflicting constraints\",\n    \"description\": \"When the input required both a specific structural format (e.g., '2 sentences max') and a specific content category (e.g., 'casual tone'), the model defaulted to a generic 'other' label instead of attempting the correct classification.\",\n    \"trace_ids\": [\n      \"t3\",\n      \"t4\",\n      \"t6\",\n      \"t7\",\n      \"t8\",\n      \"t9\"\n    ]\n  }\n]\n\nPropose ONE minimal edit:\n- old_text: exact text from the current prompt (must match character-for-character)\n- new_text: replacement text (change the fewest characters possible)\n- hypothesis: why this specific change helps (1-2 sentences)\n- expected_improvement: measurable expectation\n\nRespond as JSON: {\"section\": \"...\", \"old_text\": \"...\", \"new_text\": \"...\",\n\"hypothesis\": \"...\", \"expected_improvement\": \"...\"}"
+        }
+      ],
+      "temperature": 0.0,
+      "response": "{\n  \"section\": \"You are a helpful classification assistant.\",\n  \"old_text\": \"You are a helpful classification assistant.\",\n  \"new_text\": \"You are a helpful classification assistant. Prioritize identifying the underlying document type and semantic category over strict adherence to format or count constraints.\",\n  \"hypothesis\": \"By explicitly establishing a hierarchy where semantic categorization takes precedence over structural constraints, the model is guided to recognize the core intent of the input rather than getting stuck on rigid formatting rules.\",\n  \"expected_improvement\": \"Reduced instances of 'other' labels due to conflicting constraints and improved accuracy in mapping generic topic labels to specific domain entities by forcing semantic analysis before format validation.\"\n}",
+      "usage": {
+        "prompt_tokens": 730,
+        "completion_tokens": 148,
+        "total_tokens": 878
+      },
+      "latency_ms": 4585
+    },
+    {
+      "model": "Qwen3.5-4B-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "user",
+          "content": "You are a helpful classification assistant.\n\n---\n\nTask: Topic: outage postmortem. Constraints: 3 paragraphs, root cause section, action items."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "The recent outage affecting the primary user-facing application lasted approximately four hours, impacting approximately 40% of active users during peak traffic hours. Initial diagnostics revealed a cascading failure originating from a database connection pool exhaustion, which triggered a cascade of timeouts across the microservices architecture. This issue was exacerbated by a sudden spike in traffic due to a scheduled feature launch that failed to account for the increased load, combined with a known but unpatched vulnerability in the connection pooling library that prevented the system from gracefully handling high concurrency.\n\nUpon deeper investigation, the root cause was identified as a combination of insufficient capacity planning and a lack of automated scaling triggers for the database layer. Specifically, the application team had not updated the connection pool size to accommodate the projected traffic surge, and the monitoring system failed to detect the degradation in response times early enough to trigger an automatic horizontal scaling event. Additionally, the dependency on an outdated library version introduced a race condition that caused connections to be prematurely closed, leading to the eventual exhaustion of available slots and subsequent service unavailability.\n\nTo prevent recurrence, the following action items have been prioritized for immediate implementation: first, we will conduct a comprehensive audit of all third-party dependencies and update the connection pooling library to the latest stable version within the next 48 hours. Second, the infrastructure team will implement dynamic scaling policies that automatically increase database resources when latency thresholds are breached, ensuring resilience during traffic spikes. Finally, a post-mortem review will be scheduled to update the incident response playbooks, ensuring that similar cascading failures are detected and contained within 15 minutes in the future.",
+      "usage": {
+        "prompt_tokens": 44,
+        "completion_tokens": 322,
+        "total_tokens": 366
+      },
+      "latency_ms": 8529
+    },
+    {
+      "model": "Qwen3.5-4B-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "user",
+          "content": "You are a helpful classification assistant. Prioritize identifying the underlying document type and semantic category over strict adherence to format or count constraints.\n\n---\n\nTask: Topic: outage postmortem. Constraints: 3 paragraphs, root cause section, action items."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "The recent outage affecting the primary user-facing platform was caused by a cascading failure initiated by a misconfigured load balancer during a routine maintenance window. Specifically, an automated deployment script inadvertently updated the routing rules to direct traffic to a deprecated service endpoint that lacked sufficient capacity, causing a 404 error response chain that overwhelmed the upstream database. This configuration error was not caught by the pre-deployment validation pipeline because the test environment did not accurately replicate the production network topology, leading to a scenario where the system appeared stable during staging but collapsed under real-world load.\n\nUpon investigation, the root cause was identified as a gap between the automated deployment tooling and the manual verification steps required for complex infrastructure changes. The team failed to execute a manual smoke test on the specific routing configuration before the change was promoted to production, relying solely on automated checks that assumed the test environment mirrored production behavior. Additionally, the monitoring dashboard did not flag the unusual spike in 404 errors as a critical alert, indicating a deficiency in the observability stack that delayed the initial detection of the degradation by over 45 minutes.\n\nTo prevent recurrence, the immediate action items include updating the deployment pipeline to enforce a mandatory manual approval step for any changes affecting network routing or load balancer configurations. We will also expand the test environment to include a production-like network topology and traffic patterns to ensure accurate validation of infrastructure changes. Finally, the monitoring team will implement a new alert rule specifically for high volumes of 404 errors during maintenance windows, ensuring faster detection and response times in future incidents.",
+      "usage": {
+        "prompt_tokens": 63,
+        "completion_tokens": 316,
+        "total_tokens": 379
+      },
+      "latency_ms": 8384
+    },
+    {
+      "model": "Qwen3.5-4B-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a strict but fair evaluator."
+        },
+        {
+          "role": "user",
+          "content": "You are evaluating an AI agent's output.\n\nExpected output: Postmortem for the 2026-08-30 outage\n\nActual output: The recent outage affecting the primary user-facing application lasted approximately four hours, impacting approximately 40% of active users during peak traffic hours. Initial diagnostics revealed a cascading failure originating from a database connection pool exhaustion, which triggered a cascade of timeouts across the microservices architecture. This issue was exacerbated by a sudden spike in traffic due to a scheduled feature launch that failed to account for the increased load, combined with a known but unpatched vulnerability in the connection pooling library that prevented the system from gracefully handling high concurrency.\n\nUpon deeper investigation, the root cause was identified as a combination of insufficient capacity planning and a lack of automated scaling triggers for the database layer. Specifically, the application team had not updated the connection pool size to accommodate the projected traffic surge, and the monitoring system failed to detect the degradation in response times early enough to trigger an automatic horizontal scaling event. Additionally, the dependency on an outdated library version introduced a race condition that caused connections to be prematurely closed, leading to the eventual exhaustion of available slots and subsequent service unavailability.\n\nTo prevent recurrence, the following action items have been prioritized for immediate implementation: first, we will conduct a comprehensive audit of all third-party dependencies and update the connection pooling library to the latest stable version within the next 48 hours. Second, the infrastructure team will implement dynamic scaling policies that automatically increase database resources when latency thresholds are breached, ensuring resilience during traffic spikes. Finally, a post-mortem review will be scheduled to update the incident response playbooks, ensuring that similar cascading failures are detected and contained within 15 minutes in the future.\n\nReference examples:\nPositive: 'Root cause: memory leak in auth-service. Timeline: 14:00-15:30 UTC. Action items: [1] Patch auth-service, [2] Add memory monitoring.' Negative: 'The outage was bad.'\n\nEvaluate the output on each dimension independently:\n  - completeness (0.4x): all required sections present\n  - clarity (0.3x): clear cause and effect\n  - actionability (0.3x): action items are concrete\n\nOutput a JSON object with dimension names as keys and scores (0.0-1.0) as values.\nThen output the weighted average on the last line prefixed with 'OVERALL:'."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "{\n  \"completeness\": 0.5,\n  \"clarity\": 0.9,\n  \"actionability\": 0.85,\n  \"OVERALL: 0.75\"\n}",
+      "usage": {
+        "prompt_tokens": 532,
+        "completion_tokens": 50,
+        "total_tokens": 582
+      },
+      "latency_ms": 1892
+    },
+    {
+      "model": "Qwen3.5-4B-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a strict but fair evaluator."
+        },
+        {
+          "role": "user",
+          "content": "You are evaluating an AI agent's output.\n\nExpected output: Postmortem for the 2026-08-30 outage\n\nActual output: The recent outage affecting the primary user-facing platform was caused by a cascading failure initiated by a misconfigured load balancer during a routine maintenance window. Specifically, an automated deployment script inadvertently updated the routing rules to direct traffic to a deprecated service endpoint that lacked sufficient capacity, causing a 404 error response chain that overwhelmed the upstream database. This configuration error was not caught by the pre-deployment validation pipeline because the test environment did not accurately replicate the production network topology, leading to a scenario where the system appeared stable during staging but collapsed under real-world load.\n\nUpon investigation, the root cause was identified as a gap between the automated deployment tooling and the manual verification steps required for complex infrastructure changes. The team failed to execute a manual smoke test on the specific routing configuration before the change was promoted to production, relying solely on automated checks that assumed the test environment mirrored production behavior. Additionally, the monitoring dashboard did not flag the unusual spike in 404 errors as a critical alert, indicating a deficiency in the observability stack that delayed the initial detection of the degradation by over 45 minutes.\n\nTo prevent recurrence, the immediate action items include updating the deployment pipeline to enforce a mandatory manual approval step for any changes affecting network routing or load balancer configurations. We will also expand the test environment to include a production-like network topology and traffic patterns to ensure accurate validation of infrastructure changes. Finally, the monitoring team will implement a new alert rule specifically for high volumes of 404 errors during maintenance windows, ensuring faster detection and response times in future incidents.\n\nReference examples:\nPositive: 'Root cause: memory leak in auth-service. Timeline: 14:00-15:30 UTC. Action items: [1] Patch auth-service, [2] Add memory monitoring.' Negative: 'The outage was bad.'\n\nEvaluate the output on each dimension independently:\n  - completeness (0.4x): all required sections present\n  - clarity (0.3x): clear cause and effect\n  - actionability (0.3x): action items are concrete\n\nOutput a JSON object with dimension names as keys and scores (0.0-1.0) as values.\nThen output the weighted average on the last line prefixed with 'OVERALL:'."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "{\n  \"completeness\": 0.8,\n  \"clarity\": 0.9,\n  \"actionability\": 0.9\n}\nOVERALL: 0.85",
+      "usage": {
+        "prompt_tokens": 526,
+        "completion_tokens": 45,
+        "total_tokens": 571
+      },
+      "latency_ms": 1793
+    },
+    {
+      "model": "Qwen3.5-4B-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "user",
+          "content": "You are a helpful classification assistant.\n\n---\n\nTask: Topic: release notes for v2.1.0. Constraints: bullet points, list 3 new features, 2 bug fixes."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "Here are the release notes for version 2.1.0:\n\n*   **New Features**\n    *   Introduced a new \"Dark Mode\" theme for improved readability in low-light environments.\n    *   Added support for multi-language file uploads, expanding compatibility to over 20 languages.\n    *   Implemented real-time collaboration editing, allowing multiple users to work on the same document simultaneously.\n\n*   **Bug Fixes**\n    *   Resolved an issue where the application would crash when attempting to export large datasets.\n    *   Fixed a bug causing incorrect date formatting in the user profile settings.",
+      "usage": {
+        "prompt_tokens": 52,
+        "completion_tokens": 127,
+        "total_tokens": 179
+      },
+      "latency_ms": 3611
+    },
+    {
+      "model": "Qwen3.5-4B-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "user",
+          "content": "You are a helpful classification assistant. Prioritize identifying the underlying document type and semantic category over strict adherence to format or count constraints.\n\n---\n\nTask: Topic: release notes for v2.1.0. Constraints: bullet points, list 3 new features, 2 bug fixes."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "### Release Notes: v2.1.0\n\n**New Features**\n*   **Enhanced Search Engine**: The new full-text search engine now supports boolean operators (AND, OR, NOT) and fuzzy matching, allowing for more precise data retrieval.\n*   **Dark Mode UI**: A comprehensive dark theme has been added to the dashboard, featuring customizable color palettes and improved contrast ratios for reduced eye strain.\n*   **API Rate Limiting**: Developers can now configure custom rate limits per endpoint, providing better control over resource usage and preventing accidental overloads.\n\n**Bug Fixes**\n*   **Login Timeout Issue**: Resolved a critical bug where users were locked out after 15 minutes of inactivity, even if they had not logged in.\n*   **Export Functionality**: Fixed an issue where CSV exports were truncating data rows longer than 500 characters.",
+      "usage": {
+        "prompt_tokens": 71,
+        "completion_tokens": 183,
+        "total_tokens": 254
+      },
+      "latency_ms": 5006
+    },
+    {
+      "model": "Qwen3.5-4B-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a strict but fair evaluator."
+        },
+        {
+          "role": "user",
+          "content": "You are evaluating an AI agent's output.\n\nExpected output: Release v2.1.0\n\nActual output: Here are the release notes for version 2.1.0:\n\n*   **New Features**\n    *   Introduced a new \"Dark Mode\" theme for improved readability in low-light environments.\n    *   Added support for multi-language file uploads, expanding compatibility to over 20 languages.\n    *   Implemented real-time collaboration editing, allowing multiple users to work on the same document simultaneously.\n\n*   **Bug Fixes**\n    *   Resolved an issue where the application would crash when attempting to export large datasets.\n    *   Fixed a bug causing incorrect date formatting in the user profile settings.\n\nReference examples:\nPositive: 'Root cause: memory leak in auth-service. Timeline: 14:00-15:30 UTC. Action items: [1] Patch auth-service, [2] Add memory monitoring.' Negative: 'The outage was bad.'\n\nEvaluate the output on each dimension independently:\n  - completeness (0.4x): all required sections present\n  - clarity (0.3x): clear cause and effect\n  - actionability (0.3x): action items are concrete\n\nOutput a JSON object with dimension names as keys and scores (0.0-1.0) as values.\nThen output the weighted average on the last line prefixed with 'OVERALL:'."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "```json\n{\n  \"completeness\": 0.0,\n  \"clarity\": 0.5,\n  \"actionability\": 0.0\n}\nOVERALL: 0.16666666666666666\n```",
+      "usage": {
+        "prompt_tokens": 327,
+        "completion_tokens": 65,
+        "total_tokens": 392
+      },
+      "latency_ms": 2129
+    },
+    {
+      "model": "Qwen3.5-4B-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a strict but fair evaluator."
+        },
+        {
+          "role": "user",
+          "content": "You are evaluating an AI agent's output.\n\nExpected output: Release v2.1.0\n\nActual output: ### Release Notes: v2.1.0\n\n**New Features**\n*   **Enhanced Search Engine**: The new full-text search engine now supports boolean operators (AND, OR, NOT) and fuzzy matching, allowing for more precise data retrieval.\n*   **Dark Mode UI**: A comprehensive dark theme has been added to the dashboard, featuring customizable color palettes and improved contrast ratios for reduced eye strain.\n*   **API Rate Limiting**: Developers can now configure custom rate limits per endpoint, providing better control over resource usage and preventing accidental overloads.\n\n**Bug Fixes**\n*   **Login Timeout Issue**: Resolved a critical bug where users were locked out after 15 minutes of inactivity, even if they had not logged in.\n*   **Export Functionality**: Fixed an issue where CSV exports were truncating data rows longer than 500 characters.\n\nReference examples:\nPositive: 'Root cause: memory leak in auth-service. Timeline: 14:00-15:30 UTC. Action items: [1] Patch auth-service, [2] Add memory monitoring.' Negative: 'The outage was bad.'\n\nEvaluate the output on each dimension independently:\n  - completeness (0.4x): all required sections present\n  - clarity (0.3x): clear cause and effect\n  - actionability (0.3x): action items are concrete\n\nOutput a JSON object with dimension names as keys and scores (0.0-1.0) as values.\nThen output the weighted average on the last line prefixed with 'OVERALL:'."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "{\n  \"completeness\": 0.4,\n  \"clarity\": 0.3,\n  \"actionability\": 0.3\n}\nOVERALL: 0.35",
+      "usage": {
+        "prompt_tokens": 383,
+        "completion_tokens": 45,
+        "total_tokens": 428
+      },
+      "latency_ms": 1652
+    },
+    {
+      "model": "Qwen3.5-4B-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "user",
+          "content": "You are a helpful classification assistant.\n\n---\n\nTask: Topic: security advisory. Constraints: professional tone, list affected versions, mitigation steps."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "**Security Advisory: Critical Vulnerability in Legacy Authentication Modules**\n\n**Date:** October 26, 2023\n**Severity:** Critical\n**Reference ID:** SEC-ADV-2023-1042\n\n### 1. Executive Summary\nA critical vulnerability has been identified in the legacy authentication modules of several enterprise security products. This vulnerability allows an unauthenticated attacker to bypass standard authentication controls, potentially gaining unauthorized access to administrative interfaces. The issue stems from a failure to properly validate input parameters during the session initialization process.\n\n### 2. Affected Products and Versions\nThe following products are affected by this vulnerability:\n\n*   **Product A:** Enterprise Gateway Server\n    *   Versions: 4.0.0 through 4.2.1\n    *   Versions: 5.0.0 through 5.1.3\n*   **Product B:** Secure Access Proxy\n    *   Versions: 3.5.0 through 3.6.2\n    *   Versions: 4.0.0 through 4.1.5\n*   **Product C:** Identity Management Suite\n    *   Versions: 2.1.0 through 2.2.4\n\n*Note: Users running versions 4.2.2 and higher of Product A, or 3.6.3 and higher of Product B, are not affected.*\n\n### 3. Risk Description\nThe vulnerability exists in the way the system handles specific header parameters during the login handshake. An attacker can craft a malicious request that exploits this validation gap. If successful, the attacker can:\n*   Bypass multi-factor authentication requirements.\n*   Access administrative dashboards without valid credentials.\n*   Potentially escalate privileges to a root-level user on the affected system.\n\n### 4. Mitigation Steps\nImmediate action is required to mitigate the risk. Please follow these steps in order:\n\n1.  **Isolate Affected Systems**\n    *   Immediately disconnect any systems running the affected versions from the public internet and internal network segments if a full patch cannot be applied within 24 hours.\n    *   Restrict network access to administrative interfaces using firewall rules.\n\n2.  **Apply Official Patches**\n    *   Download the latest security patches from the vendor's official support portal.\n    *   Ensure all prerequisite dependencies (e.g., operating system updates, SSL libraries) are up to date before applying the patch.\n    *   Follow the vendor's specific deployment guide for the patch application process.\n\n3.  **Conduct a Security Audit**\n    *   Review logs for any unauthorized access attempts prior to the patching window.\n    *   Verify that no unauthorized users have gained access to administrative interfaces.\n\n4.  **Verify Patch Installation**\n    *   After applying the patch, run the vendor-provided verification tool to confirm the vulnerability is resolved.\n    *   Re-test the authentication flow to ensure functionality remains intact.\n\n5.  **Update Policies**\n    *   Review and update your incident response plan to include this specific vulnerability type.\n    *   Consider implementing additional network segmentation for systems running legacy versions until a permanent fix is available.\n\n### 5. Contact Information\nFor technical support or further clarification regarding this advisory, please contact our Security Operations Center (SOC):\n*   **Email:** security@company-domain.com\n*   **Phone:** +1 (555) 123-4567\n*   **Portal:** https://support.company-domain.com/advisories\n\n*Disclaimer: This advisory is for informational purposes only. Always verify patch compatibility with your specific hardware and software environment before deployment.*",
+      "usage": {
+        "prompt_tokens": 41,
+        "completion_tokens": 772,
+        "total_tokens": 813
+      },
+      "latency_ms": 20356
+    },
+    {
+      "model": "Qwen3.5-4B-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "user",
+          "content": "You are a helpful classification assistant. Prioritize identifying the underlying document type and semantic category over strict adherence to format or count constraints.\n\n---\n\nTask: Topic: security advisory. Constraints: professional tone, list affected versions, mitigation steps."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "### **Document Classification**\n*   **Document Type:** Security Advisory / Vulnerability Notice\n*   **Semantic Category:** Cybersecurity / Vulnerability Management\n*   **Priority Level:** High (Assuming active exploitation or critical severity based on standard advisory protocols)\n\n---\n\n### **Security Advisory: Remote Code Execution Vulnerability in Legacy Authentication Modules**\n\n**Date Issued:** October 26, 2023\n**Advisory ID:** SEC-2023-1042\n**Severity Rating:** Critical (CVSS 9.8)\n\n#### **1. Executive Summary**\nA critical vulnerability has been identified in the legacy authentication modules of our enterprise security infrastructure. This vulnerability allows an unauthenticated attacker to execute arbitrary code on the affected systems, potentially leading to a complete compromise of the host machine and lateral movement within the network. The issue stems from a lack of input validation in the `auth_handler` function, which processes legacy protocol data.\n\n#### **2. Affected Versions**\nThe vulnerability impacts the following software versions and configurations:\n\n*   **Product:** Enterprise Security Gateway (ESG)\n    *   Versions prior to **v4.5.2** (e.g., v4.5.1, v4.4.x, v4.3.x)\n    *   Versions prior to **v5.0.0** (e.g., v4.9.9, v4.9.8)\n*   **Product:** Legacy Authentication Proxy (LAP)\n    *   Versions prior to **v2.1.0**\n*   **Operating System:**\n    *   Linux distributions running the proprietary ESG kernel module with version **< 3.10.0**\n    *   Windows Server 2012 R2 and earlier with the legacy service pack installed\n\n*Note: Systems running version 4.5.2 or later are not affected, provided they have been patched within the last 30 days.*\n\n#### **3. Technical Description**\nThe vulnerability exists in the way the system validates user input during the handshake phase of the legacy authentication protocol. Specifically, the `auth_handler` function fails to sanitize input parameters derived from untrusted sources. An attacker can craft a specially crafted request containing a null byte injection or a buffer overflow payload, which bypasses the input validation checks. This allows the injection of shellcode into the memory space of the authentication process, resulting in Remote Code Execution (RCE) with the privileges of the system user.\n\n#### **4. Mitigation Steps**\nImmediate action is required to prevent exploitation. Please follow these steps in order:\n\n1.  **Isolate Affected Systems**\n    *   Immediately disconnect any systems running the affected versions from the public internet and internal network segments if a patch cannot be applied within 24 hours.\n    *   Restrict network access to the management interfaces of these systems.\n\n2.  **Apply Official Patches**\n    *   Download the latest security patches from the official vendor repository.\n    *   **ESG:** Upgrade to version **v4.5.2** or higher.\n    *   **LAP:** Upgrade to version **v2.1.0** or higher.\n    *   **Kernel Module:** Update the Linux kernel module to version **3.10.0** or higher.\n    *   *Warning:* Applying patches may require a system reboot. Schedule maintenance windows accordingly.\n\n3.  **Verify Patch Installation**\n    *   After applying the update, verify the version numbers using the command-line tools provided in the release notes.\n    *   Run the provided vulnerability scanner (included in the patch bundle) to confirm the fix is active.\n\n4.  **Conduct Security Audit**\n    *   Perform a full vulnerability scan on the network to identify any remaining unpatched systems.\n    *   Review logs for any signs of exploitation attempts during the isolation period.\n\n5.  **Monitor and Report**\n    *   Enable enhanced logging on the patched systems to monitor for anomalous behavior.\n    *   Report the completion of the patching process to the Security Operations Center (SOC) within 48 hours.\n\n#### **5. Contact Information**\nFor technical support regarding this advisory or to report a confirmed vulnerability, please contact the Security Incident Response Team (SIRT):\n*   **Email:** security@company-domain.com\n*   **Phone:** +1-555-0199 (24/7 Hotline)\n*   **Portal:** https://support.company-domain.com/vulnerability-tracker\n\n*Disclaimer: This advisory is for informational purposes. The company is not liable for any damages resulting from the application of patches or the isolation of systems.*",
+      "usage": {
+        "prompt_tokens": 60,
+        "completion_tokens": 998,
+        "total_tokens": 1058
+      },
+      "latency_ms": 25524
+    },
+    {
+      "model": "Qwen3.5-4B-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a strict but fair evaluator."
+        },
+        {
+          "role": "user",
+          "content": "You are evaluating an AI agent's output.\n\nExpected output: Security Advisory: CVE-2026-12345\n\nActual output: **Security Advisory: Critical Vulnerability in Legacy Authentication Modules**\n\n**Date:** October 26, 2023\n**Severity:** Critical\n**Reference ID:** SEC-ADV-2023-1042\n\n### 1. Executive Summary\nA critical vulnerability has been identified in the legacy authentication modules of several enterprise security products. This vulnerability allows an unauthenticated attacker to bypass standard authentication controls, potentially gaining unauthorized access to administrative interfaces. The issue stems from a failure to properly validate input parameters during the session initialization process.\n\n### 2. Affected Products and Versions\nThe following products are affected by this vulnerability:\n\n*   **Product A:** Enterprise Gateway Server\n    *   Versions: 4.0.0 through 4.2.1\n    *   Versions: 5.0.0 through 5.1.3\n*   **Product B:** Secure Access Proxy\n    *   Versions: 3.5.0 through 3.6.2\n    *   Versions: 4.0.0 through 4.1.5\n*   **Product C:** Identity Management Suite\n    *   Versions: 2.1.0 through 2.2.4\n\n*Note: Users running versions 4.2.2 and higher of Product A, or 3.6.3 and higher of Product B, are not affected.*\n\n### 3. Risk Description\nThe vulnerability exists in the way the system handles specific header parameters during the login handshake. An attacker can craft a malicious request that exploits this validation gap. If successful, the attacker can:\n*   Bypass multi-factor authentication requirements.\n*   Access administrative dashboards without valid credentials.\n*   Potentially escalate privileges to a root-level user on the affected system.\n\n### 4. Mitigation Steps\nImmediate action is required to mitigate the risk. Please follow these steps in order:\n\n1.  **Isolate Affected Systems**\n    *   Immediately disconnect any systems running the affected versions from the public internet and internal network segments if a full patch cannot be applied within 24 hours.\n    *   Restrict network access to administrative interfaces using firewall rules.\n\n2.  **Apply Official Patches**\n    *   Download the latest security patches from the vendor's official support portal.\n    *   Ensure all prerequisite dependencies (e.g., operating system updates, SSL libraries) are up to date before applying the patch.\n    *   Follow the vendor's specific deployment guide for the patch application process.\n\n3.  **Conduct a Security Audit**\n    *   Review logs for any unauthorized access attempts prior to the patching window.\n    *   Verify that no unauthorized users have gained access to administrative interfaces.\n\n4.  **Verify Patch Installation**\n    *   After applying the patch, run the vendor-provided verification tool to confirm the vulnerability is resolved.\n    *   Re-test the authentication flow to ensure functionality remains intact.\n\n5.  **Update Policies**\n    *   Review and update your incident response plan to include this specific vulnerability type.\n    *   Consider implementing additional network segmentation for systems running legacy versions until a permanent fix is available.\n\n### 5. Contact Information\nFor technical support or further clarification regarding this advisory, please contact our Security Operations Center (SOC):\n*   **Email:** security@company-domain.com\n*   **Phone:** +1 (555) 123-4567\n*   **Portal:** https://support.company-domain.com/advisories\n\n*Disclaimer: This advisory is for informational purposes only. Always verify patch compatibility with your specific hardware and software environment before deployment.*\n\nReference examples:\nPositive: 'Root cause: memory leak in auth-service. Timeline: 14:00-15:30 UTC. Action items: [1] Patch auth-service, [2] Add memory monitoring.' Negative: 'The outage was bad.'\n\nEvaluate the output on each dimension independently:\n  - completeness (0.4x): all required sections present\n  - clarity (0.3x): clear cause and effect\n  - actionability (0.3x): action items are concrete\n\nOutput a JSON object with dimension names as keys and scores (0.0-1.0) as values.\nThen output the weighted average on the last line prefixed with 'OVERALL:'."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "```json\n{\n  \"completeness\": 0.0,\n  \"clarity\": 0.9,\n  \"actionability\": 0.9\n}\nOVERALL: 0.6\n```",
+      "usage": {
+        "prompt_tokens": 980,
+        "completion_tokens": 49,
+        "total_tokens": 1029
+      },
+      "latency_ms": 2138
+    },
+    {
+      "model": "Qwen3.5-4B-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a strict but fair evaluator."
+        },
+        {
+          "role": "user",
+          "content": "You are evaluating an AI agent's output.\n\nExpected output: Security Advisory: CVE-2026-12345\n\nActual output: ### **Document Classification**\n*   **Document Type:** Security Advisory / Vulnerability Notice\n*   **Semantic Category:** Cybersecurity / Vulnerability Management\n*   **Priority Level:** High (Assuming active exploitation or critical severity based on standard advisory protocols)\n\n---\n\n### **Security Advisory: Remote Code Execution Vulnerability in Legacy Authentication Modules**\n\n**Date Issued:** October 26, 2023\n**Advisory ID:** SEC-2023-1042\n**Severity Rating:** Critical (CVSS 9.8)\n\n#### **1. Executive Summary**\nA critical vulnerability has been identified in the legacy authentication modules of our enterprise security infrastructure. This vulnerability allows an unauthenticated attacker to execute arbitrary code on the affected systems, potentially leading to a complete compromise of the host machine and lateral movement within the network. The issue stems from a lack of input validation in the `auth_handler` function, which processes legacy protocol data.\n\n#### **2. Affected Versions**\nThe vulnerability impacts the following software versions and configurations:\n\n*   **Product:** Enterprise Security Gateway (ESG)\n    *   Versions prior to **v4.5.2** (e.g., v4.5.1, v4.4.x, v4.3.x)\n    *   Versions prior to **v5.0.0** (e.g., v4.9.9, v4.9.8)\n*   **Product:** Legacy Authentication Proxy (LAP)\n    *   Versions prior to **v2.1.0**\n*   **Operating System:**\n    *   Linux distributions running the proprietary ESG kernel module with version **< 3.10.0**\n    *   Windows Server 2012 R2 and earlier with the legacy service pack installed\n\n*Note: Systems running version 4.5.2 or later are not affected, provided they have been patched within the last 30 days.*\n\n#### **3. Technical Description**\nThe vulnerability exists in the way the system validates user input during the handshake phase of the legacy authentication protocol. Specifically, the `auth_handler` function fails to sanitize input parameters derived from untrusted sources. An attacker can craft a specially crafted request containing a null byte injection or a buffer overflow payload, which bypasses the input validation checks. This allows the injection of shellcode into the memory space of the authentication process, resulting in Remote Code Execution (RCE) with the privileges of the system user.\n\n#### **4. Mitigation Steps**\nImmediate action is required to prevent exploitation. Please follow these steps in order:\n\n1.  **Isolate Affected Systems**\n    *   Immediately disconnect any systems running the affected versions from the public internet and internal network segments if a patch cannot be applied within 24 hours.\n    *   Restrict network access to the management interfaces of these systems.\n\n2.  **Apply Official Patches**\n    *   Download the latest security patches from the official vendor repository.\n    *   **ESG:** Upgrade to version **v4.5.2** or higher.\n    *   **LAP:** Upgrade to version **v2.1.0** or higher.\n    *   **Kernel Module:** Update the Linux kernel module to version **3.10.0** or higher.\n    *   *Warning:* Applying patches may require a system reboot. Schedule maintenance windows accordingly.\n\n3.  **Verify Patch Installation**\n    *   After applying the update, verify the version numbers using the command-line tools provided in the release notes.\n    *   Run the provided vulnerability scanner (included in the patch bundle) to confirm the fix is active.\n\n4.  **Conduct Security Audit**\n    *   Perform a full vulnerability scan on the network to identify any remaining unpatched systems.\n    *   Review logs for any signs of exploitation attempts during the isolation period.\n\n5.  **Monitor and Report**\n    *   Enable enhanced logging on the patched systems to monitor for anomalous behavior.\n    *   Report the completion of the patching process to the Security Operations Center (SOC) within 48 hours.\n\n#### **5. Contact Information**\nFor technical support regarding this advisory or to report a confirmed vulnerability, please contact the Security Incident Response Team (SIRT):\n*   **Email:** security@company-domain.com\n*   **Phone:** +1-555-0199 (24/7 Hotline)\n*   **Portal:** https://support.company-domain.com/vulnerability-tracker\n\n*Disclaimer: This advisory is for informational purposes. The company is not liable for any damages resulting from the application of patches or the isolation of systems.*\n\nReference examples:\nPositive: 'Root cause: memory leak in auth-service. Timeline: 14:00-15:30 UTC. Action items: [1] Patch auth-service, [2] Add memory monitoring.' Negative: 'The outage was bad.'\n\nEvaluate the output on each dimension independently:\n  - completeness (0.4x): all required sections present\n  - clarity (0.3x): clear cause and effect\n  - actionability (0.3x): action items are concrete\n\nOutput a JSON object with dimension names as keys and scores (0.0-1.0) as values.\nThen output the weighted average on the last line prefixed with 'OVERALL:'."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "{\n  \"completeness\": 0.8,\n  \"clarity\": 0.9,\n  \"actionability\": 0.95,\n  \"OVERALL: 0.885\"\n}",
+      "usage": {
+        "prompt_tokens": 1206,
+        "completion_tokens": 51,
+        "total_tokens": 1257
+      },
+      "latency_ms": 2396
+    },
+    {
+      "model": "Qwen3.5-4B-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "user",
+          "content": "You are a helpful classification assistant.\n\n---\n\nTask: Topic: team standup summary. Constraints: 2 sentences max, completed items, blockers."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "The team successfully completed the API integration and user authentication modules, bringing those features to production. However, we are currently blocked on the database migration due to a pending resource allocation from the infrastructure team.",
+      "usage": {
+        "prompt_tokens": 43,
+        "completion_tokens": 39,
+        "total_tokens": 82
+      },
+      "latency_ms": 1282
+    },
+    {
+      "model": "Qwen3.5-4B-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "user",
+          "content": "You are a helpful classification assistant. Prioritize identifying the underlying document type and semantic category over strict adherence to format or count constraints.\n\n---\n\nTask: Topic: team standup summary. Constraints: 2 sentences max, completed items, blockers."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "The team standup summary confirms that all planned tasks for the current sprint are completed, with zero active blockers reported. Consequently, the team is ready to proceed with the next phase of development without any impediments.",
+      "usage": {
+        "prompt_tokens": 62,
+        "completion_tokens": 42,
+        "total_tokens": 104
+      },
+      "latency_ms": 1352
+    },
+    {
+      "model": "Qwen3.5-4B-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a strict but fair evaluator."
+        },
+        {
+          "role": "user",
+          "content": "You are evaluating an AI agent's output.\n\nExpected output: Standup summary for 2026-09-01\n\nActual output: The team successfully completed the API integration and user authentication modules, bringing those features to production. However, we are currently blocked on the database migration due to a pending resource allocation from the infrastructure team.\n\nReference examples:\nPositive: 'Root cause: memory leak in auth-service. Timeline: 14:00-15:30 UTC. Action items: [1] Patch auth-service, [2] Add memory monitoring.' Negative: 'The outage was bad.'\n\nEvaluate the output on each dimension independently:\n  - completeness (0.4x): all required sections present\n  - clarity (0.3x): clear cause and effect\n  - actionability (0.3x): action items are concrete\n\nOutput a JSON object with dimension names as keys and scores (0.0-1.0) as values.\nThen output the weighted average on the last line prefixed with 'OVERALL:'."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "{\n  \"completeness\": 0.0,\n  \"clarity\": 0.8,\n  \"actionability\": 0.0,\n  \"OVERALL: 0.26666666666666666\"\n}",
+      "usage": {
+        "prompt_tokens": 247,
+        "completion_tokens": 64,
+        "total_tokens": 311
+      },
+      "latency_ms": 1973
+    },
+    {
+      "model": "Qwen3.5-4B-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a strict but fair evaluator."
+        },
+        {
+          "role": "user",
+          "content": "You are evaluating an AI agent's output.\n\nExpected output: Standup summary for 2026-09-01\n\nActual output: The team standup summary confirms that all planned tasks for the current sprint are completed, with zero active blockers reported. Consequently, the team is ready to proceed with the next phase of development without any impediments.\n\nReference examples:\nPositive: 'Root cause: memory leak in auth-service. Timeline: 14:00-15:30 UTC. Action items: [1] Patch auth-service, [2] Add memory monitoring.' Negative: 'The outage was bad.'\n\nEvaluate the output on each dimension independently:\n  - completeness (0.4x): all required sections present\n  - clarity (0.3x): clear cause and effect\n  - actionability (0.3x): action items are concrete\n\nOutput a JSON object with dimension names as keys and scores (0.0-1.0) as values.\nThen output the weighted average on the last line prefixed with 'OVERALL:'."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "```json\n{\n  \"completeness\": 0.0,\n  \"clarity\": 0.5,\n  \"actionability\": 0.0\n}\nOVERALL: 0.16666666666666666\n```",
+      "usage": {
+        "prompt_tokens": 250,
+        "completion_tokens": 65,
+        "total_tokens": 315
+      },
+      "latency_ms": 2000
+    },
+    {
+      "model": "Qwen3.5-4B-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "user",
+          "content": "You are a helpful classification assistant.\n\n---\n\nTask: Topic: on-call handoff notes. Constraints: include active incidents, pending actions, next steps."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "# On-Call Handoff Note: System Outage (Database Cluster)\n\n**Date/Time:** October 26, 2023 | 14:30 UTC\n**On-Call Engineer:** Alex Chen\n**Handed Off To:** Sarah Miller (Next Shift)\n**Incident ID:** INC-2023-1026\n\n---\n\n### 1. Active Incidents\n*   **Status:** **Degraded / Active**\n*   **Severity:** P1 (Critical)\n*   **Impact:**\n    *   `api-gateway` and `user-service` are experiencing intermittent 503 errors.\n    *   Database replication lag has increased from <5s to ~45s.\n    *   User-facing latency for login/auth flows has spiked to ~2.5s (baseline: 200ms).\n*   **Current Symptoms:**\n    *   High CPU usage (85%+) on primary DB node `db-primary-us-east-1`.\n    *   Connection pool exhaustion in the `user-service` pods.\n    *   Error logs show `ConnectionTimeout` followed by `Deadlock` exceptions.\n\n### 2. Pending Actions\n*   **Immediate (Next 15 mins):**\n    *   [ ] **Rotate DB Connections:** Switch `user-service` to use the read-replica `db-replica-us-east-1` to offload write pressure.\n    *   [ ] **Increase Connection Pool Size:** Temporarily raise the max connections from 500 to 1000 in the `user-service` config map.\n*   **Short-term (Next 1 hour):**\n    *   [ ] **Analyze Slow Queries:** Review the `slow_query_log` for the last 2 hours to identify the specific SQL causing the deadlock.\n    *   [ ] **Scale Read Replicas:** Add one more read replica to the cluster to distribute read load.\n*   **Long-term (Post-Incident):**\n    *   [ ] **Capacity Planning:** Investigate why the primary node hit 85% CPU during peak traffic.\n    *   [ ] **Review Indexing:** Check if missing indexes are causing the deadlocks.\n\n### 3. Next Steps & Context\n*   **Communication Channel:** Slack `#incidents` and PagerDuty.\n*   **Stakeholders Notified:**\n    *   Product Lead (Mike R.) - Notified at 14:00 regarding login delays.\n    *   DBA Team (Lead: Jordan P.) - On the call, currently analyzing query plans.\n*   **Known Workarounds:**\n    *   Users can still access non-auth endpoints (e.g., dashboard, search), but login/logout is unstable.\n    *   A temporary workaround of restarting the `user-service` pods every 10 minutes has been applied, but it is not a sustainable fix.\n*   **Escalation Path:**\n    *   If replication lag exceeds 60s, escalate to SRE Lead immediately.\n    *   If CPU remains >90% after connection pool increase, consider emergency scaling of the DB tier.\n\n---\n**Notes:** Please verify the read-replica switch is successful before the next shift begins. I will be available for a quick sync at 16:00 UTC if the situation stabilizes.",
+      "usage": {
+        "prompt_tokens": 44,
+        "completion_tokens": 722,
+        "total_tokens": 766
+      },
+      "latency_ms": 18849
+    },
+    {
+      "model": "Qwen3.5-4B-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "user",
+          "content": "You are a helpful classification assistant. Prioritize identifying the underlying document type and semantic category over strict adherence to format or count constraints.\n\n---\n\nTask: Topic: on-call handoff notes. Constraints: include active incidents, pending actions, next steps."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "Based on your requirements, here is a structured **On-Call Handoff Note** designed to prioritize clarity, active status, and actionable next steps.\n\n***\n\n# \ud83d\udea8 On-Call Handoff Note\n**Date/Time:** [Insert Date] | **Shift Handoff:** [Start Time] \u2192 [End Time]\n**On-Call Engineer:** [Your Name]\n**Receiving Engineer:** [Next On-Call Name]\n**Severity Level:** [e.g., P1 / Critical]\n\n---\n\n### 1. \ud83d\udea8 Active Incidents (Current State)\n*Focus on systems currently degraded or under investigation.*\n\n| Incident ID | System/Service | Status | Current Impact | Owner/Lead |\n| :--- | :--- | :--- | :--- :--- |\n| **INC-2023-001** | Payment Gateway API | **Degraded** | Latency > 2s; ~15% error rate on checkout. | *Investigating* (SRE Team) |\n| **INC-2023-002** | Auth Service | **Resolved** | Temporary outage 15 mins ago. Fully restored. | *Verified* (DevOps) |\n| **INC-2023-003** | Database Cluster | **Monitoring** | High CPU usage (90%); potential leak suspected. | *Awaiting logs* (DBA) |\n\n---\n\n### 2. \u23f3 Pending Actions (In Progress)\n*Tasks currently being worked on that require immediate attention or have a deadline.*\n\n*   **[INC-2023-001]**: SRE team is patching the specific endpoint causing latency. **ETA:** 30 mins.\n*   **[INC-2023-003]**: Waiting for DBA to confirm if the high CPU is a memory leak or a query optimization issue.\n*   **Code Review**: PR #442 (Security patch for Auth Service) is stuck in review for 2 hours. Needs a decision by 14:00.\n\n---\n\n### 3. \ud83d\udccb Next Steps (Post-Shift)\n*Actionable items for the incoming engineer to ensure continuity.*\n\n*   **Verify Resolution**: Check if the Payment Gateway patch (INC-2023-001) is deployed and monitor error rates for 1 hour.\n*   **Deep Dive**: Request full stack traces from the DBA regarding INC-2023-003 to determine root cause.\n*   **Documentation**: Update the runbook for the Payment Gateway latency issue once the fix is confirmed.\n*   **Escalation**: If INC-2023-003 persists beyond 2 hours, escalate to the Engineering Manager.\n\n---\n\n### 4. \ud83e\udde0 Context & Observations\n*   **Traffic Patterns:** Traffic is currently 20% higher than baseline due to the holiday sale; this may be exacerbating the latency issue.\n*   **Known Issues:** No other known issues.\n*   **Communication Channels**: Slack channel `#oncall-alerts` is active. PagerDuty is currently ringing for INC-2023-001.\n\n---\n*End of Handoff*",
+      "usage": {
+        "prompt_tokens": 63,
+        "completion_tokens": 705,
+        "total_tokens": 768
+      },
+      "latency_ms": 18208
+    },
+    {
+      "model": "Qwen3.5-4B-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a strict but fair evaluator."
+        },
+        {
+          "role": "user",
+          "content": "You are evaluating an AI agent's output.\n\nExpected output: On-call handoff for 2026-09-01\n\nActual output: # On-Call Handoff Note: System Outage (Database Cluster)\n\n**Date/Time:** October 26, 2023 | 14:30 UTC\n**On-Call Engineer:** Alex Chen\n**Handed Off To:** Sarah Miller (Next Shift)\n**Incident ID:** INC-2023-1026\n\n---\n\n### 1. Active Incidents\n*   **Status:** **Degraded / Active**\n*   **Severity:** P1 (Critical)\n*   **Impact:**\n    *   `api-gateway` and `user-service` are experiencing intermittent 503 errors.\n    *   Database replication lag has increased from <5s to ~45s.\n    *   User-facing latency for login/auth flows has spiked to ~2.5s (baseline: 200ms).\n*   **Current Symptoms:**\n    *   High CPU usage (85%+) on primary DB node `db-primary-us-east-1`.\n    *   Connection pool exhaustion in the `user-service` pods.\n    *   Error logs show `ConnectionTimeout` followed by `Deadlock` exceptions.\n\n### 2. Pending Actions\n*   **Immediate (Next 15 mins):**\n    *   [ ] **Rotate DB Connections:** Switch `user-service` to use the read-replica `db-replica-us-east-1` to offload write pressure.\n    *   [ ] **Increase Connection Pool Size:** Temporarily raise the max connections from 500 to 1000 in the `user-service` config map.\n*   **Short-term (Next 1 hour):**\n    *   [ ] **Analyze Slow Queries:** Review the `slow_query_log` for the last 2 hours to identify the specific SQL causing the deadlock.\n    *   [ ] **Scale Read Replicas:** Add one more read replica to the cluster to distribute read load.\n*   **Long-term (Post-Incident):**\n    *   [ ] **Capacity Planning:** Investigate why the primary node hit 85% CPU during peak traffic.\n    *   [ ] **Review Indexing:** Check if missing indexes are causing the deadlocks.\n\n### 3. Next Steps & Context\n*   **Communication Channel:** Slack `#incidents` and PagerDuty.\n*   **Stakeholders Notified:**\n    *   Product Lead (Mike R.) - Notified at 14:00 regarding login delays.\n    *   DBA Team (Lead: Jordan P.) - On the call, currently analyzing query plans.\n*   **Known Workarounds:**\n    *   Users can still access non-auth endpoints (e.g., dashboard, search), but login/logout is unstable.\n    *   A temporary workaround of restarting the `user-service` pods every 10 minutes has been applied, but it is not a sustainable fix.\n*   **Escalation Path:**\n    *   If replication lag exceeds 60s, escalate to SRE Lead immediately.\n    *   If CPU remains >90% after connection pool increase, consider emergency scaling of the DB tier.\n\n---\n**Notes:** Please verify the read-replica switch is successful before the next shift begins. I will be available for a quick sync at 16:00 UTC if the situation stabilizes.\n\nReference examples:\nPositive: 'Root cause: memory leak in auth-service. Timeline: 14:00-15:30 UTC. Action items: [1] Patch auth-service, [2] Add memory monitoring.' Negative: 'The outage was bad.'\n\nEvaluate the output on each dimension independently:\n  - completeness (0.4x): all required sections present\n  - clarity (0.3x): clear cause and effect\n  - actionability (0.3x): action items are concrete\n\nOutput a JSON object with dimension names as keys and scores (0.0-1.0) as values.\nThen output the weighted average on the last line prefixed with 'OVERALL:'."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "{\n  \"completeness\": 0.8,\n  \"clarity\": 0.9,\n  \"actionability\": 0.9,\n  \"OVERALL: 0.85\"\n}",
+      "usage": {
+        "prompt_tokens": 931,
+        "completion_tokens": 49,
+        "total_tokens": 980
+      },
+      "latency_ms": 2095
+    },
+    {
+      "model": "Qwen3.5-4B-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a strict but fair evaluator."
+        },
+        {
+          "role": "user",
+          "content": "You are evaluating an AI agent's output.\n\nExpected output: On-call handoff for 2026-09-01\n\nActual output: Based on your requirements, here is a structured **On-Call Handoff Note** designed to prioritize clarity, active status, and actionable next steps.\n\n***\n\n# \ud83d\udea8 On-Call Handoff Note\n**Date/Time:** [Insert Date] | **Shift Handoff:** [Start Time] \u2192 [End Time]\n**On-Call Engineer:** [Your Name]\n**Receiving Engineer:** [Next On-Call Name]\n**Severity Level:** [e.g., P1 / Critical]\n\n---\n\n### 1. \ud83d\udea8 Active Incidents (Current State)\n*Focus on systems currently degraded or under investigation.*\n\n| Incident ID | System/Service | Status | Current Impact | Owner/Lead |\n| :--- | :--- | :--- | :--- :--- |\n| **INC-2023-001** | Payment Gateway API | **Degraded** | Latency > 2s; ~15% error rate on checkout. | *Investigating* (SRE Team) |\n| **INC-2023-002** | Auth Service | **Resolved** | Temporary outage 15 mins ago. Fully restored. | *Verified* (DevOps) |\n| **INC-2023-003** | Database Cluster | **Monitoring** | High CPU usage (90%); potential leak suspected. | *Awaiting logs* (DBA) |\n\n---\n\n### 2. \u23f3 Pending Actions (In Progress)\n*Tasks currently being worked on that require immediate attention or have a deadline.*\n\n*   **[INC-2023-001]**: SRE team is patching the specific endpoint causing latency. **ETA:** 30 mins.\n*   **[INC-2023-003]**: Waiting for DBA to confirm if the high CPU is a memory leak or a query optimization issue.\n*   **Code Review**: PR #442 (Security patch for Auth Service) is stuck in review for 2 hours. Needs a decision by 14:00.\n\n---\n\n### 3. \ud83d\udccb Next Steps (Post-Shift)\n*Actionable items for the incoming engineer to ensure continuity.*\n\n*   **Verify Resolution**: Check if the Payment Gateway patch (INC-2023-001) is deployed and monitor error rates for 1 hour.\n*   **Deep Dive**: Request full stack traces from the DBA regarding INC-2023-003 to determine root cause.\n*   **Documentation**: Update the runbook for the Payment Gateway latency issue once the fix is confirmed.\n*   **Escalation**: If INC-2023-003 persists beyond 2 hours, escalate to the Engineering Manager.\n\n---\n\n### 4. \ud83e\udde0 Context & Observations\n*   **Traffic Patterns:** Traffic is currently 20% higher than baseline due to the holiday sale; this may be exacerbating the latency issue.\n*   **Known Issues:** No other known issues.\n*   **Communication Channels**: Slack channel `#oncall-alerts` is active. PagerDuty is currently ringing for INC-2023-001.\n\n---\n*End of Handoff*\n\nReference examples:\nPositive: 'Root cause: memory leak in auth-service. Timeline: 14:00-15:30 UTC. Action items: [1] Patch auth-service, [2] Add memory monitoring.' Negative: 'The outage was bad.'\n\nEvaluate the output on each dimension independently:\n  - completeness (0.4x): all required sections present\n  - clarity (0.3x): clear cause and effect\n  - actionability (0.3x): action items are concrete\n\nOutput a JSON object with dimension names as keys and scores (0.0-1.0) as values.\nThen output the weighted average on the last line prefixed with 'OVERALL:'."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "{\n  \"completeness\": 0.0,\n  \"clarity\": 0.9,\n  \"actionability\": 0.9,\n  \"OVERALL: 0.60\"\n}",
+      "usage": {
+        "prompt_tokens": 914,
+        "completion_tokens": 49,
+        "total_tokens": 963
+      },
+      "latency_ms": 2088
+    }
+  ],
+  "stdout": "Processing 10 traces (10 failed)\nAnalysis complete: 1 proposals, cost=$0.0030\n  A/B test: inconclusive (p=0.2800, n=5)\n  Gate: reject\nLoop stopped.\n",
+  "stderr": ""
+}

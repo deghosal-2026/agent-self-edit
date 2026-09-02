@@ -1,0 +1,83 @@
+# Regression sentinel — 20 tasks that baseline should get right
+# Used to catch edits that fix hard tasks but break previously-correct easy tasks
+# Scorer: SingleLabelScorer
+- id: "sentinel-001"
+  input: "I forgot my password and can't log in."
+  expected_output: "technical"
+  metadata: {benchmark_role: regression_sentinel, scorer: "exact", difficulty: "easy", tags: [sentinel, baseline]}
+- id: "sentinel-002"
+  input: "When is the next billing date for my subscription?"
+  expected_output: "billing"
+  metadata: {benchmark_role: regression_sentinel, scorer: "exact", difficulty: "easy", tags: [sentinel, baseline]}
+- id: "sentinel-003"
+  input: "Can you add dark mode to the dashboard?"
+  expected_output: "feature"
+  metadata: {benchmark_role: regression_sentinel, scorer: "exact", difficulty: "easy", tags: [sentinel, baseline]}
+- id: "sentinel-004"
+  input: "The database connection keeps timing out."
+  expected_output: "technical"
+  metadata: {benchmark_role: regression_sentinel, scorer: "exact", difficulty: "easy", tags: [sentinel, baseline]}
+- id: "sentinel-005"
+  input: "I need to update my payment method."
+  expected_output: "billing"
+  metadata: {benchmark_role: regression_sentinel, scorer: "exact", difficulty: "easy", tags: [sentinel, baseline]}
+- id: "sentinel-006"
+  input: "Please add export to CSV feature."
+  expected_output: "feature"
+  metadata: {benchmark_role: regression_sentinel, scorer: "exact", difficulty: "easy", tags: [sentinel, baseline]}
+- id: "sentinel-007"
+  input: "The page loads very slowly after the last deployment."
+  expected_output: "technical"
+  metadata: {benchmark_role: regression_sentinel, scorer: "exact", difficulty: "medium", tags: [sentinel, baseline]}
+- id: "sentinel-008"
+  input: "My invoice is missing line items for last month."
+  expected_output: "billing"
+  metadata: {benchmark_role: regression_sentinel, scorer: "exact", difficulty: "medium", tags: [sentinel, baseline]}
+- id: "sentinel-009"
+  input: "Can we get webhook support for custom integrations?"
+  expected_output: "feature"
+  metadata: {benchmark_role: regression_sentinel, scorer: "exact", difficulty: "medium", tags: [sentinel, baseline]}
+- id: "sentinel-010"
+  input: "The search results are not sorted by relevance."
+  expected_output: "technical"
+  metadata: {benchmark_role: regression_sentinel, scorer: "exact", difficulty: "medium", tags: [sentinel, baseline]}
+- id: "sentinel-011"
+  input: "I was overcharged for last month's plan."
+  expected_output: "billing"
+  metadata: {benchmark_role: regression_sentinel, scorer: "exact", difficulty: "easy", tags: [sentinel, baseline]}
+- id: "sentinel-012"
+  input: "Please add multi-factor authentication."
+  expected_output: "feature"
+  metadata: {benchmark_role: regression_sentinel, scorer: "exact", difficulty: "medium", tags: [sentinel, baseline]}
+- id: "sentinel-013"
+  input: "The application crashes when I upload a file over 10MB."
+  expected_output: "technical"
+  metadata: {benchmark_role: regression_sentinel, scorer: "exact", difficulty: "medium", tags: [sentinel, baseline]}
+- id: "sentinel-014"
+  input: "My trial period ended and I was charged incorrectly."
+  expected_output: "billing"
+  metadata: {benchmark_role: regression_sentinel, scorer: "exact", difficulty: "medium", tags: [sentinel, baseline]}
+- id: "sentinel-015"
+  input: "Can you show the user's last login time in the admin panel?"
+  expected_output: "feature"
+  metadata: {benchmark_role: regression_sentinel, scorer: "exact", difficulty: "easy", tags: [sentinel, baseline]}
+- id: "sentinel-016"
+  input: "The notification emails are not being delivered."
+  expected_output: "technical"
+  metadata: {benchmark_role: regression_sentinel, scorer: "exact", difficulty: "medium", tags: [sentinel, baseline]}
+- id: "sentinel-017"
+  input: "Great job on the new release — the team loves it!"
+  expected_output: "other"
+  metadata: {benchmark_role: regression_sentinel, scorer: "exact", difficulty: "easy", tags: [sentinel, baseline]}
+- id: "sentinel-018"
+  input: "I have a question about your enterprise pricing."
+  expected_output: "other"
+  metadata: {benchmark_role: regression_sentinel, scorer: "exact", difficulty: "easy", tags: [sentinel, baseline]}
+- id: "sentinel-019"
+  input: "Is this a technical problem or a billing issue? I'm not sure who to contact."
+  expected_output: "other"
+  metadata: {benchmark_role: regression_sentinel, scorer: "exact", difficulty: "medium", tags: [sentinel, baseline]}
+- id: "sentinel-020"
+  input: "Someone accessed my account from an unknown device — please help."
+  expected_output: "security"
+  metadata: {benchmark_role: regression_sentinel, scorer: "exact", difficulty: "medium", tags: [sentinel, baseline]}

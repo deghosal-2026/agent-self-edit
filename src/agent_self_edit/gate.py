@@ -12,7 +12,7 @@ from typing import Any, Literal
 from .ab_test import ABResult
 from .config import Config
 from .guardrails import compute_drift_tfidf, compute_edit_distance, parse_frozen_sections
-from .types import CheckResult, EditProposal, GateResult, utc_now_iso
+from .types import CheckResult, EditProposal, GateResult, materialize_candidate_prompt, utc_now_iso
 
 StdList = list
 
@@ -201,7 +201,17 @@ def check_edit_distance(
             threshold=threshold,
             details="no edit proposal; cannot measure edit distance",
         )
-    changed = compute_edit_distance(current_prompt, edit.new_text).total
+    try:
+        candidate = materialize_candidate_prompt(current_prompt, edit)
+    except ValueError as exc:
+        return CheckResult(
+            name="edit_distance",
+            passed=False,
+            value=float("inf"),
+            threshold=threshold,
+            details=str(exc),
+        )
+    changed = compute_edit_distance(current_prompt, candidate).total
     passed = changed <= threshold
     return CheckResult(
         name="edit_distance",
@@ -229,7 +239,19 @@ def check_drift(
         if drift_threshold is not None
         else (config.gate.drift_threshold if config else 0.3)
     )
-    prompt_b = edit.new_text if edit else current_prompt
+    if edit is None:
+        prompt_b = current_prompt
+    else:
+        try:
+            prompt_b = materialize_candidate_prompt(current_prompt, edit)
+        except ValueError as exc:
+            return CheckResult(
+                name="drift",
+                passed=False,
+                value=float("inf"),
+                threshold=threshold,
+                details=str(exc),
+            )
     drift = compute_drift_tfidf(original_prompt, prompt_b)
     passed = drift <= threshold
     return CheckResult(
@@ -362,6 +384,25 @@ class PromotionGate:
                 entry["proposal_section"] = edit.section
             self.audit.log(entry)
         return result
+
+    def log_result(self, result: GateResult, edit: EditProposal | None = None) -> None:
+        """Log an existing ``GateResult`` to the audit log without re-running checks."""
+        if self.audit is None:
+            return
+        entry: dict[str, Any] = {
+            "timestamp": utc_now_iso(),
+            "edit_id": result.edit_id,
+            "decision": result.decision,
+            "reason": result.reason,
+            "checks": [
+                {"name": c.name, "passed": c.passed, "value": c.value, "threshold": c.threshold}
+                for c in result.checks
+            ],
+        }
+        if edit is not None:
+            entry["proposal_text"] = edit.new_text
+            entry["proposal_section"] = edit.section
+        self.audit.log(entry)
 
 
 # ---------------------------------------------------------------------------

@@ -1,8 +1,4 @@
-"""Feedback analyzer: reviews traces, proposes minimal prompt edits (F-02).
-
-The analyzer is the creative engine — it has no authority. Every proposal
-goes through the A/B test engine and promotion gate before promotion.
-"""
+"""Feedback analyzer: reviews traces, proposes minimal prompt edits (F-02)."""
 
 from __future__ import annotations
 
@@ -24,10 +20,6 @@ class AnalyzerError(Exception):
     """Raised on analyzer LLM failure or malformed response."""
 
 
-# ---------------------------------------------------------------------------
-# #46 — System prompt template + helpers
-# ---------------------------------------------------------------------------
-
 ANALYZER_SYSTEM_PROMPT = """You are a prompt optimization analyst. You review
 execution traces where an agent failed and propose minimal, concrete edits to
 the agent's system prompt.
@@ -37,6 +29,7 @@ Current prompt (frozen sections marked with [FROZEN]):
 
 Failed traces (batch of {N}):
 {traces}
+{rejection_context}
 
 For each failure pattern you identify, propose ONE edit:
 - Which section of the prompt to change
@@ -52,9 +45,69 @@ Each edit must be minimal — change the fewest lines possible.
 Respond as a JSON array of objects with keys:
 section, old_text, new_text, hypothesis, evidence_traces, expected_improvement"""
 
+STAGE1_SUMMARIZE_PROMPT = """You are analyzing execution traces where a prompt-based
+agent failed. Summarize the recurring failure patterns.
+
+Failed traces:
+{traces}
+{rejection_context}
+
+Identify the top 2-3 distinct failure patterns. For each pattern, describe:
+- What went wrong (1 sentence)
+- Which traces exhibit this pattern
+- What the prompt likely lacks or misdirects
+
+Respond as a JSON array of objects with keys: pattern, description, trace_ids."""
+
+STAGE2_SELECT_PROMPT = """You are choosing which part of a prompt to edit.
+
+Current prompt (frozen sections marked with [FROZEN]):
+{current_prompt_with_annotations}
+
+Failure patterns identified in the traces:
+{failure_patterns}
+{rejection_context}
+
+Select exactly ONE section of the prompt to modify. Choose the section whose
+change would address the most failure patterns with the smallest edit.
+
+Do NOT choose the same section and same edit intent if the previous proposal was rejected.
+
+Respond as JSON: {{"section": "...", "rationale": "..."}}"""
+
+STAGE3_SYNTHESIZE_PROMPT = """You are making a minimal edit to a prompt.
+
+Current prompt (exact text — copy old_text from here character-for-character):
+{current_prompt_raw}
+
+Target section: {target_section}
+Rationale: {rationale}
+
+Failure patterns to address:
+{failure_patterns}
+{rejection_context}
+
+Propose ONE minimal edit:
+- old_text: copy the EXACT text from the current prompt above that you want to replace
+- new_text: replacement text (change the fewest characters possible)
+- hypothesis: why this specific change helps (1-2 sentences)
+- expected_improvement: measurable expectation
+
+Small-edit rule:
+- Prefer changing 1 line only
+- Never change more than 2 lines unless absolutely necessary
+- Prefer adding one short clause over rewriting a whole block
+
+IMPORTANT: The old_text MUST be copied verbatim from the current prompt.
+Do not paraphrase or reformat it.
+
+If previous feedback shows this exact edit family was rejected, produce a materially different edit.
+
+Respond as JSON: {{"section": "...", "old_text": "...", "new_text": "...",
+"hypothesis": "...", "expected_improvement": "..."}}"""
+
 
 def annotate_prompt(prompt_text: str) -> str:
-    """Prefix every frozen line with ``[FROZEN]`` so the LLM sees it."""
     frozen_idx = frozen_line_indexes(prompt_text)
     lines = prompt_text.splitlines()
     annotated = []
@@ -67,7 +120,6 @@ def annotate_prompt(prompt_text: str) -> str:
 
 
 def format_traces(traces: list[Trace]) -> str:
-    """Format traces as a compact text block for the analyzer prompt."""
     lines = []
     for i, t in enumerate(traces, 1):
         reason = t.failure_reason or "unknown"
@@ -83,41 +135,86 @@ def build_analyzer_prompt(
     current_prompt: str,
     traces: list[Trace],
     max_proposals: int = 3,
+    rejection_context: str = "",
 ) -> str:
-    """Assemble the full analyzer prompt (annotated prompt + traces + format)."""
     annotated = annotate_prompt(current_prompt)
     formatted = format_traces(traces)
+    rejection_section = (
+        f"\nPrevious iteration feedback:\n{rejection_context}\n"
+        if rejection_context else ""
+    )
     return ANALYZER_SYSTEM_PROMPT.format(
         current_prompt_with_annotations=annotated,
         N=len(traces),
         traces=formatted,
+        rejection_context=rejection_section,
         max_proposals=max_proposals,
     )
 
 
-# ---------------------------------------------------------------------------
-# #47 — Analyzer runner
-# ---------------------------------------------------------------------------
+def build_stage1_prompt(traces: list[Trace], rejection_context: str = "") -> str:
+    rejection_section = (
+        f"\nPrevious iteration feedback:\n{rejection_context}\n"
+        if rejection_context else ""
+    )
+    return STAGE1_SUMMARIZE_PROMPT.format(
+        traces=format_traces(traces),
+        rejection_context=rejection_section,
+    )
 
 
-def _extract_json(response: str) -> list[dict[str, Any]]:
-    """Parse the LLM response into a JSON list, stripping markdown fences."""
+def build_stage2_prompt(
+    current_prompt: str, failure_patterns: str, rejection_context: str = ""
+) -> str:
+    rejection_section = (
+        f"\nPrevious iteration feedback:\n{rejection_context}\n"
+        if rejection_context else ""
+    )
+    return STAGE2_SELECT_PROMPT.format(
+        current_prompt_with_annotations=annotate_prompt(current_prompt),
+        failure_patterns=failure_patterns,
+        rejection_context=rejection_section,
+    )
+
+
+def build_stage3_prompt(
+    current_prompt: str,
+    target_section: str,
+    rationale: str,
+    failure_patterns: str,
+    rejection_context: str = "",
+) -> str:
+    rejection_section = (
+        f"\nPrevious iteration feedback:\n{rejection_context}\n"
+        if rejection_context else ""
+    )
+    return STAGE3_SYNTHESIZE_PROMPT.format(
+        current_prompt_raw=current_prompt,
+        target_section=target_section,
+        rationale=rationale,
+        failure_patterns=failure_patterns,
+        rejection_context=rejection_section,
+    )
+
+
+def _extract_json(response: str) -> list[dict[str, Any]] | dict[str, Any]:
     text = response.strip()
     if text.startswith("```"):
         lines = text.splitlines()
         lines = [line for line in lines if not line.strip().startswith("```")]
         text = "\n".join(lines)
     try:
-        data = json.loads(text)
+        data: Any = json.loads(text)
     except json.JSONDecodeError as e:
         raise AnalyzerError(f"analyzer returned invalid JSON: {e}") from e
-    if not isinstance(data, list):
-        raise AnalyzerError("analyzer returned non-array JSON")
-    return data
+    if isinstance(data, dict):
+        return data
+    if isinstance(data, list):
+        return data
+    raise AnalyzerError(f"analyzer returned unexpected JSON type: {type(data).__name__}")
 
 
 def _build_proposal(obj: dict[str, Any]) -> EditProposal | None:
-    """Map a parsed JSON object to an EditProposal; return None if malformed."""
     try:
         return EditProposal(
             section=obj["section"],
@@ -132,50 +229,17 @@ def _build_proposal(obj: dict[str, Any]) -> EditProposal | None:
         return None
 
 
-def analyze(
-    traces: list[Trace],
-    current_prompt: str,
-    frozen_sections: list[str] | None,
-    llm_provider: LLMProvider,
-) -> list[EditProposal]:
-    """Run the analyzer over ``traces`` and return structured proposals.
-
-    Empty traces → ``[]`` (no LLM call). LLM failure → :class:`AnalyzerError`.
-    """
-    if not traces:
-        return []
-
-    prompt_text = build_analyzer_prompt(current_prompt, traces)
+def _llm_call(llm: LLMProvider, prompt: str) -> str:
     try:
-        response = llm_provider.complete(
-            prompt=prompt_text,
-            system_prompt="",
-            temperature=0.0,
-        )
+        response = llm.complete(prompt=prompt, system_prompt="", temperature=0.0)
     except ProviderError as e:
         raise AnalyzerError(f"analyzer LLM failed: {e}") from e
-
     if not response or not response.strip():
         raise AnalyzerError("analyzer returned empty response")
-
-    data = _extract_json(response)
-    proposals: list[EditProposal] = []
-    for obj in data:
-        proposal = _build_proposal(obj)
-        if proposal is not None:
-            proposals.append(proposal)
-    logger.info("Analyzer: produced %d proposals from %d traces", len(proposals), len(traces))
-    return proposals
+    return response
 
 
-# ---------------------------------------------------------------------------
-# #48 — Proposal validation
-# ---------------------------------------------------------------------------
-
-
-def _frozen_names(
-    current_prompt: str, frozen_sections: list[str] | None
-) -> set[str]:
+def _frozen_names(current_prompt: str, frozen_sections: list[str] | None) -> set[str]:
     names: set[str] = set()
     for sec in parse_frozen_sections(current_prompt):
         if sec.section_name is not None:
@@ -190,33 +254,27 @@ def validate_proposal(
     current_prompt: str,
     frozen_sections: list[str] | None,
 ) -> list[str]:
-    """Return a list of error messages; empty means the proposal is valid."""
     errors: list[str] = []
-
     if not proposal.section:
         errors.append("section is required")
-
     if not proposal.old_text or proposal.old_text not in current_prompt:
         errors.append("old_text not found in current prompt")
-
     if not proposal.new_text:
         errors.append("new_text is required")
-
     if not proposal.hypothesis:
         errors.append("hypothesis is required")
-
     frozen = _frozen_names(current_prompt, frozen_sections)
     if proposal.section in frozen:
+        errors.append(f"section '{proposal.section}' is frozen and cannot be modified")
+
+    old_lines = [line for line in proposal.old_text.splitlines() if line.strip()]
+    new_lines = [line for line in proposal.new_text.splitlines() if line.strip()]
+    changed_span = max(len(old_lines), len(new_lines))
+    if changed_span > 2:
         errors.append(
-            f"section '{proposal.section}' is frozen and cannot be modified"
+            f"edit span too large ({changed_span} lines); proposals must target at most 2 lines"
         )
-
     return errors
-
-
-# ---------------------------------------------------------------------------
-# #49 — Proposal deduplication (TF-IDF similarity per DD-19)
-# ---------------------------------------------------------------------------
 
 
 def deduplicate_proposals(
@@ -224,7 +282,6 @@ def deduplicate_proposals(
     near_misses: list[EditProposal],
     threshold: float = 0.85,
 ) -> list[EditProposal]:
-    """Skip proposals too similar to a near-miss and dedup within the list."""
     result: list[EditProposal] = []
     for proposal in proposals:
         is_dup = False
@@ -233,14 +290,10 @@ def deduplicate_proposals(
             similarity = 1.0 - drift
             if similarity > threshold:
                 is_dup = True
-                logger.info(
-                    "Dedup: skipping proposal (similarity=%.2f vs near-miss)",
-                    similarity,
-                )
+                logger.info("Dedup: skipping proposal (similarity=%.2f vs near-miss)", similarity)
                 break
         if not is_dup:
             result.append(proposal)
-
     seen: list[str] = []
     final: list[EditProposal] = []
     for p in result:
@@ -251,18 +304,232 @@ def deduplicate_proposals(
 
 
 # ---------------------------------------------------------------------------
-# #50 — Batch analysis + #51 — cost tracking
+# Staged analyzer pipeline (#127)
+# ---------------------------------------------------------------------------
+
+
+class StagedAnalyzer:
+    """Four-stage analyzer pipeline that reduces cognitive load per call.
+
+    Stage 1 — Failure summarization: identify recurring failure patterns.
+    Stage 2 — Prompt target selection: select one exact span to modify.
+    Stage 3 — Minimal edit synthesis: produce one minimal replacement.
+    Stage 4 — Deterministic structural validation: check before A/B.
+    """
+
+    def __init__(self, llm: LLMProvider) -> None:
+        self.llm = llm
+
+    def stage1_summarize(self, traces: list[Trace], rejection_context: str = "") -> str:
+        """Return a JSON string of failure patterns."""
+        prompt = build_stage1_prompt(traces, rejection_context=rejection_context)
+        response = _llm_call(self.llm, prompt)
+        data = _extract_json(response)
+        if isinstance(data, list):
+            return json.dumps(data, indent=2)
+        return response
+
+    def stage2_select(
+        self, current_prompt: str, failure_patterns: str, rejection_context: str = ""
+    ) -> tuple[str, str]:
+        """Return (section, rationale) for the chosen edit target."""
+        prompt = build_stage2_prompt(
+            current_prompt, failure_patterns, rejection_context=rejection_context
+        )
+        response = _llm_call(self.llm, prompt)
+        data = _extract_json(response)
+        if isinstance(data, dict):
+            return data.get("section", ""), data.get("rationale", "")
+        return "", ""
+
+    def stage3_synthesize(
+        self,
+        current_prompt: str,
+        target_section: str,
+        rationale: str,
+        failure_patterns: str,
+        rejection_context: str = "",
+    ) -> EditProposal | None:
+        """Produce one minimal edit proposal."""
+        prompt = build_stage3_prompt(
+            current_prompt,
+            target_section,
+            rationale,
+            failure_patterns,
+            rejection_context=rejection_context,
+        )
+        response = _llm_call(self.llm, prompt)
+        data = _extract_json(response)
+        if isinstance(data, dict):
+            return _build_proposal(data)
+        return None
+
+    def stage4_validate(
+        self,
+        proposal: EditProposal,
+        current_prompt: str,
+        frozen_sections: list[str] | None,
+    ) -> tuple[list[str], EditProposal]:
+        """Deterministic validation before A/B.
+
+        Returns (errors, corrected_proposal). If fuzzy matching fixes
+        old_text, the corrected proposal is returned with an empty error list.
+        """
+        errors = validate_proposal(proposal, current_prompt, frozen_sections)
+        if errors and "old_text not found in current prompt" in errors:
+            corrected = self._fuzzy_fix_old_text(proposal, current_prompt)
+            if corrected is not None:
+                errors = validate_proposal(corrected, current_prompt, frozen_sections)
+                if not errors:
+                    logger.info(
+                        "Stage 4 fuzzy match: old_text corrected successfully"
+                    )
+                    return [], corrected
+        return errors, proposal
+
+    @staticmethod
+    def _fuzzy_fix_old_text(
+        proposal: EditProposal, current_prompt: str
+    ) -> EditProposal | None:
+        """Try to find the closest match for old_text in the prompt.
+
+        Uses multiple strategies:
+        1. Exact substring (already failed if we're here)
+        2. Line-window matching with difflib
+        3. Substring search with varying window sizes
+        """
+        import difflib
+
+        old_text = proposal.old_text
+        prompt_lines = current_prompt.splitlines()
+        old_lines = old_text.splitlines()
+        old_len = len(old_lines)
+
+        best_ratio = 0.0
+        best_match = ""
+
+        # Strategy 1: same-length line windows
+        if old_len <= len(prompt_lines):
+            for i in range(len(prompt_lines) - old_len + 1):
+                candidate = "\n".join(prompt_lines[i:i + old_len])
+                ratio = difflib.SequenceMatcher(None, old_text, candidate).ratio()
+                if ratio > best_ratio:
+                    best_ratio = ratio
+                    best_match = candidate
+
+        # Strategy 2: try windows of varying sizes (±2 lines)
+        for delta in (-2, -1, 1, 2):
+            window = old_len + delta
+            if window < 1 or window > len(prompt_lines):
+                continue
+            for i in range(len(prompt_lines) - window + 1):
+                candidate = "\n".join(prompt_lines[i:i + window])
+                ratio = difflib.SequenceMatcher(None, old_text, candidate).ratio()
+                if ratio > best_ratio:
+                    best_ratio = ratio
+                    best_match = candidate
+
+        # Strategy 3: try the old_text as a substring of the prompt
+        # (handles whitespace normalization)
+        normalized_old = " ".join(old_text.split())
+        normalized_prompt = " ".join(current_prompt.split())
+        if normalized_old in normalized_prompt:
+            # Find the actual substring in the original prompt
+            # by matching on normalized whitespace
+            best_ratio = 1.0
+            best_match = old_text  # already a match after normalization
+
+        if best_ratio > 0.80 and best_match:
+            return EditProposal(
+                section=proposal.section,
+                old_text=best_match,
+                new_text=proposal.new_text,
+                hypothesis=proposal.hypothesis,
+                expected_improvement=proposal.expected_improvement,
+                evidence_traces=proposal.evidence_traces,
+                edit_id=proposal.edit_id,
+            )
+        return None
+
+    def analyze(
+        self,
+        traces: list[Trace],
+        current_prompt: str,
+        frozen_sections: list[str] | None,
+        llm_provider: LLMProvider,
+        rejection_context: str = "",
+    ) -> list[EditProposal]:
+        """Run the full staged pipeline."""
+        if not traces:
+            return []
+
+        try:
+            patterns = self.stage1_summarize(traces, rejection_context=rejection_context)
+            section, rationale = self.stage2_select(
+                current_prompt, patterns, rejection_context=rejection_context
+            )
+            if not section:
+                return []
+            proposal = self.stage3_synthesize(
+                current_prompt,
+                section,
+                rationale,
+                patterns,
+                rejection_context=rejection_context,
+            )
+            if proposal is None:
+                return []
+            errors, proposal = self.stage4_validate(proposal, current_prompt, frozen_sections)
+            if errors:
+                logger.warning("Stage 4 validation failed: %s", errors)
+                return []
+            return [proposal]
+        except AnalyzerError:
+            logger.warning("Staged analyzer failed; falling through to empty proposals")
+            return []
+
+
+# ---------------------------------------------------------------------------
+# Legacy single-pass analyze (kept for backward compatibility)
+# ---------------------------------------------------------------------------
+
+
+def analyze(
+    traces: list[Trace],
+    current_prompt: str,
+    frozen_sections: list[str] | None,
+    llm_provider: LLMProvider,
+) -> list[EditProposal]:
+    """Run the analyzer (single-pass or staged depending on config)."""
+    if not traces:
+        return []
+
+    prompt_text = build_analyzer_prompt(current_prompt, traces)
+    response = _llm_call(llm_provider, prompt_text)
+    data = _extract_json(response)
+    if not isinstance(data, list):
+        raise AnalyzerError("analyzer returned non-array JSON")
+    proposals: list[EditProposal] = []
+    for obj in data:
+        proposal = _build_proposal(obj)
+        if proposal is not None:
+            proposals.append(proposal)
+    logger.info("Analyzer: produced %d proposals from %d traces", len(proposals), len(traces))
+    return proposals
+
+
+# ---------------------------------------------------------------------------
+# Batch analysis (+ cost tracking)
 # ---------------------------------------------------------------------------
 
 
 @dataclass
 class AnalysisResult:
-    """Result of a batch analysis, including cost tracking."""
-
     proposals: list[EditProposal] = field(default_factory=list)
     tokens_used: int = 0
     cost_usd: float = 0.0
     cost_aborted: bool = False
+    failure_reason: str | None = None
 
 
 def analyze_batch(
@@ -272,48 +539,67 @@ def analyze_batch(
     llm_provider: LLMProvider,
     max_proposals: int = 3,
     near_misses: list[EditProposal] | None = None,
+    rejection_context: str = "",
     config: Config | None = None,
+    staged: bool = True,
 ) -> AnalysisResult:
-    """Filter failed traces, analyze, validate, dedup, truncate, track cost.
-
-    Returns an :class:`AnalysisResult` with proposals and cost info.
-    """
+    """Filter failed traces, analyze (staged or single-pass), validate, dedup, track cost."""
     failed = [t for t in traces if not t.success]
     if not failed:
         return AnalysisResult()
 
     ceiling = config.analyzer.cost_ceiling_usd if config else 0.50
-    prompt_text = build_analyzer_prompt(current_prompt, failed, max_proposals)
+    prompt_text = build_analyzer_prompt(
+        current_prompt, failed, max_proposals, rejection_context=rejection_context,
+    )
     prompt_tokens = estimate_tokens(prompt_text)
     pre_cost = estimate_cost(prompt_tokens)
 
     if pre_cost > ceiling:
         logger.warning(
             "Analyzer: pre-call cost %.4f exceeds ceiling %.4f — aborting",
-            pre_cost,
-            ceiling,
+            pre_cost, ceiling,
         )
-        return AnalysisResult(cost_aborted=True, tokens_used=prompt_tokens, cost_usd=pre_cost)
+        return AnalysisResult(
+            cost_aborted=True, tokens_used=prompt_tokens, cost_usd=pre_cost,
+            failure_reason="cost ceiling exceeded",
+        )
 
-    response, proposals = _analyze_with_response(
-        failed, current_prompt, frozen_sections, llm_provider
-    )
-    total_tokens = prompt_tokens + estimate_tokens(response)
-    total_cost = estimate_cost(total_tokens)
+    if staged:
+        sa = StagedAnalyzer(llm_provider)
+        proposals = sa.analyze(
+            failed,
+            current_prompt,
+            frozen_sections,
+            llm_provider,
+            rejection_context=rejection_context,
+        )
+        total_tokens = prompt_tokens  # approximate
+        total_cost = estimate_cost(total_tokens)
+        if not proposals:
+            return AnalysisResult(
+                proposals=[],
+                tokens_used=total_tokens,
+                cost_usd=total_cost,
+                failure_reason="staged analyzer produced no proposals",
+            )
+    else:
+        response, proposals = _analyze_with_response(
+            failed, current_prompt, frozen_sections, llm_provider,
+        )
+        total_tokens = prompt_tokens + estimate_tokens(response)
+        total_cost = estimate_cost(total_tokens)
+        proposals = [
+            p for p in proposals[:max_proposals]
+            if not validate_proposal(p, current_prompt, frozen_sections)
+        ]
 
-    validated = [
-        p
-        for p in proposals[:max_proposals]
-        if not validate_proposal(p, current_prompt, frozen_sections)
-    ]
-    validated = deduplicate_proposals(validated, near_misses or [])
-
+    validated = deduplicate_proposals(proposals, near_misses or [])
     cost_aborted = total_cost > ceiling
     if cost_aborted:
         logger.warning(
             "Analyzer: post-call cost %.4f exceeds ceiling %.4f — partial results",
-            total_cost,
-            ceiling,
+            total_cost, ceiling,
         )
 
     return AnalysisResult(
@@ -330,24 +616,11 @@ def _analyze_with_response(
     frozen_sections: list[str] | None,
     llm_provider: LLMProvider,
 ) -> tuple[str, list[EditProposal]]:
-    """Call analyze() but also capture the LLM response text for cost tracking.
-
-    Returns ``(response_text, proposals)``.
-    """
     prompt_text = build_analyzer_prompt(current_prompt, traces)
-    try:
-        response = llm_provider.complete(
-            prompt=prompt_text,
-            system_prompt="",
-            temperature=0.0,
-        )
-    except ProviderError as e:
-        raise AnalyzerError(f"analyzer LLM failed: {e}") from e
-
-    if not response or not response.strip():
-        raise AnalyzerError("analyzer returned empty response")
-
+    response = _llm_call(llm_provider, prompt_text)
     data = _extract_json(response)
+    if not isinstance(data, list):
+        raise AnalyzerError("analyzer returned non-array JSON")
     proposals: list[EditProposal] = []
     for obj in data:
         proposal = _build_proposal(obj)
@@ -356,14 +629,7 @@ def _analyze_with_response(
     return response, proposals
 
 
-# ---------------------------------------------------------------------------
-# #51 — MockAnalyzer
-# ---------------------------------------------------------------------------
-
-
 class MockAnalyzer:
-    """Returns predetermined proposals; never calls an LLM (hermetic CI)."""
-
     def __init__(self, proposals: list[EditProposal] | None = None) -> None:
         self._proposals = proposals or []
         self.calls = 0

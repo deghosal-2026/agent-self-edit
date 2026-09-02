@@ -213,6 +213,7 @@ class TraceStore:
             failure_reason=row["failure_reason"],
             timestamp=row["timestamp"],
             prompt_version=row["prompt_version"],
+            row_id=row["id"],
         )
 
     # ---- batching ----
@@ -232,22 +233,78 @@ class TraceStore:
             conn.close()
 
     def get_batch(self, size: int) -> StdList[Trace]:
+        """Atomically reserve and return a batch of pending traces.
+
+        Rows are marked ``processed = -1`` (in-flight) to prevent concurrent
+        workers from fetching the same rows. Call ``acknowledge_rows`` on
+        success or ``release_in_flight`` on failure.
+        """
         conn = self._connect()
         try:
-            rows = conn.execute(
-                """
-                SELECT * FROM traces
-                WHERE processed = 0
-                ORDER BY id
-                LIMIT ?
-                """,
-                (size,),
-            ).fetchall()
-            return [self._row_to_trace(row) for row in rows]
+            with self._write_lock:
+                rows = conn.execute(
+                    """
+                    SELECT * FROM traces
+                    WHERE processed = 0
+                    ORDER BY id
+                    LIMIT ?
+                    """,
+                    (size,),
+                ).fetchall()
+                if not rows:
+                    return []
+                row_ids = [row["id"] for row in rows]
+                placeholders = ",".join("?" for _ in row_ids)
+                conn.execute(
+                    f"UPDATE traces SET processed = -1 WHERE id IN ({placeholders})",
+                    row_ids,
+                )
+                conn.commit()
+                traces = [self._row_to_trace(row) for row in rows]
+                return traces
         finally:
             conn.close()
 
+    def acknowledge_rows(self, traces: StdList[Trace]) -> None:
+        """Mark rows as successfully processed (by immutable row id)."""
+        if not traces:
+            return
+        row_ids = [t.row_id for t in traces if t.row_id is not None]
+        if not row_ids:
+            return
+        placeholders = ",".join("?" for _ in row_ids)
+        with self._write_lock:
+            conn = self._connect()
+            try:
+                conn.execute(
+                    f"UPDATE traces SET processed = 1 WHERE id IN ({placeholders})",
+                    row_ids,
+                )
+                conn.commit()
+            finally:
+                conn.close()
+
+    def release_in_flight(self, traces: StdList[Trace]) -> None:
+        """Release in-flight rows back to pending (for retry after failure)."""
+        if not traces:
+            return
+        row_ids = [t.row_id for t in traces if t.row_id is not None]
+        if not row_ids:
+            return
+        placeholders = ",".join("?" for _ in row_ids)
+        with self._write_lock:
+            conn = self._connect()
+            try:
+                conn.execute(
+                    f"UPDATE traces SET processed = 0 WHERE id IN ({placeholders})",
+                    row_ids,
+                )
+                conn.commit()
+            finally:
+                conn.close()
+
     def acknowledge(self, task_ids: StdList[str]) -> None:
+        """Legacy: acknowledge by task_id. Prefer ``acknowledge_rows``."""
         if not task_ids:
             return
         placeholders = ",".join("?" for _ in task_ids)
@@ -257,6 +314,29 @@ class TraceStore:
                 conn.execute(
                     f"UPDATE traces SET processed = 1 WHERE task_id IN ({placeholders})",
                     task_ids,
+                )
+                conn.commit()
+            finally:
+                conn.close()
+
+    def acknowledge_batch(self, traces: StdList[Trace]) -> None:
+        """Mark rows as processed by their immutable ``id``, not ``task_id``.
+
+        This prevents silent data loss when duplicate ``task_id`` values exist
+        (ref #147). Pass the batch of traces returned by ``get_batch``.
+        """
+        if not traces:
+            return
+        row_ids = [t.row_id for t in traces if t.row_id is not None]
+        if not row_ids:
+            return
+        placeholders = ",".join("?" for _ in row_ids)
+        with self._write_lock:
+            conn = self._connect()
+            try:
+                conn.execute(
+                    f"UPDATE traces SET processed = 1 WHERE id IN ({placeholders})",
+                    row_ids,
                 )
                 conn.commit()
             finally:

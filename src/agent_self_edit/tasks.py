@@ -11,6 +11,61 @@ class TaskSetError(Exception):
     """Raised on task set validation failure."""
 
 
+VALID_BENCHMARK_ROLES = {
+    "failure_seeding", "promotion_ab", "held_out",
+    "regression_sentinel", "adversarial",
+}
+
+VALID_DOMAINS = {"classification", "extraction", "generation", "mixed"}
+
+VALID_SCORERS = {
+    "exact", "exactset", "exact_set", "partialset", "partial_set",
+    "contains", "structured", "llmjudge", "llm_judge",
+}
+
+
+@dataclass(frozen=True)
+class TaskSetManifest:
+    """Top-level manifest fields for a task set."""
+    domain: str = ""
+    scorer: str = ""
+    benchmark_role: str = ""
+    judge_rubric: str = ""
+    normalization: str = ""
+    allow_for_analyzer_seed: bool = False
+    required_count: int = 0
+
+
+def validate_manifest(
+    data: list[dict[str, Any]],
+    top_level: dict[str, Any] | None = None,
+) -> list[str]:
+    """Validate manifest-level fields and per-task metadata consistency."""
+    errors: list[str] = []
+    if top_level is None:
+        return errors
+
+    domain = top_level.get("domain", "")
+    if domain and domain not in VALID_DOMAINS:
+        errors.append(f"Invalid domain '{domain}' — must be one of {VALID_DOMAINS}")
+
+    scorer = top_level.get("scorer", "")
+    if scorer and scorer not in VALID_SCORERS:
+        errors.append(f"Invalid scorer '{scorer}' — must be one of {VALID_SCORERS}")
+
+    role = top_level.get("benchmark_role", "")
+    if role and role not in VALID_BENCHMARK_ROLES:
+        errors.append(f"Invalid benchmark_role '{role}'")
+
+    required = top_level.get("required_count", 0)
+    if required and len(data) < required:
+        errors.append(
+            f"Task set has {len(data)} tasks, minimum required is {required}"
+        )
+
+    return errors
+
+
 @dataclass(frozen=True)
 class Task:
     id: str
@@ -22,6 +77,7 @@ class Task:
 @dataclass
 class TaskSet:
     tasks: dict[str, Task] = field(default_factory=dict)
+    manifest: dict[str, Any] = field(default_factory=dict)
     _lock: threading.Lock = field(default_factory=threading.Lock)
 
     def add_task(self, task: Task) -> None:
@@ -44,6 +100,28 @@ class TaskSet:
         with self._lock:
             return len(self.tasks)
 
+    def benchmark_role(self) -> str | None:
+        """Return the benchmark role declared in task metadata, or None."""
+        for task in self.list_tasks():
+            role: str | None = task.metadata.get("benchmark_role")
+            if role:
+                return role
+        return None
+
+    def validate_benchmark_roles(self) -> list[str]:
+        """Check that all tasks declare the same benchmark_role and that it's valid."""
+        errors: list[str] = []
+        roles_seen: set[str] = set()
+        for task in self.list_tasks():
+            role = task.metadata.get("benchmark_role")
+            if role:
+                roles_seen.add(role)
+                if role not in VALID_BENCHMARK_ROLES:
+                    errors.append(f"Task '{task.id}': invalid benchmark_role '{role}'")
+        if len(roles_seen) > 1:
+            errors.append(f"Mixed benchmark roles in task set: {roles_seen}")
+        return errors
+
 
 def load_task_set(path: str | Path) -> TaskSet:
     path = Path(path)
@@ -63,15 +141,29 @@ def load_task_set(path: str | Path) -> TaskSet:
     else:
         raise TaskSetError(f"Unsupported format: {path.suffix} (use .yaml, .yml, or .json)")
 
-    if not isinstance(data, list):
+    if isinstance(data, dict):
+        if "tasks" not in data and "task_list" not in data:
+            raise TaskSetError("Task set must be a list of tasks or a dict with 'tasks' key")
+        manifest = data.get("manifest", {})
+        tasks_data = data.get("tasks", data.get("task_list", []))
+        if not isinstance(tasks_data, list):
+            raise TaskSetError("'tasks' must be a list")
+        man_errors = validate_manifest(tasks_data, manifest)
+        if man_errors:
+            raise TaskSetError("; ".join(man_errors))
+    else:
+        tasks_data = data
+        manifest = {}
+
+    if not isinstance(tasks_data, list):
         raise TaskSetError("Task set must be a list of tasks")
 
-    errors = _validate_task_list(data)
+    errors = _validate_task_list(tasks_data)
     if errors:
         raise TaskSetError("; ".join(errors))
 
     tasks = {}
-    for item in data:
+    for item in tasks_data:
         task = Task(
             id=item["id"],
             input=item["input"],
@@ -80,7 +172,7 @@ def load_task_set(path: str | Path) -> TaskSet:
         )
         tasks[task.id] = task
 
-    return TaskSet(tasks=tasks)
+    return TaskSet(tasks=tasks, manifest=dict(manifest))
 
 
 def _validate_task_list(data: list[Any]) -> list[str]:

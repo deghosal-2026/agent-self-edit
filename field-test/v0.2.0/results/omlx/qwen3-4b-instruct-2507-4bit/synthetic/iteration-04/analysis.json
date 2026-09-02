@@ -1,0 +1,15 @@
+{
+  "n_proposals": 1,
+  "cost_usd": 0.0035177999999999997,
+  "tokens_used": 1066,
+  "proposals": [
+    {
+      "section": "Rules",
+      "old_text": "urgent: immediate action (system down, blocked workflow, security breach)\n- billing: payments, invoices, refunds, subscriptions, charges\n- technical: bugs, errors, deployment issues, account access\n- feature: feature requests, integrations, enhancements\n- security: phishing, account compromise, unauthorized access\n- other: praise, general questions, unresolved ambiguity, meta-questions",
+      "new_text": "urgent: immediate action (system down, blocked workflow, security breach); only if no workaround exists and action must happen within 15 minutes\n- billing: payments, invoices, refunds, subscriptions, charges\n- technical: bugs, errors, deployment issues, account access\n- feature: feature requests, integrations, enhancements\n- security: phishing, account compromise, unauthorized access\n- other: praise, general questions, unresolved ambiguity, meta-questions, multi-issue or ambiguous cases",
+      "hypothesis": "By adding a clear time-bound and actionable threshold for 'urgent' (within 15 minutes) and explicitly including multi-issue or ambiguous cases in 'other', the model is less likely to misclassify non-urgent technical issues as urgent and better handles ambiguous or complex inputs that involve multiple domains.",
+      "expected_improvement": "Reduces misclassification of non-urgent technical issues as urgent by 30-40% and improves handling of multi-issue inputs by directing them to 'other' with higher accuracy, as measured by precision in classification tasks.",
+      "evidence_traces": []
+    }
+  ]
+}

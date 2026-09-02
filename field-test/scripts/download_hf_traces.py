@@ -4,7 +4,7 @@ Usage:
     pip install datasets
     python field-test/scripts/download_hf_traces.py
 
-Output: field-test/v0.1.0/corpus/real-traces/hf-*.jsonl
+Output: field-test/corpus/real-traces/hf-*.jsonl
 """
 
 import json
@@ -15,7 +15,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "src"))
 
 OUTPUT_DIR = (Path(__file__).resolve().parent.parent
-              / "v0.1.0" / "corpus" / "real-life" / "real-traces")
+              / "corpus" / "real-traces")
 
 
 def _skip_if_exists(path: Path) -> bool:

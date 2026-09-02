@@ -18,8 +18,7 @@ def rollback(version: int, reason: str, config_path: str) -> None:
     try:
         v = registry.rollback(version, reason or "rollback")
     except Exception as e:
-        click.echo(f"Error: {e}", err=True)
-        return
+        raise click.ClickException(str(e)) from e
 
     click.echo(f"Rolled back to v{version}. Created new version {v}.")
     if reason:

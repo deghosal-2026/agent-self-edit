@@ -6,11 +6,17 @@ from agent_self_edit.llm import LLMProvider, MockProvider, ProviderError
 from agent_self_edit.scorers import (
     ContainsScorer,
     ExactMatchScorer,
+    ExactSetScorer,
     LLMJudgeScorer,
+    PartialSetScorer,
     Scorer,
     ScorerError,
+    SingleLabelScorer,
+    StructuredExtractionScorer,
     get_scorer,
+    resolve_scorer,
 )
+from agent_self_edit.tasks import Task, TaskSet
 
 
 class FailingJudge(LLMProvider):
@@ -135,7 +141,22 @@ def test_llm_judge_provider_failure():
 
 def test_get_scorer_exact():
     s = get_scorer("exact")
-    assert isinstance(s, ExactMatchScorer)
+    assert isinstance(s, SingleLabelScorer)
+
+
+def test_get_scorer_single_label():
+    s = get_scorer("single_label")
+    assert isinstance(s, SingleLabelScorer)
+
+
+def test_get_scorer_exact_set():
+    s = get_scorer("exactset")
+    assert isinstance(s, ExactSetScorer)
+
+
+def test_get_scorer_partial_set():
+    s = get_scorer("partial")
+    assert isinstance(s, PartialSetScorer)
 
 
 def test_get_scorer_contains():
@@ -161,3 +182,177 @@ def test_get_scorer_unknown():
 def test_scorer_abstract_cannot_instantiate():
     with pytest.raises(TypeError):
         Scorer()  # type: ignore[abstract]
+
+
+# ---- SingleLabelScorer ----
+
+def test_single_label_pass():
+    s = SingleLabelScorer()
+    assert s.score("urgent", "URGENT") == (True, 1.0)
+
+
+def test_single_label_fail():
+    s = SingleLabelScorer()
+    assert s.score("urgent", "billing") == (False, 0.0)
+
+
+# ---- ExactSetScorer ----
+
+def test_exact_set_unordered_pass():
+    s = ExactSetScorer()
+    assert s.score("security, billing", "billing, security") == (True, 1.0)
+
+
+def test_exact_set_extra_label_fails():
+    s = ExactSetScorer()
+    passed, _ = s.score("security, billing", "security, billing, urgent")
+    assert passed is False
+
+
+def test_exact_set_missing_label_fails():
+    s = ExactSetScorer()
+    passed, _ = s.score("security, billing", "security")
+    assert passed is False
+
+
+def test_exact_set_single_label():
+    s = ExactSetScorer()
+    assert s.score("urgent", "urgent") == (True, 1.0)
+
+
+def test_exact_set_empty_actual():
+    s = ExactSetScorer()
+    assert s.score("urgent", "") == (False, 0.0)
+
+
+def test_exact_set_reordered_labels():
+    s = ExactSetScorer()
+    # "technical, security" and "security, technical" are the same set
+    assert s.score("technical, security", "security, technical") == (True, 1.0)
+
+
+# ---- PartialSetScorer ----
+
+def test_partial_set_full_overlap():
+    s = PartialSetScorer()
+    passed, score = s.score("security, billing", "billing, security")
+    assert passed is True
+    assert score == 1.0
+
+
+def test_partial_set_half_overlap():
+    s = PartialSetScorer()
+    passed, score = s.score("security, billing, urgent", "security, billing")
+    assert passed is False
+    # 2/3 overlap = 0.67
+    assert score == pytest.approx(2 / 3)
+
+
+def test_partial_set_no_overlap():
+    s = PartialSetScorer()
+    passed, score = s.score("urgent", "billing")
+    assert passed is False
+    assert score == 0.0
+
+
+def test_partial_set_empty_actual():
+    s = PartialSetScorer()
+    assert s.score("urgent", "") == (False, 0.0)
+
+
+def test_partial_set_both_empty():
+    s = PartialSetScorer()
+    assert s.score("", "") == (True, 1.0)
+
+
+def test_partial_set_extra_labels():
+    s = PartialSetScorer()
+    # expected={"security", "billing"}, actual=all three → 2/3 overlap
+    passed, score = s.score("security, billing", "security, billing, urgent")
+    assert passed is False
+    assert score == pytest.approx(2 / 3)
+
+
+# ---- resolve_scorer ----
+
+def test_resolve_scorer_from_first_task():
+    ts = TaskSet()
+    ts.add_task(Task(id="t1", input="x", expected_output="y", metadata={"scorer": "exactset"}))
+    s = resolve_scorer(ts)
+    assert isinstance(s, ExactSetScorer)
+
+
+def test_resolve_scorer_fallback_default():
+    ts = TaskSet()
+    ts.add_task(Task(id="t1", input="x", expected_output="y"))
+    s = resolve_scorer(ts)
+    assert isinstance(s, SingleLabelScorer)
+
+
+def test_resolve_scorer_contains():
+    ts = TaskSet()
+    ts.add_task(Task(id="t1", input="x", expected_output="y", metadata={"scorer": "contains"}))
+    s = resolve_scorer(ts)
+    assert isinstance(s, ContainsScorer)
+
+
+def test_resolve_scorer_empty_task_set():
+    ts = TaskSet()
+    s = resolve_scorer(ts)
+    assert isinstance(s, SingleLabelScorer)
+
+
+# ---- StructuredExtractionScorer (#126) ----
+
+def test_structured_extraction_exact():
+    s = StructuredExtractionScorer()
+    passed, score = s.score("name: Alice\nemail: a@b.com", "name: Alice\nemail: a@b.com")
+    assert passed is True
+    assert score == 1.0
+
+
+def test_structured_extraction_reordered():
+    s = StructuredExtractionScorer()
+    passed, score = s.score("name: Alice\nemail: a@b.com", "email: a@b.com\nname: Alice")
+    assert passed is True
+    assert score == 1.0
+
+
+def test_structured_extraction_formatting_differences():
+    s = StructuredExtractionScorer()
+    passed, score = s.score("name: Alice", "name:   alice")
+    assert passed is True
+    assert score == 1.0
+
+
+def test_structured_extraction_missing_field():
+    s = StructuredExtractionScorer()
+    passed, score = s.score("name: Alice\nemail: a@b.com", "name: Alice")
+    assert passed is False
+    assert score < 1.0
+
+
+def test_structured_extraction_extra_field():
+    s = StructuredExtractionScorer()
+    passed, score = s.score("name: Alice", "name: Alice\nemail: a@b.com")
+    assert passed is False
+    assert score < 1.0
+
+
+def test_structured_extraction_wrong_value():
+    s = StructuredExtractionScorer()
+    passed, _ = s.score("name: Alice", "name: Bob")
+    assert passed is False
+
+
+def test_structured_extraction_empty_actual():
+    s = StructuredExtractionScorer()
+    passed, _ = s.score("name: Alice", "")
+    assert passed is False
+
+
+def test_structured_extraction_empty_expected():
+    s = StructuredExtractionScorer()
+    passed, score = s.score("", "anything at all")
+    assert passed is True
+    assert score == 1.0

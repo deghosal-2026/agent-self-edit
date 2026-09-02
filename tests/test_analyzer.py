@@ -262,7 +262,7 @@ def test_analyze_batch_only_failed_traces():
     proposal = _proposal()
     llm = MockProvider(responses=_json_response([proposal]))
     traces = [_trace("ok", success=True), _trace("bad", success=False)]
-    result = analyze_batch(traces, CURRENT, None, llm)
+    result = analyze_batch(traces, CURRENT, None, llm, staged=False)
     # only 'bad' failed → still produces proposals
     assert len(result.proposals) == 1
 
@@ -271,7 +271,7 @@ def test_analyze_batch_max_proposals():
     ps = [_proposal(new_text=f"v{i}") for i in range(5)]
     llm = MockProvider(responses=_json_response(ps))
     traces = [_trace(f"t{i}") for i in range(5)]
-    result = analyze_batch(traces, CURRENT, None, llm, max_proposals=3)
+    result = analyze_batch(traces, CURRENT, None, llm, max_proposals=3, staged=False)
     assert len(result.proposals) <= 3
 
 
@@ -279,14 +279,14 @@ def test_analyze_batch_validates():
     # proposal with old_text not in prompt → dropped
     bad = _proposal(old_text="not in prompt")
     llm = MockProvider(responses=_json_response([bad]))
-    result = analyze_batch([_trace("t1")], CURRENT, None, llm)
+    result = analyze_batch([_trace("t1")], CURRENT, None, llm, staged=False)
     assert result.proposals == []
 
 
 def test_analyze_batch_cost_tracked():
     proposal = _proposal()
     llm = MockProvider(responses=_json_response([proposal]))
-    result = analyze_batch([_trace("t1")], CURRENT, None, llm)
+    result = analyze_batch([_trace("t1")], CURRENT, None, llm, staged=False)
     assert result.tokens_used > 0
     assert result.cost_usd > 0
     assert result.cost_aborted is False
@@ -313,7 +313,7 @@ def test_analyze_batch_llm_failure_raises():
             raise ProviderError("down")
 
     with pytest.raises(AnalyzerError):
-        analyze_batch([_trace("t1")], CURRENT, None, FailingProvider())
+        analyze_batch([_trace("t1")], CURRENT, None, FailingProvider(), staged=False)
 
 
 # ---- #51: MockAnalyzer ----
@@ -353,3 +353,10 @@ def test_analysis_result_dataclass():
     r = AnalysisResult(proposals=[], tokens_used=0, cost_usd=0.0, cost_aborted=False)
     assert r.proposals == []
     assert r.cost_aborted is False
+    assert r.failure_reason is None
+
+
+def test_analysis_result_with_failure_reason():
+    r = AnalysisResult(proposals=[], tokens_used=0, cost_usd=0.0, cost_aborted=False,
+                        failure_reason="cost ceiling exceeded")
+    assert r.failure_reason == "cost ceiling exceeded"

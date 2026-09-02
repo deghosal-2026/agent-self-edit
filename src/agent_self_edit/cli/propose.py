@@ -7,28 +7,39 @@ from typing import TYPE_CHECKING
 import click
 
 if TYPE_CHECKING:
-    from ..config import Config
+    from ..config import Config, ModelRoleConfig
     from ..llm.base import LLMProvider
 
 
-def _build_llm(config: Config) -> LLMProvider:
-    """Build the LLM provider from config file settings."""
+def _build_llm_for_role(config: Config, role_cfg: ModelRoleConfig) -> LLMProvider:
+    """Build a provider for a specific model role, falling back to the default ``llm`` config."""
+    provider = role_cfg.provider or config.llm.provider
+    model = role_cfg.model or config.llm.model
+    api_key = role_cfg.api_key or config.llm.api_key
+    base_url = role_cfg.base_url or config.llm.base_url
+    max_tokens = role_cfg.max_tokens or config.llm.max_tokens
+    timeout = role_cfg.timeout or config.llm.timeout
+    extra_body = role_cfg.extra_body if role_cfg.extra_body is not None else config.llm.extra_body
     from ..llm.base import ProviderError
     from ..llm.mock import MockProvider
-
-    if config.llm.provider == "mock":
+    if provider == "mock":
         return MockProvider(responses="mock output")
-    if config.llm.provider == "openai":
+    if provider == "openai":
         from ..llm.openai import OpenAIProvider
-
         return OpenAIProvider(
-            model=config.llm.model,
-            api_key=config.llm.api_key or None,
-            base_url=config.llm.base_url or None,
-            timeout=config.llm.timeout,
-            max_tokens=config.llm.max_tokens,
+            model=model,
+            api_key=api_key or None,
+            base_url=base_url or None,
+            timeout=timeout,
+            max_tokens=max_tokens,
+            extra_body=extra_body,
         )
-    raise ProviderError(f"Unknown LLM provider: {config.llm.provider}")
+    raise ProviderError(f"Unknown LLM provider: {provider}")
+
+
+def _build_llm(config: Config) -> LLMProvider:
+    """Build the default LLM provider from config file settings."""
+    return _build_llm_for_role(config, ModelRoleConfig())
 
 
 @click.command()
@@ -54,13 +65,13 @@ def propose(config_path: str, dry_run: bool) -> None:
     click.echo(f"Analyzing {len(failed)} failed traces (of {len(batch)} in batch)")
 
     if not failed:
-        store.acknowledge([t.task_id for t in batch])
+        store.acknowledge_rows(batch)
         click.echo("All traces succeeded; no proposals needed.")
         return
 
-    llm = _build_llm(config)
+    analyzer_llm = _build_llm_for_role(config, config.analyzer_role)
     result = analyze_batch(
-        failed, registry.current_prompt, None, llm,
+        failed, registry.current_prompt, None, analyzer_llm,
         max_proposals=config.analyzer.max_proposals_per_batch,
         config=config,
     )
@@ -70,26 +81,30 @@ def propose(config_path: str, dry_run: bool) -> None:
         click.echo(f"  - [{p.section}] {p.hypothesis}")
 
     if dry_run or not result.proposals:
-        store.acknowledge([t.task_id for t in batch])
+        store.acknowledge_rows(batch)
         return
 
     from ..ab_test import run_ab_test
     from ..gate import PromotionGate, check_all
-    from ..scorers import ExactMatchScorer
+    from ..scorers import resolve_scorer
     from ..tasks import load_task_set
 
     task_set = load_task_set(config.tasks.task_set_path) if config.tasks.task_set_path else None
     if task_set is None:
         click.echo("No task set configured — skipping A/B test.", err=True)
         return
-    scorer = ExactMatchScorer()
+    executor_llm = _build_llm_for_role(config, config.executor_role)
+    judge_llm = _build_llm_for_role(config, config.judge_role)
+    scorer = resolve_scorer(task_set, judge_llm=judge_llm)
+
+    rejection_context_lines: list[str] = []
 
     for proposal in result.proposals:
         candidate_prompt = registry.current_prompt.replace(
             proposal.old_text, proposal.new_text
         )
         ab_result = run_ab_test(
-            registry.current_prompt, candidate_prompt, task_set, llm, scorer, config
+            registry.current_prompt, candidate_prompt, task_set, executor_llm, scorer, config
         )
         click.echo(
             f"  A/B: {ab_result.winner} (p={ab_result.p_value:.4f}, n={ab_result.n_trials})"
@@ -101,9 +116,15 @@ def propose(config_path: str, dry_run: bool) -> None:
         )
         click.echo(f"  Gate: {gate_result.decision}")
 
+        if gate_result.decision in ("reject", "near_miss"):
+            rejection_context_lines.append(
+                f"Previous edit '{proposal.hypothesis}' was {gate_result.decision}: "
+                f"{gate_result.reason}"
+            )
+
         if gate_result.decision == "promote":
             registry.create(
-                proposal.new_text,
+                candidate_prompt,
                 hypothesis=proposal.hypothesis,
                 ab_results={
                     "winner": ab_result.winner,
@@ -116,6 +137,6 @@ def propose(config_path: str, dry_run: bool) -> None:
             )
             click.echo(f"  Promoted to version {registry.current_version}")
 
-        gate.check(proposal, ab_result, registry.current_prompt, registry.current_prompt, config)
+        gate.log_result(gate_result, edit=proposal)
 
-    store.acknowledge([t.task_id for t in batch])
+    store.acknowledge_rows(batch)

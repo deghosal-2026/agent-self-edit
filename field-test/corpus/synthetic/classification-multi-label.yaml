@@ -1,0 +1,22 @@
+# Multi-label classification — 5 tasks, ExactSetScorer
+# Each task has multiple correct labels (comma-separated). Order is irrelevant.
+- id: "classify-multi-021"
+  input: "My account was hacked and they changed my billing address — I need a refund AND a password reset."
+  expected_output: "security, billing"
+  metadata: {benchmark_role: promotion_ab, scorer: "exactset", difficulty: "hard", tags: [multi-label, security, billing]}
+- id: "classify-multi-022"
+  input: "The API is down AND I'm being charged for premium tier that I can't use."
+  expected_output: "technical, billing"
+  metadata: {benchmark_role: promotion_ab, scorer: "exactset", difficulty: "hard", tags: [multi-label, technical, billing]}
+- id: "classify-multi-023"
+  input: "Someone is using my stolen credit card on your platform and I need urgent help."
+  expected_output: "urgent, security"
+  metadata: {benchmark_role: promotion_ab, scorer: "exactset", difficulty: "hard", tags: [multi-label, urgent, security]}
+- id: "classify-multi-024"
+  input: "I want to request a new integration feature and also report that the billing page is broken."
+  expected_output: "feature, billing"
+  metadata: {benchmark_role: promotion_ab, scorer: "exactset", difficulty: "hard", tags: [multi-label, feature, billing]}
+- id: "classify-multi-025"
+  input: "The deployment failed and it exposed a security vulnerability in the auth module."
+  expected_output: "technical, security"
+  metadata: {benchmark_role: promotion_ab, scorer: "exactset", difficulty: "hard", tags: [multi-label, technical, security]}

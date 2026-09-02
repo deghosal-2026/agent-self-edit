@@ -264,20 +264,20 @@ def test_edit_distance_small():
 
 
 def test_check_edit_distance_pass():
-    p = _proposal(new_text="line1\nline2\nline3\nline4\nline5\nline6")
+    p = _proposal(old_text="line2", new_text="line2\nline4\nline5\nline6")
     c = check_edit_distance(p, "line1\nline2\nline3", _config(max_edit=10))
     assert c.passed is True
 
 
 def test_check_edit_distance_fail():
     # 5-line insertion far exceeds max_edit=2
-    p = _proposal(new_text="a\nb\nc\nd\ne\nf")
+    p = _proposal(old_text="a", new_text="a\nb\nc\nd\ne\nf")
     c = check_edit_distance(p, "a", _config(max_edit=2))
     assert c.passed is False
 
 
 def test_check_edit_distance_max_zero():
-    p = _proposal(new_text="changed")
+    p = _proposal(old_text="original", new_text="changed")
     c = check_edit_distance(p, "original", _config(max_edit=0))
     assert c.passed is False
 
@@ -285,6 +285,59 @@ def test_check_edit_distance_max_zero():
 def test_check_edit_distance_no_edit():
     c = check_edit_distance(None, "original", _config())
     assert c.passed is False
+
+
+# ---- M1: edit-distance measures full candidate (#117) ----
+
+def test_edit_distance_single_line_replacement_small():
+    """One-line replacement in a large prompt yields a small edit-distance value."""
+    long_prompt = "\n".join(f"line{i}" for i in range(100))
+    p = _proposal(
+        old_text="line50",
+        new_text="line50_modified",
+        edit_id="ed-small",
+    )
+    c = check_edit_distance(p, long_prompt, _config(max_edit=5))
+    assert c.passed is True
+    assert c.value <= 2
+
+
+def test_edit_distance_missing_old_text_fails():
+    """Missing old_text fails explicitly rather than being measured against a fragment."""
+    p = _proposal(old_text="nonexistent", new_text="something", edit_id="ed-missing")
+    c = check_edit_distance(p, "current prompt content", _config(max_edit=20))
+    assert c.passed is False
+    assert "not found" in c.details
+
+
+# ---- M1: drift measures full candidate (#118) ----
+
+def test_drift_single_line_replacement_low():
+    """Tiny in-place edits yield low drift."""
+    original = "Please classify the following tickets by urgency."
+    current = original
+    p = _proposal(
+        old_text="classify the following tickets",
+        new_text="classify incoming tickets",
+        edit_id="d-low",
+    )
+    c = check_drift(p, current, original, _config(drift=0.5))
+    assert c.passed is True
+    assert c.value < 0.5
+
+
+def test_drift_full_rewrite_high():
+    """Full rewrites yield high drift."""
+    original = "Please classify the following tickets by urgency."
+    current = original
+    p = _proposal(
+        old_text=original,
+        new_text="You are a helpful assistant for summarizing long documents into concise bullet points.",
+        edit_id="d-high",
+    )
+    c = check_drift(p, current, original, _config(drift=0.5))
+    assert c.passed is False
+    assert c.value > 0.5
 
 
 # ---- Drift (#29) ----
@@ -306,7 +359,7 @@ def test_drift_similar_low():
 
 def test_check_drift_pass():
     c = check_drift(
-        _proposal(new_text="classify tickets"),
+        _proposal(old_text="classify tickets", new_text="classify tickets by urgency"),
         "classify tickets", "classify tickets", _config(drift=0.5),
     )
     assert c.passed is True
@@ -314,13 +367,13 @@ def test_check_drift_pass():
 
 def test_check_drift_fail():
     # completely different by design
-    p = _proposal(new_text="completely different content about apples bananas")
+    p = _proposal(old_text="original prompt text here", new_text="completely different content about apples bananas")
     c = check_drift(p, "original prompt text here", "original prompt text here", _config(drift=0.1))
     assert c.passed is False
 
 
 def test_check_drift_identical_prompt():
-    c = check_drift(_proposal(new_text="same"), "same", "same", _config(drift=0.1))
+    c = check_drift(_proposal(old_text="same", new_text="same"), "same", "same", _config(drift=0.1))
     assert c.passed is True
 
 

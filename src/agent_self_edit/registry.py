@@ -77,6 +77,20 @@ class Meta:
     rollback_reason: str | None = None
     rollback_target: int | None = None
 
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "version": self.version,
+            "timestamp": self.timestamp,
+            "sha256_hash": self.sha256_hash,
+            "commit_sha": self.commit_sha,
+            "hypothesis": self.hypothesis,
+            "ab_results": self.ab_results,
+            "gate_result": self.gate_result,
+            "token_cost": self.token_cost,
+            "rollback_reason": self.rollback_reason,
+            "rollback_target": self.rollback_target,
+        }
+
 
 def _sha256(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
@@ -116,13 +130,13 @@ def _build_meta(
 class Registry:
     """Git-backed versioned prompt store.
 
-    When ``git_backed=True`` (default) and the registry path is inside a git
-    work tree, every ``create()``/``rollback()`` also creates a git commit
-    (PRD §2.5). If git is unavailable or the path is outside a repo, it falls
-    back to plain file-based storage.
+    When ``git_backed=True`` is explicitly set and the registry path is inside a
+    git work tree, every ``create()``/``rollback()`` also creates a git commit.
+    Default is ``False`` (opt-in) to avoid unintended auto-commits into
+    enclosing repositories (ref #157).
     """
 
-    def __init__(self, path: str | Path, git_backed: bool = True) -> None:
+    def __init__(self, path: str | Path, git_backed: bool = False) -> None:
         self._path = Path(path)
         self._path.mkdir(parents=True, exist_ok=True)
         self._git_enabled = git_backed and _inside_git_repo(self._path)
@@ -171,7 +185,6 @@ class Registry:
                     "commit",
                     "-m",
                     f"prompt v{version}",
-                    "--no-verify",
                 ],
                 check=True,
                 capture_output=True,
