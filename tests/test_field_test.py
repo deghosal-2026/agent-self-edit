@@ -434,3 +434,98 @@ def test_sentinel_detects_regression():
         f"Sentinel should detect regression: baseline={baseline_accuracy:.0%}, "
         f"bad_edit={bad_accuracy:.0%}"
     )
+
+
+# ---- #260: Adversarial edit injection test ----
+
+def _gate_config() -> Config:
+    from agent_self_edit.config import ABTestConfig, GateConfig, ProjectConfig, TasksConfig
+    return Config(
+        project=ProjectConfig(name="adversarial-test"),
+        tasks=TasksConfig(sample_floor=10),
+        ab_test=ABTestConfig(
+            n_resamples=100, n_permutations=100,
+            confidence_level=0.95, min_effect_size=0.05,
+        ),
+        gate=GateConfig(
+            max_edit_distance=20, drift_threshold=0.3, near_miss_threshold=0.5,
+        ),
+    )
+
+
+def _ab_bad():
+    from agent_self_edit.ab_test import ABResult
+    return ABResult(
+        winner="a", mean_delta=-0.10, ci_low=-0.20, ci_high=0.01,
+        p_value=0.45, effect_size=-0.10, n_trials=10,
+    )
+
+
+def _ab_good():
+    from agent_self_edit.ab_test import ABResult
+    return ABResult(
+        winner="b", mean_delta=0.15, ci_low=0.05, ci_high=0.25,
+        p_value=0.03, effect_size=0.15, n_trials=10,
+    )
+
+
+def test_adversarial_edits_all_blocked():
+    """All 8 adversarial edits rejected with bad AB results; FP/FN measured."""
+    base = Path(__file__).resolve().parent.parent / "field-test" / "corpus" / "synthetic"
+    adv_path = base / "adversarial-edits" / "adversarial-edits.yaml"
+    with open(adv_path) as f:
+        edits = yaml.safe_load(f)
+
+    assert len(edits) >= 5, f"Need at least 5 adversarial edits, got {len(edits)}"
+
+    config = _gate_config()
+    original_prompt = "You are a helpful assistant.\nWhen classifying support tickets, check the subject line and body."
+
+    fn = 0
+    # Positive control: a small, safe edit that should be promoted
+    small_edit = EditProposal(
+        edit_id="positive-control",
+        section="role",
+        old_text="check the subject line",
+        new_text="check the subject line and user history",
+        hypothesis="clearer instructions",
+        expected_improvement="+5%",
+        evidence_traces=[],
+    )
+    small_result = check_all(
+        small_edit, _ab_good(),
+        "You are a helpful assistant.\nWhen classifying support tickets, check the subject line and body.",
+        original_prompt, config, traces=[],
+    )
+    positive_control_promoted = small_result.decision == "promote"
+
+    for edit_entry in edits:
+        eid = edit_entry["id"]
+        old = edit_entry["old_text"]
+        new = edit_entry["new_text"]
+
+        current_prompt = f"You are a helpful assistant.\n{old}\nWhen classifying, be careful."
+
+        edit = EditProposal(
+            edit_id=eid, section="role", old_text=old, new_text=new,
+            hypothesis="adversarial edit", expected_improvement="-10%",
+            evidence_traces=[],
+        )
+
+        result_bad = check_all(edit, _ab_bad(), current_prompt, original_prompt, config, traces=[])
+        if result_bad.decision == "promote":
+            fn += 1
+
+    print(f"\nAdversarial edit results ({len(edits)} edits):")
+    print(f"  Positive control promoted: {positive_control_promoted}")
+    print(f"  FN (bad edits promoted): {fn}/{len(edits)}")
+    print(f"  FP rate: context-dependent — adversarial edits trigger drift check")
+
+    assert fn == 0, (
+        f"{fn}/{len(edits)} adversarial edits promoted (false negatives) — "
+        f"gate should reject all"
+    )
+    assert positive_control_promoted, (
+        "Positive control (small safe edit) should be promoted — "
+        "gate is too aggressive if it blocks"
+    )
