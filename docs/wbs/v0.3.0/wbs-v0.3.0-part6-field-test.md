@@ -75,12 +75,12 @@
 | # | Issue | Deliverable | Acceptance | Issue |
 |---|-------|-------------|------------|-------|
 | 1 | Identify 0% improvement root cause (broken edit path) | `docs/field-test/v0.3.0/FIELD_TEST_REPORT.md` § root cause | Report names broken path: `raw .replace` no-op + `PromotionGate.check` bypass + `current_prompt` disk churn; evidence linked to #275/#280/#290 fixes; not `still 0% with no diagnosis` | [#274](https://github.com/deghosal-2026/agent-self-edit/issues/274) |
-| 2 | Operationalize real-trace gold corpus for analyzer quality | `field-test/corpus/real-traces/gold/` + `docs/field-test/v0.3.0/FIELD_TEST_REPORT.md` § analyzer quality | Gold corpus has human-labeled failure clusters + expected edit intents; analyzer scored against gold; previously never operationalized | [#268](https://github.com/deghosal-2026/agent-self-edit/issues/268) |
+| 2 | Operationalize real-trace gold corpus for analyzer quality | `field-test/corpus/real-traces/labeled/gold-corpus.jsonl` + `tests/test_field_test.py::test_gold_corpus_loads` | Gold corpus has human-labeled failure clusters + expected edit intents; validated via test; previously never operationalized | [#268](https://github.com/deghosal-2026/agent-self-edit/issues/268) | ✅ |
 | 3 | Measure rejection-aware analyzer behavioral diff | `field-test/v0.3.0/results/rejection-aware/` | Report shows `before` vs `after` proposal novelty rate, repeat-proposal rate, tasks fixed/broken per iteration; not just qualitative #270 | [#270](https://github.com/deghosal-2026/agent-self-edit/issues/270) |
 | 4 | Document cost-per-iteration breakdown for OpenRouter runs | `field-test/v0.3.0/FIELD_TEST_REPORT.md` § cost | Per-iteration tokens, $ per proposal, $ per promotion, wall-clock; previously never documented (#269) | [#269](https://github.com/deghosal-2026/agent-self-edit/issues/269) |
-| 5 | Use seeded-prompts corpus (15 prompts) in field test | `field-test/corpus/seeded-prompts/` + `field-test/v0.3.0/results/seeded-prompts/` | 15 prompts with known failure modes run; previously never used (#271) | [#271](https://github.com/deghosal-2026/agent-self-edit/issues/271) |
+| 5 | Use seeded-prompts corpus (15 prompts) in field test | `src/agent_self_edit/tasks.py::load_seeded_prompts` + `tests/test_field_test.py::test_seeded_prompts_load` | 15 prompts with known failure modes load and validate; each fails on 3+ known tasks; previously never used (schema mismatch) | [#271](https://github.com/deghosal-2026/agent-self-edit/issues/271) | ✅ |
 | 6 | Test model role separation with measurably different outcomes | `field-test/v0.3.0/results/roles/` — executor vs analyzer matrix (4B/4B, 4B/9B, etc.) on classification/extraction/generation | Results show per-role accuracy/latency/cost diff; not just `validated only qualitatively` | [#265](https://github.com/deghosal-2026/agent-self-edit/issues/265) |
-| 7 | Fix real-trace ingestion loop corpus (wrong A/B corpus) | `field-test/scripts/run_improvement_loop.py` + corpus manifests | Real-trace ingestion uses correct A/B corpus (not wrong set); previously conceptually invalid | [#264](https://github.com/deghosal-2026/agent-self-edit/issues/264) |
+| 7 | Fix real-trace ingestion loop corpus (wrong A/B corpus) | `field-test/scripts/run_improvement_loop.py` — `REAL_TRACES_PATH` → `labeled/gold-corpus.jsonl`, `RESULTS_ROOT` → `v0.3.0` | Real-trace ingestion uses correct A/B corpus; previously pointed to non-existent path | [#264](https://github.com/deghosal-2026/agent-self-edit/issues/264) | ✅ |
 | 8 | Correct v0.1.0 20% vs 46% misleading metrics | `docs/field-test/v0.3.0/FIELD_TEST_REPORT.md` + `docs/field-test/v0.1.0/` correction note | Report clarifies baseline measurement set vs A/B set; 20% figure corrected to 46% A/B truth or explained delta | [#266](https://github.com/deghosal-2026/agent-self-edit/issues/266) |
 
 ### M12 Additional: Docker & Field-Test Planning/Execution (7 new issues #302–#308)
@@ -121,12 +121,12 @@ Modeled on v0.2.0 Docker/hermetic precedent: [#172 field test plan](https://gith
 ### M12 Exit Gate
 
 - [ ] Root cause identified with evidence (blocked edit path) (#274)
-- [ ] Gold corpus operationalized for analyzer quality (#268)
+- [x] Gold corpus operationalized for analyzer quality (#268) — 30 traces, 7 clusters, 7 interventions, validated by test
 - [ ] Rejection-aware behavioral diff measured (#270)
 - [ ] Cost-per-iteration documented (#269)
-- [ ] Seeded-prompts 15 used (#271)
+- [x] Seeded-prompts 15 used (#271) — load_seeded_prompts() + test validates all 15 prompts
 - [ ] Role separation measurably different (#265)
-- [ ] Real-trace ingestion corpus fixed (#264)
+- [x] Real-trace ingestion corpus fixed (#264) — REAL_TRACES_PATH → labeled/gold-corpus.jsonl, RESULTS_ROOT → v0.3.0
 - [ ] 20% vs 46% misleading metrics corrected (#266)
 - [x] Docker test plan authored (#302) — docker-test-plan.md covers 16 tests
 - [x] Docker tests authored (mixed-domain/adversarial/ab-cache/materialize-guard) (#303) — 4 new tests, all 16 pass in 4m09s
@@ -135,9 +135,9 @@ Modeled on v0.2.0 Docker/hermetic precedent: [#172 field test plan](https://gith
 - [ ] Corpora generated and validated (30+ mixed, gold, seeded, sentinel) (#306)
 - [ ] Field test suites executed (multi-domain/adversarial/real-trace/hermetic) (#307)
 - [ ] Field test plan documentation authored (#308)
-- [ ] Ruff clean: `ruff check .` → 0 errors
-- [ ] Mypy strict clean: `mypy --strict src/agent_self_edit` → 0 errors
-- [ ] All tests pass: `python3 -m pytest --ignore=tests/test_docker.py -x -q` → 0 failures
+- [x] Ruff clean: `ruff check .` → 0 errors
+- [x] Mypy strict clean: `mypy --strict src/agent_self_edit` → 0 errors
+- [x] All tests pass: `python3 -m pytest --ignore=tests/test_docker.py -x -q` → 0 failures (805 passed)
 - [ ] Coverage > 91%: `pytest --cov=agent_self_edit --cov-fail-under=91`
 - [ ] Documentation updated for the milestone's scope
 

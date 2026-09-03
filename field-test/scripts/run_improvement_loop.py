@@ -1,4 +1,4 @@
-"""Run N self-improvement iterations with inspectable A/B test artifacts (v0.2.0).
+"""Run N self-improvement iterations with inspectable A/B test artifacts (v0.3.0).
 
 Calls the internal API directly (not the CLI) so every A/B test result is
 captured as structured data. Per iteration writes:
@@ -43,9 +43,9 @@ CLASSIFICATION_TASK_FILES = [
 
 SENTINEL_TASKS_PATH = REPO_ROOT / "field-test" / "corpus" / "synthetic" / "sentinel.yaml"
 PROMOTION_TASKS_PATH = REPO_ROOT / "field-test" / "corpus" / "synthetic" / "classification-promotion.yaml"
-REAL_TRACES_PATH = REPO_ROOT / "field-test" / "corpus" / "real-traces" / "gold-corpus.jsonl"
+REAL_TRACES_PATH = REPO_ROOT / "field-test" / "corpus" / "real-traces" / "labeled" / "gold-corpus.jsonl"
 
-RESULTS_ROOT = REPO_ROOT / "field-test" / "v0.2.0" / "results"
+RESULTS_ROOT = REPO_ROOT / "field-test" / "v0.3.0" / "results"
 
 HELD_OUT_TASKS: list[dict[str, str]] = [
     {"id": "classify-006", "input": "I think my account was compromised — someone logged in from an unknown IP.", "expected_output": "security"},

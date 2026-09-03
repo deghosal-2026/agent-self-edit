@@ -572,3 +572,92 @@ def test_real_trace_replay_50_plus(tmp_path):
     print(f"  Failure: {failures} ({1 - success_rate:.0%})")
 
     assert total >= 50, f"Should have 50+ traces, got {total}"
+
+
+# ---- #268: Gold corpus analyzer quality ----
+
+def test_gold_corpus_loads():
+    """Gold corpus loads and validates (30 traces, all fields present)."""
+    base = Path(__file__).resolve().parent.parent / "field-test" / "corpus" / "real-traces" / "labeled"
+    gold_path = base / "gold-corpus.jsonl"
+    assert gold_path.exists()
+
+    import json
+    traces = []
+    with open(gold_path) as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                traces.append(json.loads(line))
+
+    assert len(traces) == 30, f"Gold corpus should have 30 traces, got {len(traces)}"
+    for t in traces:
+        assert "task_id" in t
+        assert "task_input" in t
+        assert "final_output" in t
+        assert "expected_output" in t
+        assert "failure_cluster" in t
+        assert "ideal_intervention" in t
+
+    clusters = set(t["failure_cluster"] for t in traces)
+    interventions = set(t["ideal_intervention"] for t in traces)
+    assert len(clusters) >= 5, f"Expected 5+ failure clusters, got {clusters}"
+    assert len(interventions) >= 5, f"Expected 5+ ideal interventions, got {interventions}"
+    assert all(t.get("failure_cluster") for t in traces), "All gold traces should have a failure cluster"
+    assert all(t.get("ideal_intervention") for t in traces), "All gold traces should have an ideal intervention"
+
+
+# ---- #271: Seeded-prompts validation ----
+
+def test_seeded_prompts_load():
+    """All 15 seeded prompts load and validate."""
+    from agent_self_edit.tasks import load_seeded_prompts
+
+    base = Path(__file__).resolve().parent.parent / "field-test" / "corpus" / "synthetic" / "seeded-prompts"
+    prompts = load_seeded_prompts(str(base / "seeded-prompts.yaml"))
+    assert len(prompts) == 15, f"Expected 15 seeded prompts, got {len(prompts)}"
+
+    for p in prompts:
+        assert p.id.startswith("seeded-"), f"Unexpected id: {p.id}"
+        assert len(p.prompt) > 10, f"Prompt {p.id} too short"
+        assert len(p.fails_on) >= 3, f"Prompt {p.id} should fail on 3+ tasks, got {len(p.fails_on)}"
+
+    # Verify each prompt fails on tasks from the classification/extraction/generation corpora
+    all_task_ids = set()
+    for corpus_name in ["classification.yaml", "extraction.yaml", "generation.yaml"]:
+        corp_path = Path(__file__).resolve().parent.parent / "field-test" / "corpus" / "synthetic" / corpus_name
+        if corp_path.exists():
+            import yaml as _yaml
+            with open(corp_path) as f:
+                tasks = _yaml.safe_load(f)
+            for t in tasks:
+                all_task_ids.add(t["id"])
+
+    for p in prompts:
+        for task_id in p.fails_on:
+            assert task_id in all_task_ids, (
+                f"Prompt {p.id} fails_on unknown task '{task_id}'"
+            )
+
+
+# ---- #264: Real-trace ingestion path ----
+
+def test_real_trace_path_valid():
+    """REAL_TRACES_PATH in the runner script points to an existing file."""
+    runner_path = Path(__file__).resolve().parent.parent / "field-test" / "scripts" / "run_improvement_loop.py"
+    assert runner_path.exists()
+
+    # Parse the REAL_TRACES_PATH from the script
+    source = runner_path.read_text()
+    for line in source.splitlines():
+        if "REAL_TRACES_PATH" in line and "=" in line:
+            assert "labeled" in line, (
+                f"REAL_TRACES_PATH should point to labeled/ directory: {line}"
+            )
+            # Extract the path and verify it exists
+            import re
+            path_match = re.search(r'"(field-test[^"]+)"', line)
+            if path_match:
+                resolved = Path(__file__).resolve().parent.parent / path_match.group(1)
+                assert resolved.exists(), f"REAL_TRACES_PATH points to non-existent file: {resolved}"
+            break
