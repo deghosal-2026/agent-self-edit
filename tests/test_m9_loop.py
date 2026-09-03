@@ -188,3 +188,46 @@ def test_ab_cache_disabled_skips_cache():
         run_ab_test("prompt a", "prompt b", tasks, llm, scorer, cfg, cache=cache)
         run_ab_test("prompt a", "prompt b", tasks, llm, scorer, cfg, cache=cache)
         assert len(llm.calls) > 0, "Cache disabled: LLM should be called both times"
+
+
+# ---------------------------------------------------------------------------
+# Task 4: File-based registry lock — fcntl.flock (#229)
+# ---------------------------------------------------------------------------
+
+
+def test_registry_file_lock_prevents_concurrent_corruption():
+    """Two threads creating versions concurrently should not corrupt."""
+    import threading
+
+    from agent_self_edit.registry import Registry
+
+    errors: list[str] = []
+
+    def create_in_thread(reg_path: str) -> None:
+        try:
+            reg = Registry(reg_path)
+            reg.create(f"prompt from {threading.current_thread().name}", hypothesis="h1")
+        except Exception as e:
+            errors.append(str(e))
+
+    with tempfile.TemporaryDirectory() as tmp:
+        reg_path = os.path.join(tmp, "registry")
+        threads = [threading.Thread(target=create_in_thread, args=(reg_path,)) for _ in range(3)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+        assert len(errors) == 0, f"Errors: {errors}"
+        reg = Registry(reg_path)
+        assert reg.current_version >= 1
+
+
+def test_registry_lockfile_created():
+    """Registry should create a .registry.lock file."""
+    from agent_self_edit.registry import Registry
+
+    with tempfile.TemporaryDirectory() as tmp:
+        reg_path = os.path.join(tmp, "registry")
+        reg = Registry(reg_path)
+        reg.create("prompt v1", hypothesis="h1")
+        assert os.path.exists(os.path.join(reg_path, ".registry.lock"))

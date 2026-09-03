@@ -10,12 +10,16 @@ gracefully to plain file-based storage.
 from __future__ import annotations
 
 import difflib
+import errno
 import hashlib
 import json
 import logging
+import os
 import shutil
 import subprocess
 import threading
+import time
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -135,6 +139,8 @@ class Registry:
         self._current = self._resolve_current()
         self._cached_prompt: str | None = None
         self._cached_version: int | None = None
+        self._lock_path = self._path / ".registry.lock"
+        self._fcntl_available = not os.name == "nt"
         if self._git_enabled:
             logger.info(
                 "Registry: git-backed at %s (current version %d)",
@@ -150,6 +156,32 @@ class Registry:
     @property
     def git_backed(self) -> bool:
         return self._git_enabled
+
+    @contextmanager
+    def _file_lock(self) -> Any:
+        """Acquire exclusive flock for cross-process safety; non-blocking with retry."""
+        if not self._fcntl_available:
+            yield
+            return
+        import fcntl
+
+        for attempt in range(3):
+            try:
+                fd = os.open(str(self._lock_path), os.O_CREAT | os.O_RDWR)
+                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                try:
+                    yield
+                finally:
+                    fcntl.flock(fd, fcntl.LOCK_UN)
+                    os.close(fd)
+                return
+            except OSError as e:
+                if e.errno in (errno.EACCES, errno.EAGAIN):
+                    if attempt < 2:
+                        time.sleep(0.5)
+                        continue
+                    raise RegistryError("registry locked by another process") from e
+                raise
 
     def _ensure_git_repo(self) -> None:
         if self._git_enabled:
@@ -287,81 +319,78 @@ class Registry:
     ) -> int:
         """Create a new prompt version (optionally git-committed). Returns the version number."""
         with self._lock:
-            self._ensure_git_repo()
-            version = self._current + 1
-            diff = self._compute_diff(self._current, prompt_text)
-            # Write with no SHA first so git has files to add; single logical write
-            # but handle corruption window (fix 222): clean up if git fails after write
-            meta_tmp = _build_meta(
-                version,
-                prompt_text,
-                commit_sha=None,
-                diff_from_previous=(
-                    {
-                        "lines_added": len(diff.added),
-                        "lines_removed": len(diff.removed),
-                        "lines_modified": len(diff.modified),
-                        "total": len(diff.added)
-                        + len(diff.removed)
-                        + len(diff.modified),
-                    }
-                    if diff is not None
-                    else None
-                ),
-                hypothesis=metadata.get("hypothesis"),
-                ab_results=metadata.get("ab_results"),
-                gate_result=metadata.get("gate_result"),
-                trigger_trace_ids=metadata.get("trigger_trace_ids"),
-                model_version=metadata.get("model_version"),
-                token_cost=metadata.get("token_cost"),
-                rollback_reason=metadata.get("rollback_reason"),
-                rollback_target=metadata.get("rollback_target"),
-            )
-            self._write(version, prompt_text, meta_tmp)
-            commit_sha: str | None = None
-            if self._git_enabled:
-                try:
-                    commit_sha = self._git_commit(version)
-                except Exception as e:
-                    md_path, meta_path = self._version_path(version)
-                    if md_path.exists():
-                        md_path.unlink(missing_ok=True)
-                    if meta_path.exists():
-                        meta_path.unlink(missing_ok=True)
-                    raise RegistryError(f"git commit failed for v{version}: {e}") from e
-                if commit_sha:
-                    # Second write with SHA (working tree ahead)
-                    meta = _build_meta(
-                        version,
-                        prompt_text,
-                        commit_sha=commit_sha,
-                        diff_from_previous=meta_tmp.diff_from_previous,
-                        hypothesis=meta_tmp.hypothesis,
-                        ab_results=meta_tmp.ab_results,
-                        gate_result=meta_tmp.gate_result,
-                        trigger_trace_ids=meta_tmp.trigger_trace_ids,
-                        model_version=meta_tmp.model_version,
-                        token_cost=meta_tmp.token_cost,
-                        rollback_reason=meta_tmp.rollback_reason,
-                        rollback_target=meta_tmp.rollback_target,
-                    )
-                    self._write(version, prompt_text, meta)
-                    self._cached_prompt = prompt_text
-                    self._cached_version = version
-                    self._current = version
-                    logger.info(
-                        "Registry: created version %d (git=%s, sha=%s)",
-                        version,
-                        self._git_enabled,
-                        commit_sha,
-                    )
-                    return version
-            # File-only or git without SHA
-            self._cached_prompt = prompt_text
-            self._cached_version = version
-            self._current = version
-            logger.info("Registry: created version %d (git=%s)", version, self._git_enabled)
-            return version
+            with self._file_lock():
+                self._ensure_git_repo()
+                version = self._current + 1
+                diff = self._compute_diff(self._current, prompt_text)
+                meta_tmp = _build_meta(
+                    version,
+                    prompt_text,
+                    commit_sha=None,
+                    diff_from_previous=(
+                        {
+                            "lines_added": len(diff.added),
+                            "lines_removed": len(diff.removed),
+                            "lines_modified": len(diff.modified),
+                            "total": len(diff.added)
+                            + len(diff.removed)
+                            + len(diff.modified),
+                        }
+                        if diff is not None
+                        else None
+                    ),
+                    hypothesis=metadata.get("hypothesis"),
+                    ab_results=metadata.get("ab_results"),
+                    gate_result=metadata.get("gate_result"),
+                    trigger_trace_ids=metadata.get("trigger_trace_ids"),
+                    model_version=metadata.get("model_version"),
+                    token_cost=metadata.get("token_cost"),
+                    rollback_reason=metadata.get("rollback_reason"),
+                    rollback_target=metadata.get("rollback_target"),
+                )
+                self._write(version, prompt_text, meta_tmp)
+                commit_sha: str | None = None
+                if self._git_enabled:
+                    try:
+                        commit_sha = self._git_commit(version)
+                    except Exception as e:
+                        md_path, meta_path = self._version_path(version)
+                        if md_path.exists():
+                            md_path.unlink(missing_ok=True)
+                        if meta_path.exists():
+                            meta_path.unlink(missing_ok=True)
+                        raise RegistryError(f"git commit failed for v{version}: {e}") from e
+                    if commit_sha:
+                        meta = _build_meta(
+                            version,
+                            prompt_text,
+                            commit_sha=commit_sha,
+                            diff_from_previous=meta_tmp.diff_from_previous,
+                            hypothesis=meta_tmp.hypothesis,
+                            ab_results=meta_tmp.ab_results,
+                            gate_result=meta_tmp.gate_result,
+                            trigger_trace_ids=meta_tmp.trigger_trace_ids,
+                            model_version=meta_tmp.model_version,
+                            token_cost=meta_tmp.token_cost,
+                            rollback_reason=meta_tmp.rollback_reason,
+                            rollback_target=meta_tmp.rollback_target,
+                        )
+                        self._write(version, prompt_text, meta)
+                        self._cached_prompt = prompt_text
+                        self._cached_version = version
+                        self._current = version
+                        logger.info(
+                            "Registry: created version %d (git=%s, sha=%s)",
+                            version,
+                            self._git_enabled,
+                            commit_sha,
+                        )
+                        return version
+                self._cached_prompt = prompt_text
+                self._cached_version = version
+                self._current = version
+                logger.info("Registry: created version %d (git=%s)", version, self._git_enabled)
+                return version
 
     def get(self, version: int) -> tuple[str, Meta]:
         if version <= 0 or version > self._current:
@@ -409,12 +438,9 @@ class Registry:
             raise RegistryError(
                 f"version {version} not in range [1, {self._current}]"
             )
-        text, _ = self._read(version)
-        return self.create(
-            text,
-            rollback_reason=reason,
-            rollback_target=version,
-        )
+        with self._lock:
+            text, _ = self._read(version)
+        return self.create(text, rollback_reason=reason, rollback_target=version)
 
     def lineage(
         self, from_version: int | None = None
