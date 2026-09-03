@@ -12,13 +12,12 @@ Covers:
 """
 
 import json
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 
 from agent_self_edit.analyzer import (
     STAGE3_SYNTHESIZE_PROMPT,
-    AnalysisResult,
     AnalyzerError,
     StagedAnalyzer,
     _extract_json,
@@ -215,7 +214,6 @@ def test_validate_proposal_blank_lines_counted():
     # max is 10, so 5 should pass
     assert validate_proposal(prop5, prompt5, None) == []
     # but verify changed_span uses max of old/new: new larger than old triggers
-    prop5b = _proposal(old_text="a", new_text="\n".join([f"l{i}" for i in range(11)]))
     # old "a" not found check would fail but we use prompt containing "a" and new spans 11
     prompt_a = "a\n" + "\n".join([f"l{i}" for i in range(11)])
     prop5c = _proposal(old_text="a", new_text="\n".join([f"l{i}" for i in range(11)]))
@@ -415,7 +413,8 @@ def test_stage4_validate_passes_directly():
 
 def test_staged_analyze_empty_traces_returns_empty():
     sa = StagedAnalyzer(MockProvider(responses=""))
-    proposals, _, _ = sa.analyze([], CURRENT, None); assert proposals == []
+    proposals, _, _ = sa.analyze([], CURRENT, None)
+    assert proposals == []
 
 
 def test_staged_analyze_successful_pipeline():
@@ -451,7 +450,8 @@ def test_staged_analyze_section_empty_returns_empty():
             return '{"section":"","rationale":"r"}'
         return "{}"
     sa = StagedAnalyzer(MockProvider(responses=responder))
-    proposals, _, _ = sa.analyze([_trace("t1")], CURRENT, None); assert proposals == []
+    proposals, _, _ = sa.analyze([_trace("t1")], CURRENT, None)
+    assert proposals == []
 
 
 def test_staged_analyze_proposal_none_returns_empty():
@@ -464,7 +464,8 @@ def test_staged_analyze_proposal_none_returns_empty():
             return '[]'  # list not dict => stage3 returns None
         return "[]"
     sa = StagedAnalyzer(MockProvider(responses=responder))
-    proposals, _, _ = sa.analyze([_trace("t1")], CURRENT, None); assert proposals == []
+    proposals, _, _ = sa.analyze([_trace("t1")], CURRENT, None)
+    assert proposals == []
 
 
 def test_staged_analyze_validation_fails_returns_empty():
@@ -483,7 +484,8 @@ def test_staged_analyze_validation_fails_returns_empty():
             })
         return "[]"
     sa = StagedAnalyzer(MockProvider(responses=responder))
-    proposals, _, _ = sa.analyze([_trace("t1")], CURRENT, None); assert proposals == []
+    proposals, _, _ = sa.analyze([_trace("t1")], CURRENT, None)
+    assert proposals == []
 
 
 def test_staged_analyze_exception_returns_empty():
@@ -558,7 +560,7 @@ def test_analyze_batch_staged_vs_single_pass_call_count():
             "hypothesis": "h",
             "expected_improvement": "e",
         }]))
-        result = analyze_batch(traces, CURRENT, None, llm, staged=True)
+        analyze_batch(traces, CURRENT, None, llm, staged=True)
         assert mock_staged.call_count == 1
 
     # staged=False should NOT call StagedAnalyzer.analyze, uses single-pass

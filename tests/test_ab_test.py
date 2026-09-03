@@ -373,7 +373,7 @@ def test_tie_epsilon_near_zero():
     res = run_ab_test("same", "same", ts, llm, ExactMatchScorer(), _config())
     assert res.winner == "tie"
     # near-zero deltas via custom scorer that returns 1e-15 diff
-    from agent_self_edit.scorers import Scorer as S
+    from agent_self_edit.scorers import Scorer as S  # noqa: N817
 
     class EpsilonScorer(S):
         def score(self, expected, actual):
@@ -388,7 +388,6 @@ def test_tie_epsilon_near_zero():
 
 
 def test_run_task_passes_system_prompt():
-    from unittest.mock import Mock
 
     class Capture(LLMProvider):
         def __init__(self):
