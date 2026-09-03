@@ -15,6 +15,7 @@ from .tasks import Task, TaskSet
 from .types import utc_now_iso  # noqa: F401  (re-export convenience)
 
 _COST_PER_1K_TOKENS = 0.0033  # approx gpt-4o-mini blend ($ per 1K tokens)
+_MAX_RETRIES = 3  # rate-limit retries (fix 231)
 
 
 @dataclass(frozen=True)
@@ -91,25 +92,39 @@ _TIE_EPSILON = 1e-9
 
 
 def run_task(task: Task, prompt: str, llm: LLMProvider) -> TaskResult:
-    """Run ``task`` against one ``prompt`` and measure latency + tokens."""
+    """Run ``task`` against one ``prompt`` and measure latency + tokens.
+
+    Retries on rate-limit errors with exponential backoff (fix 231).
+    """
     if not prompt.strip():
         return TaskResult(output="", success=False, latency_ms=0.0, token_count=0,
                           error="empty prompt")
 
     start = time.monotonic()
-    try:
-        output = llm.complete(prompt=task.input, system_prompt=prompt, temperature=0.0)
-    except ProviderError as e:
-        return TaskResult(output="", success=False, latency_ms=0.0, token_count=0,
-                          error=str(e))
-    latency_ms = (time.monotonic() - start) * 1000.0
-    tokens = estimate_tokens(prompt) + estimate_tokens(task.input) + estimate_tokens(output)
-    return TaskResult(
-        output=output,
-        success=True,
-        latency_ms=latency_ms,
-        token_count=tokens,
-    )
+    last_error: str | None = None
+    for attempt in range(_MAX_RETRIES):
+        try:
+            output = llm.complete(prompt=task.input, system_prompt=prompt, temperature=0.0)
+            latency_ms = (time.monotonic() - start) * 1000.0
+            tokens = estimate_tokens(prompt) + estimate_tokens(task.input) + estimate_tokens(output)
+            return TaskResult(
+                output=output,
+                success=True,
+                latency_ms=latency_ms,
+                token_count=tokens,
+            )
+        except ProviderError as e:
+            err_str = str(e)
+            is_rate = ("rate" in err_str.lower() or "429" in err_str
+                       or "too many" in err_str.lower())
+            if is_rate and attempt < _MAX_RETRIES - 1:
+                wait = 2 ** attempt
+                time.sleep(wait)
+                continue
+            last_error = err_str
+            break
+    return TaskResult(output="", success=False, latency_ms=0.0, token_count=0,
+                      error=last_error or "unknown error")
 
 
 # ---------------------------------------------------------------------------
@@ -219,17 +234,22 @@ def run_ab_test(
     llm: LLMProvider,
     scorer: Scorer,
     config: Config | None = None,
+    llm_b: LLMProvider | None = None,
 ) -> ABResult:
-    """Run the paired A/B comparison of ``prompt_b`` vs ``prompt_a``."""
+    """Run the paired A/B comparison of ``prompt_b`` vs ``prompt_a``.
+
+    When ``llm_b`` is provided, use it for prompt_b; otherwise ``llm`` is used for both sides.
+    """
     ab_config = _resolve_ab_config(config)
     tasks = task_set.list_tasks()
     results: list[PerTask] = []
     total_tokens = 0
     failures = 0
+    llm_for_b = llm_b or llm
 
     for task in tasks:
         result_a = run_task(task, prompt_a, llm)
-        result_b = run_task(task, prompt_b, llm)
+        result_b = run_task(task, prompt_b, llm_for_b)
 
         score_a = (
             scorer.score(task.expected_output, result_a.output)[1]

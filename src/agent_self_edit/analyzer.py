@@ -471,12 +471,11 @@ class StagedAnalyzer:
         frozen_sections: list[str] | None,
         llm_provider: LLMProvider | None = None,
         rejection_context: str = "",
-    ) -> list[EditProposal]:
-        """Run the full staged pipeline."""
+    ) -> tuple[list[EditProposal], str | None]:
+        """Run the full staged pipeline. Returns (proposals, failure_reason)."""
         if not traces:
-            return []
+            return [], None
 
-        # Use passed llm_provider if provided, else self.llm (fix 286/219)
         effective_llm = llm_provider if llm_provider is not None else self.llm
         orig_llm = self.llm
         if effective_llm is not self.llm:
@@ -487,7 +486,7 @@ class StagedAnalyzer:
                 current_prompt, patterns, rejection_context=rejection_context
             )
             if not section:
-                return []
+                return [], None
             proposal = self.stage3_synthesize(
                 current_prompt,
                 section,
@@ -496,15 +495,13 @@ class StagedAnalyzer:
                 rejection_context=rejection_context,
             )
             if proposal is None:
-                return []
+                return [], None
             errors, proposal = self.stage4_validate(proposal, current_prompt, frozen_sections)
             if errors:
-                logger.warning("Stage 4 validation failed: %s", errors)
-                return []
-            return [proposal]
-        except AnalyzerError:
-            logger.warning("Staged analyzer failed; falling through to empty proposals")
-            return []
+                return [], f"validation failed: {errors}"
+            return [proposal], None
+        except AnalyzerError as e:
+            return [], f"staged analyzer error: {e}"
         finally:
             self.llm = orig_llm
 
@@ -571,7 +568,7 @@ def analyze_batch(
     if staged:
         # Staged path: early branch, no single-pass prompt (fix 285)
         sa = StagedAnalyzer(llm_provider)
-        proposals = sa.analyze(
+        proposals, stage_reason = sa.analyze(
             failed,
             current_prompt,
             frozen_sections,
@@ -602,7 +599,7 @@ def analyze_batch(
                 proposals=[],
                 tokens_used=total_tokens,
                 cost_usd=total_cost,
-                failure_reason="staged analyzer produced no proposals",
+                failure_reason=stage_reason or "staged analyzer produced no proposals",
             )
         validated = deduplicate_proposals(proposals, near_misses or [])
         cost_aborted = total_cost > ceiling

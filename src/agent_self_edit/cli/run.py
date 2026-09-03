@@ -181,22 +181,39 @@ def run(config_path: str, batch_size: int | None, once_flag: bool, dry_run: bool
     signal.signal(signal.SIGTERM, _handler)
 
     while not shutdown:
-        try:
-            _, rejection_context = _run_once(
-                config_path,
-                batch_size,
-                dry_run,
-                rejection_context,
-                store=store,
-                registry=registry,
-                config=config,
-            )
-        except Exception as e:
-            click.echo(f"Error in cycle: {e}", err=True)
-
-        if once_flag or shutdown:
+        if config.trigger == "manual":
+            try:
+                _, rejection_context = _run_once(
+                    config_path, batch_size, dry_run, rejection_context,
+                    store=store, registry=registry, config=config,
+                )
+            except Exception as e:
+                click.echo(f"Error in cycle: {e}", err=True)
             break
+        elif config.trigger == "time":
+            try:
+                _, rejection_context = _run_once(
+                    config_path, batch_size, dry_run, rejection_context,
+                    store=store, registry=registry, config=config,
+                )
+            except Exception as e:
+                click.echo(f"Error in cycle: {e}", err=True)
+            if once_flag or shutdown:
+                break
+            interval = config.trigger_interval_hours * 3600
+            time.sleep(interval)
+        else:  # batch
+            try:
+                _, rejection_context = _run_once(
+                    config_path, batch_size, dry_run, rejection_context,
+                    store=store, registry=registry, config=config,
+                )
+            except Exception as e:
+                click.echo(f"Error in cycle: {e}", err=True)
 
-        time.sleep(5)
+            if once_flag or shutdown:
+                break
+
+            time.sleep(5)
 
     click.echo("Loop stopped.")

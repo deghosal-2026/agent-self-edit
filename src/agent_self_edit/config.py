@@ -64,6 +64,8 @@ class ABTestConfig:
     confidence_level: float = 0.95
     min_effect_size: float = 0.05
     cost_ceiling_usd: float = 0.10
+    task_timeout_seconds: int = 30
+    cache_enabled: bool = True
 
 
 @dataclass(frozen=True)
@@ -94,6 +96,7 @@ class Config:
     gate: GateConfig = field(default_factory=lambda: GateConfig())
     analyzer: AnalyzerConfig = field(default_factory=lambda: AnalyzerConfig())
     trigger: str = "batch"
+    trigger_interval_hours: float = 1.0
     trace_retention_days: int = 90
 
     @classmethod
@@ -102,14 +105,16 @@ class Config:
 
 
 def _interpolate_env(value: Any) -> Any:
-    if isinstance(value, str):
-        match = re.fullmatch(r"\$\{(\w+)\}", value)
-        if match:
-            env_val = os.environ.get(match.group(1))
-            if env_val is None:
-                raise ConfigError(f"Environment variable '{match.group(1)}' is not set")
-            return env_val
-    return value
+    if not isinstance(value, str):
+        return value
+
+    def replacer(m: re.Match[str]) -> str:
+        env_val = os.environ.get(m.group(1))
+        if env_val is None:
+            raise ConfigError(f"Environment variable '{m.group(1)}' is not set")
+        return env_val
+
+    return re.sub(r"\$\{(\w+)\}", replacer, value)
 
 
 def _deep_interpolate(raw: Any) -> Any:
@@ -134,6 +139,7 @@ def _build_config(data: dict[str, Any]) -> Config:
             gate=GateConfig(**data.get("gate", {})),
             analyzer=AnalyzerConfig(**data.get("analyzer", {})),
             trigger=data.get("trigger", "batch"),
+            trigger_interval_hours=data.get("trigger_interval_hours", 1.0),
             trace_retention_days=data.get("trace_retention_days", 90),
         )
     except TypeError as e:
@@ -221,6 +227,17 @@ def validate_config(config: Config) -> list[str]:
             f"llm.provider must be 'openai' or 'mock', got '{config.llm.provider}'"
         )
 
+    for role_name, role_cfg in [
+        ('executor_role', config.executor_role),
+        ('analyzer_role', config.analyzer_role),
+        ('judge_role', config.judge_role),
+    ]:
+        if role_cfg.provider is not None and role_cfg.provider not in ('openai', 'mock'):
+            errors.append(
+                f"{role_name}.provider must be 'openai' or 'mock', "
+                f"got '{role_cfg.provider}'"
+            )
+
     if config.analyzer.max_proposals_per_batch < 1:
         errors.append(
             f"max_proposals_per_batch must be >= 1, got {config.analyzer.max_proposals_per_batch}"
@@ -239,6 +256,11 @@ def validate_config(config: Config) -> list[str]:
     if config.trigger not in ("batch", "time", "manual"):
         errors.append(
             f"trigger must be one of: batch, time, manual, got '{config.trigger}'"
+        )
+
+    if config.trigger_interval_hours <= 0:
+        errors.append(
+            f"trigger_interval_hours must be > 0, got {config.trigger_interval_hours}"
         )
 
     if config.trace_retention_days < 0:
