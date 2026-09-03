@@ -23,6 +23,7 @@ dev = [
     "pytest-cov>=4.1",
     "ruff>=0.1",
     "mypy>=1.7",
+    "openai>=1.0",
 ]
 
 [project.urls]
