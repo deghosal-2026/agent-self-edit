@@ -124,9 +124,13 @@ def _run_once(
         scorer = resolve_scorer(task_set, judge_llm=judge_llm)
 
         for proposal in result.proposals:
-            candidate_prompt = registry.current_prompt.replace(
-                proposal.old_text, proposal.new_text
-            )
+            from ..types import materialize_candidate_prompt
+
+            try:
+                candidate_prompt = materialize_candidate_prompt(registry.current_prompt, proposal)
+            except ValueError as e:
+                click.echo(f"  Skipping proposal: {e}", err=True)
+                continue
             ab_result = run_ab_test(
                 registry.current_prompt, candidate_prompt, task_set, executor_llm, scorer, config
             )
@@ -151,6 +155,7 @@ def _run_once(
                 registry.create(
                     candidate_prompt,
                     hypothesis=proposal.hypothesis,
+                    changed_section=proposal.section,
                     ab_results={
                         "winner": ab_result.winner,
                         "mean_delta": ab_result.mean_delta,

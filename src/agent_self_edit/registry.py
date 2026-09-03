@@ -58,7 +58,7 @@ class DiffResult:
 
     added: list[str] = field(default_factory=list)
     removed: list[str] = field(default_factory=list)
-    modified: list[str] = field(default_factory=list)
+    modified: list[tuple[str, str]] = field(default_factory=list)
     unchanged_count: int = 0
     frozen_unchanged_count: int = 0
 
@@ -80,6 +80,7 @@ class Meta:
     token_cost: float | None = None
     rollback_reason: str | None = None
     rollback_target: int | None = None
+    changed_section: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         import dataclasses
@@ -104,6 +105,7 @@ def _build_meta(
     token_cost: float | None = None,
     rollback_reason: str | None = None,
     rollback_target: int | None = None,
+    changed_section: str | None = None,
 ) -> Meta:
     return Meta(
         version=version,
@@ -119,6 +121,7 @@ def _build_meta(
         token_cost=token_cost,
         rollback_reason=rollback_reason,
         rollback_target=rollback_target,
+        changed_section=changed_section,
     )
 
 
@@ -304,6 +307,7 @@ class Registry:
             "token_cost",
             "rollback_reason",
             "rollback_target",
+            "changed_section",
         ):
             val = getattr(meta, key, None)
             if val is not None:
@@ -347,6 +351,7 @@ class Registry:
                     token_cost=metadata.get("token_cost"),
                     rollback_reason=metadata.get("rollback_reason"),
                     rollback_target=metadata.get("rollback_target"),
+                    changed_section=metadata.get("changed_section"),
                 )
                 self._write(version, prompt_text, meta_tmp)
                 commit_sha: str | None = None
@@ -374,6 +379,7 @@ class Registry:
                             token_cost=meta_tmp.token_cost,
                             rollback_reason=meta_tmp.rollback_reason,
                             rollback_target=meta_tmp.rollback_target,
+                            changed_section=meta_tmp.changed_section,
                         )
                         self._write(version, prompt_text, meta)
                         self._cached_prompt = prompt_text
@@ -415,13 +421,19 @@ class Registry:
         sm = difflib.SequenceMatcher(None, old_lines, new_lines)
         added: list[str] = []
         removed: list[str] = []
-        modified: list[str] = []
+        modified: list[tuple[str, str]] = []
         unchanged = 0
         for tag, i1, i2, j1, j2 in sm.get_opcodes():
             if tag == "equal":
                 unchanged += i2 - i1
             elif tag == "replace":
-                modified.extend(old_lines[i1:i2])
+                old_chunk = old_lines[i1:i2]
+                new_chunk = new_lines[j1:j2]
+                # Pad shorter side with empty strings so zip works
+                max_len = max(len(old_chunk), len(new_chunk))
+                old_padded = old_chunk + [""] * (max_len - len(old_chunk))
+                new_padded = new_chunk + [""] * (max_len - len(new_chunk))
+                modified.extend(zip(old_padded, new_padded))
             elif tag == "delete":
                 removed.extend(old_lines[i1:i2])
             elif tag == "insert":

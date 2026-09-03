@@ -68,13 +68,13 @@
 
 | # | Issue | Build (files) | Behavior + edge cases | Issue | Verify | Status |
 |---|-------|---------------|----------------------|-------|--------|--------|
-| 1 | Fix `format_edit_summary()` gate count as lines | `src/agent_self_edit/cli/status.py` or `diff.py` — show actual `diff lines_changed` not `len(gate_checks)` | Summary reads `+12% (p=0.03, n=40) — 5 lines` not `6 checks` | [#218](https://github.com/deghosal-2026/agent-self-edit/issues/218) | Summary shows diff lines, not check count | ⬜ |
-| 2 | Fix side-by-side diff identical text | `src/agent_self_edit/diff.py` — side-by-side `removed` vs `added` distinct; previously both sides showed same text for modified lines | Modified line: left shows `-old`, right shows `+new` | [#212](https://github.com/deghosal-2026/agent-self-edit/issues/212) | Side-by-side not identical | ⬜ |
-| 3 | Add `_run_once()` unit tests | `tests/test_run.py` or `test_loop.py` — core loop only tested via full CLI invocation; add unit tests mocking trace/batch/gate/registry | `_run_once` has direct unit coverage; no CLI subprocess required | [#247](https://github.com/deghosal-2026/agent-self-edit/issues/247) | `_run_once` tests exist and pass | ⬜ |
-| 4 | Add behavioral asserts to CLI tests | `tests/test_cli.py` — currently `assert exit_code ==0` only; add output shape, diff content, lineage JSON, guardrail report assertions | CLI tests assert behavior, not just code | [#233](https://github.com/deghosal-2026/agent-self-edit/issues/233) | Behavioral asserts added | ⬜ |
-| 5 | Add StagedAnalyzer unit tests | `tests/test_analyzer.py` — entire default path untested; cover staged 4-stage happy + failure | Staged path tested; coverage of default | [#232](https://github.com/deghosal-2026/agent-self-edit/issues/232) | Staged tests added | ⬜ |
-| 6 | Fix edit density heatmap bucket | `src/agent_self_edit/diff.py` — bucket by `prompt section` (e.g. `role`, `steps`, `examples`) not `hypothesis` text | Heatmap shows per-section frequency | [#246](https://github.com/deghosal-2026/agent-self-edit/issues/246) | Heatmap buckets by section | ⬜ |
-| 7 | Guard raw `.replace()` no-ops | `src/agent_self_edit/cli/run.py`, `propose.py` — `candidate = materialize_candidate_prompt(current_prompt, proposal.old_text, proposal.new_text)` and assert `candidate != current_prompt` or fail | Silent no-op when `old_text` missing becomes loud failure; previously raw `.replace()` silently unchanged | [#208](https://github.com/deghosal-2026/agent-self-edit/issues/208), [#275](https://github.com/deghosal-2026/agent-self-edit/issues/275) | Missing `old_text` does not silently no-op | ⬜ |
+| 1 | Fix `format_edit_summary()` gate count as lines | `src/agent_self_edit/cli/status.py` or `diff.py` — show actual `diff lines_changed` not `len(gate_checks)` | Summary reads `+12% (p=0.03, n=40) — 5 lines` not `6 checks` | [#218](https://github.com/deghosal-2026/agent-self-edit/issues/218) | Summary shows diff lines, not check count | ✅ |
+| 2 | Fix side-by-side diff identical text | `src/agent_self_edit/diff.py` — side-by-side `removed` vs `added` distinct; previously both sides showed same text for modified lines | Modified line: left shows `-old`, right shows `+new` | [#212](https://github.com/deghosal-2026/agent-self-edit/issues/212) | Side-by-side not identical | ✅ |
+| 3 | Add `_run_once()` unit tests | `tests/test_run.py` or `test_loop.py` — core loop only tested via full CLI invocation; add unit tests mocking trace/batch/gate/registry | `_run_once` has direct unit coverage; no CLI subprocess required | [#247](https://github.com/deghosal-2026/agent-self-edit/issues/247) | `_run_once` tests exist and pass | ✅ |
+| 4 | Add behavioral asserts to CLI tests | `tests/test_cli.py` — currently `assert exit_code ==0` only; add output shape, diff content, lineage JSON, guardrail report assertions | CLI tests assert behavior, not just code | [#233](https://github.com/deghosal-2026/agent-self-edit/issues/233) | Behavioral asserts added | ✅ |
+| 5 | Add StagedAnalyzer unit tests | `tests/test_analyzer.py` — entire default path untested; cover staged 4-stage happy + failure | Staged path tested; coverage of default | [#232](https://github.com/deghosal-2026/agent-self-edit/issues/232) | Staged tests added | ✅ |
+| 6 | Fix edit density heatmap bucket | `src/agent_self_edit/diff.py` — bucket by `prompt section` (e.g. `role`, `steps`, `examples`) not `hypothesis` text | Heatmap shows per-section frequency | [#246](https://github.com/deghosal-2026/agent-self-edit/issues/246) | Heatmap buckets by section | ✅ |
+| 7 | Guard raw `.replace()` no-ops | `src/agent_self_edit/cli/run.py`, `propose.py` — `candidate = materialize_candidate_prompt(current_prompt, proposal.old_text, proposal.new_text)` and assert `candidate != current_prompt` or fail | Silent no-op when `old_text` missing becomes loud failure; previously raw `.replace()` silently unchanged | [#208](https://github.com/deghosal-2026/agent-self-edit/issues/208), [#275](https://github.com/deghosal-2026/agent-self-edit/issues/275) | Missing `old_text` does not silently no-op | ✅ |
 
 ### M10 Success Metrics
 
@@ -91,17 +91,17 @@
 
 ### M10 Exit Gate
 
-- [ ] `format_edit_summary` shows diff lines (#218)
-- [ ] Side-by-side diff distinct (#212)
-- [ ] `_run_once` unit tests added (#247)
-- [ ] CLI behavioral asserts (#233)
-- [ ] StagedAnalyzer tests added (#232)
-- [ ] Heatmap buckets by section (#246)
-- [ ] `raw .replace` guarded (both #208/#275 fixed)
-- [ ] Ruff clean: `ruff check .` → 0 errors
-- [ ] Mypy strict clean: `mypy --strict src/agent_self_edit` → 0 errors
-- [ ] All tests pass: `python3 -m pytest --ignore=tests/test_docker.py -x -q` → 0 failures
-- [ ] Coverage > 91%: `pytest --cov=agent_self_edit --cov-fail-under=91`
-- [ ] Documentation updated for the milestone's scope
+- [x] `format_edit_summary` shows diff lines (#218)
+- [x] Side-by-side diff distinct (#212)
+- [x] `_run_once` unit tests added (#247)
+- [x] CLI behavioral asserts (#233)
+- [x] StagedAnalyzer tests added (#232)
+- [x] Heatmap buckets by section (#246)
+- [x] `raw .replace` guarded (both #208/#275 fixed)
+- [x] Ruff clean: `ruff check .` → 0 errors
+- [x] Mypy strict clean: `mypy --strict src/agent_self_edit` → 0 errors
+- [x] All tests pass: `python3 -m pytest --ignore=tests/test_docker.py -x -q` → 0 failures (788 passed)
+- [x] Coverage > 91%: `pytest --cov=agent_self_edit --cov-fail-under=91` (94.82%)
+- [x] Documentation updated for the milestone's scope
 
 **Dependency:** M9. **Produces for M11+:** visible diffs, tested loop, safe materialization.

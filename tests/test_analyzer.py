@@ -360,3 +360,121 @@ def test_analysis_result_with_failure_reason():
     r = AnalysisResult(proposals=[], tokens_used=0, cost_usd=0.0, cost_aborted=False,
                         failure_reason="cost ceiling exceeded")
     assert r.failure_reason == "cost ceiling exceeded"
+
+
+# ---- #232: StagedAnalyzer unit tests ----
+
+STAGE1_RESPONSE = json.dumps([
+    {"pattern": "wrong output", "description": "output mismatch", "trace_ids": ["t1"]}
+])
+
+STAGE2_RESPONSE = json.dumps({"section": "role", "rationale": "clarify instructions"})
+
+
+def _stage3_response(section="role", old_text="be concise",
+                     new_text="be very concise") -> str:
+    return json.dumps({
+        "section": section,
+        "old_text": old_text,
+        "new_text": new_text,
+        "hypothesis": "clarify conciseness",
+        "expected_improvement": "better output",
+    })
+
+
+def test_stage1_summarize():
+    from agent_self_edit.analyzer import StagedAnalyzer
+    mock = MockProvider(responses=STAGE1_RESPONSE)
+    sa = StagedAnalyzer(mock)
+    result = sa.stage1_summarize([_trace()])
+    assert "wrong output" in result
+    assert len(mock.calls) == 1
+
+
+def test_stage2_select():
+    from agent_self_edit.analyzer import StagedAnalyzer
+    mock = MockProvider(responses=STAGE2_RESPONSE)
+    sa = StagedAnalyzer(mock)
+    section, rationale = sa.stage2_select("be concise", STAGE1_RESPONSE)
+    assert section == "role"
+    assert "clarify" in rationale
+
+
+def test_stage3_synthesize():
+    from agent_self_edit.analyzer import StagedAnalyzer
+    mock = MockProvider(responses=_stage3_response())
+    sa = StagedAnalyzer(mock)
+    proposal = sa.stage3_synthesize("be concise", "role", "clarify", STAGE1_RESPONSE)
+    assert proposal is not None
+    assert proposal.old_text == "be concise"
+    assert proposal.new_text == "be very concise"
+
+
+def test_stage4_validate_passes():
+    from agent_self_edit.analyzer import StagedAnalyzer
+    sa = StagedAnalyzer(MockProvider())
+    proposal = EditProposal(
+        section="role", old_text="be concise", new_text="be very concise",
+        hypothesis="clarify", expected_improvement="better",
+    )
+    errors, _ = sa.stage4_validate(proposal, "be concise", None)
+    assert len(errors) == 0
+
+
+def test_stage4_fuzzy_fix():
+    from agent_self_edit.analyzer import StagedAnalyzer
+    sa = StagedAnalyzer(MockProvider())
+    proposal = EditProposal(
+        section="role",
+        old_text="be  concise",
+        new_text="be very concise",
+        hypothesis="clarify", expected_improvement="better",
+    )
+    errors, corrected = sa.stage4_validate(proposal, "be concise", None)
+    assert len(errors) == 0
+    assert corrected.old_text == "be concise"
+
+
+def test_staged_analyzer_full_pipeline():
+    from agent_self_edit.analyzer import StagedAnalyzer
+    responses = [STAGE1_RESPONSE, STAGE2_RESPONSE, _stage3_response()]
+    mock = MockProvider(responses=responses)
+    sa = StagedAnalyzer(mock)
+    proposals, reason, tokens = sa.analyze([_trace()], "be concise", None)
+    assert len(proposals) == 1
+    assert proposals[0].old_text == "be concise"
+    assert reason is None
+
+
+def test_staged_analyzer_empty_traces():
+    from agent_self_edit.analyzer import StagedAnalyzer
+    sa = StagedAnalyzer(MockProvider())
+    proposals, reason, tokens = sa.analyze([], "prompt", None)
+    assert len(proposals) == 0
+    assert tokens == 0
+
+
+def test_staged_analyzer_failure_isolation():
+    from agent_self_edit.analyzer import AnalyzerError, StagedAnalyzer
+    failing_llm = MockProvider(responses=lambda p, s: (_ for _ in ()).throw(
+        AnalyzerError("LLM failed")))
+    sa = StagedAnalyzer(failing_llm)
+    proposals, reason, tokens = sa.analyze([_trace()], "prompt", None)
+    assert len(proposals) == 0
+    assert reason is not None
+    assert "LLM failed" in reason
+
+
+def test_staged_analyzer_uses_llm_provider():
+    from agent_self_edit.analyzer import StagedAnalyzer
+    unused = MockProvider(responses="unused")
+    stage_mock = MockProvider(responses=[
+        STAGE1_RESPONSE, STAGE2_RESPONSE, _stage3_response(),
+    ])
+    sa = StagedAnalyzer(unused)
+    proposals, reason, tokens = sa.analyze(
+        [_trace()], "be concise", None, llm_provider=stage_mock,
+    )
+    assert len(proposals) == 1
+    assert len(unused.calls) == 0
+    assert len(stage_mock.calls) == 3
