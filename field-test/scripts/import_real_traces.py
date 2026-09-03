@@ -17,7 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent.parent / "s
 
 from agent_self_edit.types import utc_now_iso
 
-OUTPUT = Path(__file__).resolve().parent.parent / "v0.1.0" / "corpus" / "real-life" / "real-traces"
+OUTPUT = Path(__file__).resolve().parent.parent / "v0.3.0" / "corpus" / "real-life" / "real-traces"
 
 
 def _unique_task_id(prefix: str, counter: int) -> str:

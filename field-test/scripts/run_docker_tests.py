@@ -17,7 +17,7 @@ def main():
     cmd = [
         sys.executable, "-m", "pytest", "tests/test_docker.py",
         "-v", "-m", "docker", "--no-header",
-        "-p", "no:cacheprovider", "--no-cov",
+        "-p", "no:cacheprovider", "--no-cov", "-n", "4",
     ]
     result = subprocess.run(cmd, cwd=REPO_ROOT)
     return result.returncode

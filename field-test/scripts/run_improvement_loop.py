@@ -432,7 +432,7 @@ def _seed_real_traces(trace_path: str, real_traces_path: str, n: int) -> object:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Run N self-improvement iterations with inspectable A/B artifacts (v0.2.0)"
+        description="Run N self-improvement iterations with inspectable A/B artifacts (v0.3.0)"
     )
     parser.add_argument("--iterations", type=int, default=10)
     parser.add_argument("--traces-per-iteration", type=int, default=10)

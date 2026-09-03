@@ -13,7 +13,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "src"))
 
 OUTPUT_DIR = (Path(__file__).resolve().parent.parent
-              / "v0.1.0" / "corpus" / "real-life" / "real-traces")
+              / "v0.3.0" / "corpus" / "real-life" / "real-traces")
 REPO = "MaxDevv/real-pi-coding-agent-traces-sessions"
 
 
