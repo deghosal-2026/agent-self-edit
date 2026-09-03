@@ -65,6 +65,16 @@ def _run_once(config_path: str, batch_size: int | None, dry_run: bool,
     if rejection_context:
         rejection_context_lines.append(rejection_context)
 
+    # Drift must be measured against original v1, not current (fix 276/206)
+    try:
+        original_prompt = (
+            registry.get(1)[0]
+            if registry.current_version >= 1
+            else registry.current_prompt
+        )
+    except Exception:
+        original_prompt = registry.current_prompt
+
     for proposal in result.proposals:
         from ..ab_test import run_ab_test
         from ..gate import PromotionGate, check_all
@@ -88,7 +98,7 @@ def _run_once(config_path: str, batch_size: int | None, dry_run: bool,
 
         gate = PromotionGate(audit_path=config.project.registry_path + "/audit.jsonl")
         gate_result = check_all(
-            proposal, ab_result, registry.current_prompt, registry.current_prompt, config
+            proposal, ab_result, registry.current_prompt, original_prompt, config
         )
         click.echo(f"  Gate: {gate_result.decision}")
 

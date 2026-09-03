@@ -107,6 +107,16 @@ def propose(config_path: str, dry_run: bool) -> None:
 
     rejection_context_lines: list[str] = []
 
+    # Drift must be measured against original v1, not current (fix 276/206)
+    try:
+        original_prompt = (
+            registry.get(1)[0]
+            if registry.current_version >= 1
+            else registry.current_prompt
+        )
+    except Exception:
+        original_prompt = registry.current_prompt
+
     for proposal in result.proposals:
         candidate_prompt = registry.current_prompt.replace(
             proposal.old_text, proposal.new_text
@@ -120,7 +130,7 @@ def propose(config_path: str, dry_run: bool) -> None:
 
         gate = PromotionGate(audit_path=config.project.registry_path + "/audit.jsonl")
         gate_result = check_all(
-            proposal, ab_result, registry.current_prompt, registry.current_prompt, config
+            proposal, ab_result, registry.current_prompt, original_prompt, config
         )
         click.echo(f"  Gate: {gate_result.decision}")
 

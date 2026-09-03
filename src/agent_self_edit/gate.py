@@ -161,7 +161,11 @@ def check_frozen_sections(
     for sec in sections:
         if sec.section_name is None:
             continue
-        if frozen_sections is not None and sec.section_name not in set(frozen_sections):
+        if (
+            frozen_sections is not None
+            and len(frozen_sections) > 0
+            and sec.section_name not in set(frozen_sections)
+        ):
             continue
         block = "\n".join(sec.lines) if sec.lines else ""
         if block and block not in proposed:
@@ -276,6 +280,7 @@ def _run_individual_checks(
     config: Config,
 ) -> list[CheckResult]:
     checks: list[CheckResult] = []
+    frozen_cfg = getattr(config.gate, "frozen_sections", None)
     for name in _CHECK_ORDER:
         if name == "sample_floor":
             checks.append(check_sample_floor(ab_result, config))
@@ -284,7 +289,7 @@ def _run_individual_checks(
         elif name == "confidence":
             checks.append(check_confidence(ab_result, config))
         elif name == "frozen_sections":
-            checks.append(check_frozen_sections(edit, current_prompt))
+            checks.append(check_frozen_sections(edit, current_prompt, frozen_sections=frozen_cfg))
         elif name == "edit_distance":
             checks.append(check_edit_distance(edit, current_prompt, config))
         elif name == "drift":
@@ -305,6 +310,7 @@ def check_all(
 
     checks: list[CheckResult] = []
     passed_count = 0
+    frozen_cfg = getattr(config.gate, "frozen_sections", None)
     for name in _CHECK_ORDER:
         if name == "sample_floor":
             result = check_sample_floor(ab_result, config)
@@ -313,7 +319,7 @@ def check_all(
         elif name == "confidence":
             result = check_confidence(ab_result, config)
         elif name == "frozen_sections":
-            result = check_frozen_sections(edit, current_prompt)
+            result = check_frozen_sections(edit, current_prompt, frozen_sections=frozen_cfg)
         elif name == "edit_distance":
             result = check_edit_distance(edit, current_prompt, config)
         else:  # drift

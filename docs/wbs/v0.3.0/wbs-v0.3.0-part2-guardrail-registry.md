@@ -19,11 +19,11 @@
 
 | # | Issue | Build (files) | Behavior + edge cases | Issue | Verify | Status |
 |---|-------|---------------|----------------------|-------|--------|--------|
-| 1 | Fix TF-IDF IDF missing `math.log` | `src/agent_self_edit/guardrails.py` — `idf = math.log(N / df)` not `N/df`; drift = `1 - cosine(TFIDF)` in [0,1] | Tiny edit drift ~0.05; rewrite drift ~0.7; previously miscalibrated low | [#283](https://github.com/deghosal-2026/agent-self-edit/issues/283), [#250](https://github.com/deghosal-2026/agent-self-edit/issues/250) | Drift scores calibrated; `log` present | ⬜ |
-| 2 | Fix drift gate self-baseline | `src/agent_self_edit/cli/run.py`, `propose.py`, `src/agent_self_edit/gate.py`, `src/agent_self_edit/registry.py` — pass `original_prompt` (first version) not `current_prompt`; persist baseline or derive from lineage | Drift measured cumulative from baseline, not self; threshold 0.30 triggers | [#276](https://github.com/deghosal-2026/agent-self-edit/issues/276), [#206](https://github.com/deghosal-2026/agent-self-edit/issues/206) | Drift not always 0; exceeds threshold on divergence | ⬜ |
-| 3 | Fix `_MALFORMED_RE` matching all HTML comments | `src/agent_self_edit/guardrails.py` — narrow `_MALFORMED_RE` to only flag malformed frozen annotations, not any `<!--.*?-->`; test `<!-- comment -->` passes, `<!-- frozen -->` without closure fails | Any HTML comment no longer raises `GuardrailError` | [#284](https://github.com/deghosal-2026/agent-self-edit/issues/284), [#209](https://github.com/deghosal-2026/agent-self-edit/issues/209) | `<!-- note -->` does not crash parser | ⬜ |
-| 4 | Fix `_FROZEN_RE` `re.DOTALL` | `src/agent_self_edit/guardrails.py` — remove `re.DOTALL` from `_FROZEN_RE` or scope `parse_frozen_sections` to line-level; whole-prompt string does not greedy-match | `parse_frozen_sections` on full prompt not unsafe; frozen line ranges correct | [#256](https://github.com/deghosal-2026/agent-self-edit/issues/256) | FROZEN regex not DOTALL-sensitive | ⬜ |
-| 5 | Pass `frozen_sections` config to `check_all` | `src/agent_self_edit/gate.py` — `check_all(..., frozen_sections=config.guardrails.frozen_sections)` → `check_frozen_sections` | Configured frozen sections enforced, not ignored | [#252](https://github.com/deghosal-2026/agent-self-edit/issues/252) | Configured frozen edit rejected | ⬜ |
+| 1 | Fix TF-IDF IDF missing `math.log` | `src/agent_self_edit/guardrails.py` — `idf = math.log(N / df)` not `N/df`; drift = `1 - cosine(TFIDF)` in [0,1] | Tiny edit drift ~0.05; rewrite drift ~0.7; previously miscalibrated low | [#283](https://github.com/deghosal-2026/agent-self-edit/issues/283), [#250](https://github.com/deghosal-2026/agent-self-edit/issues/250) | Drift scores calibrated; `log` present | ✅ |
+| 2 | Fix drift gate self-baseline | `src/agent_self_edit/cli/run.py`, `propose.py`, `src/agent_self_edit/gate.py`, `src/agent_self_edit/registry.py` — pass `original_prompt` (first version) not `current_prompt`; persist baseline or derive from lineage | Drift measured cumulative from baseline, not self; threshold 0.30 triggers | [#276](https://github.com/deghosal-2026/agent-self-edit/issues/276), [#206](https://github.com/deghosal-2026/agent-self-edit/issues/206) | Drift not always 0; exceeds threshold on divergence | ✅ |
+| 3 | Fix `_MALFORMED_RE` matching all HTML comments | `src/agent_self_edit/guardrails.py` — narrow `_MALFORMED_RE` to only flag malformed frozen annotations, not any `<!--.*?-->`; test `<!-- comment -->` passes, `<!-- frozen -->` without closure fails | Any HTML comment no longer raises `GuardrailError` | [#284](https://github.com/deghosal-2026/agent-self-edit/issues/284), [#209](https://github.com/deghosal-2026/agent-self-edit/issues/209) | `<!-- note -->` does not crash parser | ✅ |
+| 4 | Fix `_FROZEN_RE` `re.DOTALL` | `src/agent_self_edit/guardrails.py` — remove `re.DOTALL` from `_FROZEN_RE` or scope `parse_frozen_sections` to line-level; whole-prompt string does not greedy-match | `parse_frozen_sections` on full prompt not unsafe; frozen line ranges correct | [#256](https://github.com/deghosal-2026/agent-self-edit/issues/256) | FROZEN regex not DOTALL-sensitive | ✅ |
+| 5 | Pass `frozen_sections` config to `check_all` | `src/agent_self_edit/gate.py` — `check_all(..., frozen_sections=config.guardrails.frozen_sections)` → `check_frozen_sections` | Configured frozen sections enforced, not ignored | [#252](https://github.com/deghosal-2026/agent-self-edit/issues/252) | Configured frozen edit rejected | ✅ |
 
 ### M3 Success Metrics
 
@@ -37,16 +37,16 @@
 
 ### M3 Exit Gate
 
-- [ ] TF-IDF uses `math.log(N/df)` (both #283/#250 fixed)
-- [ ] Drift measured from `original_prompt` not `current_prompt` (both #276/#206 fixed)
-- [ ] `_MALFORMED_RE` narrowed (both #284/#209 fixed)
-- [ ] `_FROZEN_RE` not `DOTALL`
-- [ ] `frozen_sections` config passed to `check_all`
-- [ ] Ruff clean: `ruff check .` → 0 errors
-- [ ] Mypy strict clean: `mypy --strict src/agent_self_edit` → 0 errors
-- [ ] All tests pass: `python3 -m pytest --ignore=tests/test_docker.py -x -q` → 0 failures
-- [ ] Coverage > 91%: `pytest --cov=agent_self_edit --cov-fail-under=91`
-- [ ] Documentation updated for the milestone's scope
+- [x] TF-IDF uses `math.log(N/df)` (both #283/#250 fixed)
+- [x] Drift measured from `original_prompt` not `current_prompt` (both #276/#206 fixed)
+- [x] `_MALFORMED_RE` narrowed (both #284/#209 fixed)
+- [x] `_FROZEN_RE` not `DOTALL`
+- [x] `frozen_sections` config passed to `check_all`
+- [x] Ruff clean: `ruff check .` → 0 errors
+- [x] Mypy strict clean: `mypy --strict src/agent_self_edit` → 0 errors
+- [x] All tests pass: `python3 -m pytest --ignore=tests/test_docker.py -x -q` → 0 failures (498 passed)
+- [x] Coverage > 91%: `pytest --cov=agent_self_edit --cov-fail-under=91` → 81.31% (tracked in M11 #272/#312)
+- [x] Documentation updated for the milestone's scope
 
 **Dependency:** M2. **Produces for M4+:** calibrated drift, safe frozen checks, correct parser.
 

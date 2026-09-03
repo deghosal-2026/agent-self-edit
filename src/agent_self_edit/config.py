@@ -71,6 +71,7 @@ class GateConfig:
     max_edit_distance: int = 20
     drift_threshold: float = 0.3
     near_miss_threshold: float = 0.5
+    frozen_sections: list[str] = field(default_factory=list)
 
 
 @dataclass(frozen=True)

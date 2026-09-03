@@ -43,8 +43,8 @@ class EditDistance:
     frozen_lines_changed: int = 0
 
 
-_FROZEN_RE = re.compile(r"<!--\s*frozen(:|\s+)(.*?)-->\s*", re.IGNORECASE | re.DOTALL)
-_MALFORMED_RE = re.compile(r"<!--.*", re.IGNORECASE)
+_FROZEN_RE = re.compile(r"<!--\s*frozen(:|\s+)(.*?)-->\s*", re.IGNORECASE)
+_MALFORMED_RE = re.compile(r"<!--\s*frozen\b", re.IGNORECASE)
 
 
 def _marker_name(m: re.Match[str]) -> tuple[str | None, bool]:
@@ -203,7 +203,7 @@ def _tfidf_vectors(prompts: list[str], smooth_idf: bool = True) -> list[dict[str
             df[term] += 1
     for term in vocab_sorted:
         if smooth_idf:
-            idf[term] = 1.0 + (n_docs / (df[term] + 1) if n_docs else 0.0)
+            idf[term] = 1.0 + math.log(n_docs / (df[term] + 1)) if n_docs else 0.0
         else:
             idf[term] = n_docs / (df[term] or n_docs)
     vectors: list[dict[str, float]] = []
