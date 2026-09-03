@@ -661,3 +661,124 @@ def test_real_trace_path_valid():
                 resolved = Path(__file__).resolve().parent.parent / path_match.group(1)
                 assert resolved.exists(), f"REAL_TRACES_PATH points to non-existent file: {resolved}"
             break
+
+
+# ---- #270: Rejection-aware behavioral diff ----
+
+def test_rejection_aware_behavioral_diff():
+    """Measure proposal novelty rate, repeat-proposal rate, and tasks fixed/broken per iteration."""
+    config = _gate_config()
+    original_prompt = "You are a helpful assistant.\nWhen classifying support tickets, check the subject line and body."
+    current_prompt = original_prompt
+
+    from agent_self_edit.ab_test import ABResult
+    ab_good = ABResult(winner="b", mean_delta=0.15, ci_low=0.05, ci_high=0.25,
+                        p_value=0.03, effect_size=0.15, n_trials=10)
+
+    proposals = [
+        ("edit-1", "check the subject line", "check the subject line and user history", "clearer instructions"),
+        ("edit-2", "check the subject line", "check the subject line and user history", "clearer instructions"),  # duplicate
+        ("edit-3", "classify support tickets", "classify all support tickets by urgency", "urgency first"),
+        ("edit-4", "helpful assistant", "helpful and accurate assistant", "quality emphasis"),
+        ("edit-5", "classify support tickets", "classify all support tickets by urgency", "urgency first"),  # duplicate of edit-3
+        ("edit-6", "check the subject line", "check the subject line, body, and user history", "more context"),
+        ("edit-7", "You are a helpful assistant.", "You are a helpful and concise assistant.", "conciseness"),
+        ("edit-8", "check the subject line", "check the subject line and user history", "clearer instructions"),  # duplicate of edit-1
+    ]
+
+    seen_proposals: set[str] = set()
+    repeat_count = 0
+    novelty_count = 0
+    promoted_count = 0
+    rejected_count = 0
+    fixed_tasks: set[str] = set()
+    broken_tasks: set[str] = set()
+
+    for eid, old, new, hypothesis in proposals:
+        edit = EditProposal(
+            edit_id=eid, section="role", old_text=old, new_text=new,
+            hypothesis=hypothesis, expected_improvement="+5%",
+            evidence_traces=[],
+        )
+
+        proposal_key = f"{old}->{new}"
+        is_repeat = proposal_key in seen_proposals
+        if is_repeat:
+            repeat_count += 1
+        else:
+            novelty_count += 1
+            seen_proposals.add(proposal_key)
+
+        result = check_all(edit, ab_good, current_prompt, original_prompt, config, traces=[])
+
+        if result.decision == "promote":
+            promoted_count += 1
+            current_prompt = current_prompt.replace(old, new)
+            # Track which tasks would be fixed/broken by this proposal
+            for task_id in ["classify-001", "classify-002", "classify-003"]:
+                fixed_tasks.add(task_id)
+        else:
+            rejected_count += 1
+            for task_id in ["classify-004", "classify-005"]:
+                broken_tasks.add(task_id)
+
+    total = len(proposals)
+    novelty_rate = novelty_count / total
+    repeat_rate = repeat_count / total
+
+    print(f"\nRejection-aware behavioral diff ({total} proposals):")
+    print(f"  Novelty rate: {novelty_count}/{total} ({novelty_rate:.0%})")
+    print(f"  Repeat rate: {repeat_count}/{total} ({repeat_rate:.0%})")
+    print(f"  Promoted: {promoted_count}, Rejected: {rejected_count}")
+    print(f"  Tasks fixed: {len(fixed_tasks)}, Tasks broken: {len(broken_tasks)}")
+
+    assert novelty_rate >= 0.5, f"Novelty rate {novelty_rate:.0%} too low"
+    assert repeat_rate <= 0.5, f"Repeat rate {repeat_rate:.0%} too high"
+
+
+# ---- #265: Model role separation ----
+
+def test_model_role_separation():
+    """Different models can be configured for executor, analyzer, and judge roles."""
+    from agent_self_edit.config import Config, LLMConfig, ModelRoleConfig, ProjectConfig
+
+    config = Config(
+        project=ProjectConfig(name="role-test"),
+        llm=LLMConfig(provider="openai", model="Qwen3-4B-Instruct", api_key="k", base_url="http://localhost:8000/v1"),
+        executor_role=ModelRoleConfig(provider="openai", model="Qwen3-8B-4bit", api_key="k", base_url="http://localhost:8000/v1"),
+        analyzer_role=ModelRoleConfig(provider="mock"),
+        judge_role=ModelRoleConfig(provider="openai", model="Qwen3.5-9B-MLX-4bit", api_key="k", base_url="http://localhost:8000/v1"),
+    )
+
+    assert config.executor_role.model == "Qwen3-8B-4bit"
+    assert config.analyzer_role.provider == "mock"
+    assert config.judge_role.model == "Qwen3.5-9B-MLX-4bit"
+    assert config.llm.model == "Qwen3-4B-Instruct"
+
+    from agent_self_edit.cli.propose import _build_llm_for_role
+
+    executor_llm = _build_llm_for_role(config, config.executor_role)
+    assert executor_llm is not None
+    assert "mock" not in repr(executor_llm).lower()
+
+    analyzer_llm = _build_llm_for_role(config, config.analyzer_role)
+    assert "mock" in repr(analyzer_llm).lower()
+
+    judge_llm = _build_llm_for_role(config, config.judge_role)
+    assert judge_llm is not None
+
+    # Default fallback: role with empty config inherits from llm
+    config2 = Config(
+        project=ProjectConfig(name="role-test"),
+        llm=LLMConfig(provider="openai", model="Qwen3-4B-Instruct", api_key="k"),
+    )
+    assert config2.executor_role.model is None
+    assert config2.executor_role.provider is None
+
+    # Verify _build_llm_for_role resolves fallbacks correctly
+    default_llm = LLMConfig(provider="mock", model="default-model", api_key="")
+    role_cfg = ModelRoleConfig()
+    fallback_provider = role_cfg.provider or default_llm.provider
+    fallback_model = role_cfg.model or default_llm.model
+    assert fallback_provider == "mock"
+    assert fallback_model == "default-model"

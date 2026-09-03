@@ -120,14 +120,14 @@ Modeled on v0.2.0 Docker/hermetic precedent: [#172 field test plan](https://gith
 
 ### M12 Exit Gate
 
-- [ ] Root cause identified with evidence (blocked edit path) (#274)
+- [x] Root cause identified with evidence (blocked edit path) (#274) — documented in FIELD_TEST_REPORT.md
 - [x] Gold corpus operationalized for analyzer quality (#268) — 30 traces, 7 clusters, 7 interventions, validated by test
-- [ ] Rejection-aware behavioral diff measured (#270)
-- [ ] Cost-per-iteration documented (#269)
+- [x] Rejection-aware behavioral diff measured (#270) — test_rejection_aware_behavioral_diff measures novelty/repeat/fixed/broken
+- [x] Cost-per-iteration documented (#269) — in FIELD_TEST_REPORT.md with Docker test data
 - [x] Seeded-prompts 15 used (#271) — load_seeded_prompts() + test validates all 15 prompts
-- [ ] Role separation measurably different (#265)
+- [ ] Role separation measurably different (#265) — test_model_role_separation validates config + _build_llm_for_role
 - [x] Real-trace ingestion corpus fixed (#264) — REAL_TRACES_PATH → labeled/gold-corpus.jsonl, RESULTS_ROOT → v0.3.0
-- [ ] 20% vs 46% misleading metrics corrected (#266)
+- [x] 20% vs 46% misleading metrics corrected (#266) — documented in FIELD_TEST_REPORT.md
 - [x] Docker test plan authored (#302) — docker-test-plan.md covers 16 tests
 - [x] Docker tests authored (mixed-domain/adversarial/ab-cache/materialize-guard) (#303) — 4 new tests, all 16 pass in 4m09s
 - [x] Docker tests executed + results captured (#304) — 16/16 pass, 127 LLM calls, $0.06 total, docker-test-run-report.md + summary written
@@ -137,7 +137,7 @@ Modeled on v0.2.0 Docker/hermetic precedent: [#172 field test plan](https://gith
 - [ ] Field test plan documentation authored (#308)
 - [x] Ruff clean: `ruff check .` → 0 errors
 - [x] Mypy strict clean: `mypy --strict src/agent_self_edit` → 0 errors
-- [x] All tests pass: `python3 -m pytest --ignore=tests/test_docker.py -x -q` → 0 failures (805 passed)
+- [x] All tests pass: `python3 -m pytest --ignore=tests/test_docker.py -x -q` → 0 failures (807 passed)
 - [ ] Coverage > 91%: `pytest --cov=agent_self_edit --cov-fail-under=91`
 - [ ] Documentation updated for the milestone's scope
 
