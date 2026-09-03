@@ -1,15 +1,6 @@
 {
-  "n_proposals": 1,
-  "cost_usd": 0.0095733,
-  "tokens_used": 2901,
-  "proposals": [
-    {
-      "section": "Rules",
-      "old_text": "urgent: immediate action (system down, blocked workflow, security breach)",
-      "new_text": "urgent: immediate action (system down, blocked workflow, security breach, critical data loss)",
-      "hypothesis": "Adding 'critical data loss' as an explicit example of 'urgent' helps clarify the boundary between urgent and security/technical issues, reducing overgeneralization of 'urgent'.",
-      "expected_improvement": "Reduction in misclassification of technical/security issues as 'urgent' by 15-20% based on trace_ids.",
-      "evidence_traces": []
-    }
-  ]
+  "n_proposals": 0,
+  "cost_usd": 0.0,
+  "tokens_used": 0,
+  "proposals": []
 }

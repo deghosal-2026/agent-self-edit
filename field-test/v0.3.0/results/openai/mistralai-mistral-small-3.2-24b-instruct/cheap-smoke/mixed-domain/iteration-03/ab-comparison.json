@@ -1,0 +1,120 @@
+{
+  "winner": "inconclusive",
+  "mean_delta": 0.11666666666666665,
+  "ci_low": 0.0,
+  "ci_high": 0.2333333333333333,
+  "p_value": 0.46,
+  "effect_size": Infinity,
+  "n_trials": 10,
+  "cost_usd": 0.0120747,
+  "token_count": 3659,
+  "per_task": [
+    {
+      "task_id": "mixed-001",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "**Classification:** Incident\n\n**Extracted Affected Service:** Payment Gateway",
+      "output_b": "Classification: Incident\n\nAffected Service: Payment Gateway"
+    },
+    {
+      "task_id": "mixed-002",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "**Classification:**\n- Category: Security\n- Sub-category: API Key Compromise\n- Priority: High\n- Urgency: Immediate\n\n**Summary for Dashboard:**\n\"Urgent: API key leaked on GitHub, requires immediate revocation.\"",
+      "output_b": "Classification: Urgent Security Issue\n\nSummary: Immediate API key revocation required due to GitHub leak."
+    },
+    {
+      "task_id": "mixed-003",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "**Extracted Error Code:** E5001\n\n**Severity Classification:** High\n\nThe error code E5001 is classified as high severity due to the significant number of customers affected (3,400) and the substantial estimated revenue impact ($12K/hour).",
+      "output_b": "Error code: E5001\n\nSeverity: High"
+    },
+    {
+      "task_id": "mixed-004",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "**Customer-Facing Message:**\n\nDear Valued Customer,\n\nWe are currently experiencing an unexpected outage affecting some of our services. We understand that this may cause inconvenience, and we apologize for any disruption this may have on your operations.\n\nOur technical team has been alerted and is working diligently to resolve the issue. We expect to have the services back online within the next 30 minutes. We will continue to keep you updated on our progress.\n\nThank you for your patience and understanding.\n\nBest,\n[Your Company Name]\n\n**Affected Services:**\n- API\n- Dashboard\n- Webhooks",
+      "output_b": "**Customer-Facing Message:**\n\"Dear Customer, We are currently experiencing an outage affecting our API, dashboard, and webhooks. Our team is working to resolve the issue and we anticipate a resolution within the next 30 minutes. We apologize for any inconvenience caused and will keep you updated.\"\n\n**Affected Services:**\n- API\n- Dashboard\n- Webhooks"
+    },
+    {
+      "task_id": "mixed-005",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "**Classification:** Urgent\n\n**Extracted SLA Deadline:** 4 hours",
+      "output_b": "Urgent\nSLA deadline: 4 hours"
+    },
+    {
+      "task_id": "mixed-006",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "**Extracted Services:**\n1. auth-service\n2. user-service\n3. search-service\n\n**Rollback Plan Summary:**\n\n**Objective:** Roll back the auth-service and user-service from version 3.2.1 to 3.2.0 due to a regression introduced in the latest deployment.\n\n**Affected Services:**\n- auth-service\n- user-service\n\n**Unaffected Service:**\n- search-service\n\n**Rollback Steps:**\n\n1. **Notification:**\n   - Inform relevant stakeholders about the rollback plan and its potential impact.\n\n2. **Backup:**\n   - Ensure current data is backed up before proceeding with the rollback.\n\n3. **Rollback Procedure:**\n   - For each affected service (auth-service and user-service):\n     - Stop the service.\n     - Roll back to version 3.2.0.\n     - Start the service.\n     - Monitor the service for any issues or errors.\n\n4. **Verification:**\n   - Test the rolled-back services to ensure they are functioning correctly and the regression has been resolved.\n\n5. **Update Documentation:**\n   - Update relevant documentation to reflect the rollback and any changes made.\n\n6. **Post-Rollback Review:**\n   - Conduct a review meeting to discuss the rollback, its success, and any lessons learned.\n\n7. **Communication:**\n   - Inform stakeholders that the rollback has been completed and the services are back to normal operation.",
+      "output_b": "**Extracted Services:**\n- auth-service\n- user-service\n- search-service\n\n**Rollback Plan Summary:**\nRoll back auth-service and user-service from v3.2.1 to v3.2.0 due to regression. Search-service remains unaffected and does not require rollback."
+    },
+    {
+      "task_id": "mixed-007",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "**Classification:**\nThe priority of this incident is **Critical (P1)**. This is due to the high customer impact, with a significant portion of traffic affected (45% in the EU region), a 100% error rate, and timeout for P95 latency.\n\n**Extracted Customer Impact Metrics:**\n- **Affected Traffic:** 45% in EU region\n- **Error Rate:** 100%\n- **P95 Latency:** Timeout\n- **Start Time:** 09:15 UTC",
+      "output_b": "Priority: P1\n\nCustomer Impact Metrics:\n- Affected Traffic: 45% in EU region\n- Error Rate: 100%\n- P95 Latency: timeout"
+    },
+    {
+      "task_id": "mixed-008",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "**Postmortem Outline:**\n\n1. **Incident Summary**\n   - Brief description of the incident (e.g., \"Memory leak in the image-resize worker led to out-of-memory (OOM) kills, causing service disruptions.\")\n   - Date and time of the incident\n   - Duration of the incident\n\n2. **Impact**\n   - Services or users affected\n   - Severity and scale of the impact\n   - Any downtime or performance degradation experienced\n\n3. **Timeline of Events**\n   - Initial detection of the issue\n   - Escalation and investigation process\n   - Key milestones in the resolution process\n   - Time when the issue was fully resolved\n\n4. **Root Cause Analysis**\n   - Detailed explanation of the root cause (e.g., \"A memory leak in the image-resize worker was introduced in commit abc123, leading to OOM kills.\")\n   - Code snippets or configuration changes that contributed to the issue\n   - Any underlying design or architectural flaws\n\n5. **Resolution and Recovery**\n   - Steps taken to mitigate the issue\n   - Fix deployed (e.g., \"Fix deployed in v2.4.2.\")\n   - Verification and testing processes to ensure the fix was effective\n\n6. **Root Cause Category**\n   - Software Bug\n\n7. **Preventive Measures**\n   - Code review and testing improvements\n   - Monitoring and alerting enhancements\n   - Documentation updates\n   - Any other measures to prevent similar incidents in the future\n\n8. **Action Items**\n   - Specific tasks assigned to team members to address the root cause and preventive measures\n   - Timeline for completing these tasks\n\n9. **Conclusion**\n   - Summary of the incident and its resolution\n   - Lessons learned\n   - Appreciation and acknowledgments\n\n**Extracted Root Cause Category:** Software Bug",
+      "output_b": "**Postmortem Outline:**\n\n1. **Incident Summary**\n   - Brief description of the incident and its impact.\n\n2. **Timeline**\n   - Initial detection of the issue.\n   - Escalation and investigation.\n   - Identification of the root cause.\n   - Deployment of the fix.\n\n3. **Root Cause**\n   - Memory leak in the image-resize worker caused OOM kills.\n   - The leak was introduced in commit abc123.\n\n4. **Impact**\n   - Services affected and their downtime.\n   - User experience and any data loss.\n\n5. **Resolution and Recovery**\n   - Steps taken to mitigate the issue.\n   - Deployment of the fix in version v2.4.2.\n\n6. **Root Cause Category**\n   - Software Bug\n\n7. **Preventive Measures**\n   - Strategies to prevent similar incidents in the future.\n   - Code review and testing improvements.\n   - Monitoring and alerting enhancements.\n\n8. **Action Items**\n   - Specific tasks and responsible parties for implementing preventive measures.\n\n9. **Conclusion**\n   - Summary of the incident and lessons learned."
+    },
+    {
+      "task_id": "mixed-009",
+      "score_a": 0.0,
+      "score_b": 0.6666666666666666,
+      "delta": 0.6666666666666666,
+      "output_a": "**Classification:** Technical\n\n**Affected Customer ID:** AC-7890\n\n**Estimated Severity:** High (Given the duration of the issue, the enterprise contract with a high SLA, and the significant data export volume)",
+      "output_b": "Classification: technical\nAffected customer ID: AC-7890\nEstimated severity: High"
+    },
+    {
+      "task_id": "mixed-010",
+      "score_a": 0.0,
+      "score_b": 0.5,
+      "delta": 0.5,
+      "output_a": "**Extracted Error Codes:**\n- E4031 (auth-service, 3 retries)\n- E5002 (user-service, 1 retry)\n- E4031 (billing-service, 5 retries)\n\n**System Health Classification:**\nThe overall system health is **degraded**. While all services are responding, the elevated error rates indicate potential issues that need to be addressed.",
+      "output_b": "Error codes: E4031, E5002, E4031\n\nSystem health: Degraded"
+    }
+  ],
+  "gate": {
+    "decision": "near_miss",
+    "reason": "2/3 checks passed (failed at: confidence); near-miss threshold met (67% >= 50%)",
+    "checks": [
+      {
+        "name": "sample_floor",
+        "passed": true,
+        "value": 10.0,
+        "threshold": 5.0,
+        "details": "n_trials (10) >= sample floor (5)"
+      },
+      {
+        "name": "effect_size",
+        "passed": true,
+        "value": Infinity,
+        "threshold": 0.05,
+        "details": "effect size (inf%) >= min (5.0%)"
+      },
+      {
+        "name": "confidence",
+        "passed": false,
+        "value": 0.46,
+        "threshold": 0.050000000000000044,
+        "details": "p-value (0.4600) >= alpha (0.0500)"
+      }
+    ]
+  }
+}

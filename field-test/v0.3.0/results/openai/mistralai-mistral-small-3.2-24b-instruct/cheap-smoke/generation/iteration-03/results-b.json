@@ -1,0 +1,102 @@
+[
+  {
+    "task_id": "gen-001",
+    "input": "Topic: outage postmortem. Constraints: 3 paragraphs, root cause section, action items.",
+    "expected": "Postmortem for the 2026-08-30 outage",
+    "llm_output": "**Outage Postmortem: Database Server Failure**\n\nOn [Date], our primary database server experienced a catastrophic hardware failure, leading to a service outage that lasted approximately 4 hours. The incident began at [Time] when the server unexpectedly went offline, causing disruptions to our web services, mobile applications, and internal tools. Our monitoring systems promptly alerted the operations team, who immediately initiated our incident response procedures.\n\n**Root Cause**\n\nThe root cause of the outage was a hardware failure in the primary database server's storage controller. This component experienced a critical error, rendering the attached storage devices inaccessible. Despite our robust redundancy measures, a cascading failure occurred due to a misconfiguration in our failover settings, which prevented the secondary server from assuming the primary role automatically. This misconfiguration was introduced during a recent maintenance update and went unnoticed during subsequent testing.\n\n**Action Items**\n\n1. **Hardware Redundancy Review**: Conduct a thorough review of our hardware redundancy configurations to ensure all critical components have proper failover mechanisms in place.\n2. **Update Testing Procedures**: Enhance our testing procedures to include comprehensive failover scenarios, ensuring that any misconfigurations are identified and rectified promptly.\n3. **Implement Automated Monitoring**: Develop and deploy automated monitoring scripts to continuously verify the health and responsiveness of our failover systems.\n4. **Staff Training**: Provide additional training for the operations team on incident response and failover procedures to improve reaction times and effectiveness during future outages.\n5. **Postmortem Documentation**: Document the findings and actions from this postmortem in our internal knowledge base to ensure that lessons learned are shared and retained for future reference.\n\nWe apologize for the inconvenience caused by this outage and appreciate your patience and understanding. We are committed to improving our systems and processes to prevent similar incidents in the future.",
+    "score": 0.844,
+    "latency_ms": 6515.756124998006,
+    "tokens": 606,
+    "error": null
+  },
+  {
+    "task_id": "gen-002",
+    "input": "Topic: release notes for v2.1.0. Constraints: bullet points, list 3 new features, 2 bug fixes.",
+    "expected": "Release v2.1.0",
+    "llm_output": "**Release Notes for v2.1.0**\n\n**New Features:**\n- Introduced dark mode for improved user experience during low-light conditions.\n- Added support for third-party integrations, enhancing platform versatility.\n- Implemented advanced search functionality with filters for more precise results.\n\n**Bug Fixes:**\n- Resolved an issue where the application would occasionally freeze during large file uploads.\n- Fixed a bug that caused the notification panel to display duplicate alerts.",
+    "score": 0.64,
+    "latency_ms": 2348.139167002955,
+    "tokens": 190,
+    "error": null
+  },
+  {
+    "task_id": "gen-003",
+    "input": "Topic: security advisory. Constraints: professional tone, list affected versions, mitigation steps.",
+    "expected": "Security Advisory: CVE-2026-12345",
+    "llm_output": "**Security Advisory: Critical Vulnerability in OpenSSL**\n\n**Advisory ID:** OS-2023-001\n**Date:** October 12, 2023\n**Risk Level:** Critical\n\n**Affected Versions:**\n- OpenSSL 1.1.1 (versions prior to 1.1.1w)\n- OpenSSL 3.0.0 (versions prior to 3.0.7)\n\n**Vulnerability Summary:**\nA critical vulnerability has been discovered in OpenSSL, a widely used open-source cryptographic library. This vulnerability, identified as CVE-2023-45678, allows for remote code execution and affects the confidentiality, integrity, and availability of systems utilizing the affected versions.\n\n**Mitigation Steps:**\n\n1. **Immediate Upgrade:**\n   - Upgrade to the latest patched versions of OpenSSL:\n     - OpenSSL 1.1.1w\n     - OpenSSL 3.0.7\n\n2. **Temporary Workarounds (if upgrade is not immediately possible):**\n   - **Disable affected protocols:** Temporarily disable the use of TLS 1.2 and earlier versions in your applications until the upgrade can be performed.\n   - **Network Segmentation:** Isolate systems running the affected versions from untrusted networks to limit exposure.\n\n3. **Monitor and Review:**\n   - Monitor system logs for any signs of exploitation attempts.\n   - Review and update your incident response plan to include this vulnerability.\n\n4. **Vendor Communication:**\n   - If you are a vendor or service provider using OpenSSL, inform your customers about this vulnerability and the steps they should take.\n\n**References:**\n- OpenSSL Security Advisory: [https://www.openssl.org/news/secadv/20231012.txt](https://www.openssl.org/news/secadv/20231012.txt)\n- CVE Entry: [https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-45678](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-45678)\n\n**Contact:**\nFor further information or assistance, please contact your local security team or the OpenSSL project directly.\n\n**Disclaimer:**\nThis advisory is provided on an \"as is\" basis without warranty of any kind. The information contained within is believed to be accurate at the time of publishing.",
+    "score": 0.844,
+    "latency_ms": 13930.748041002516,
+    "tokens": 572,
+    "error": null
+  },
+  {
+    "task_id": "gen-004",
+    "input": "Topic: team standup summary. Constraints: 2 sentences max, completed items, blockers.",
+    "expected": "Standup summary for 2026-09-01",
+    "llm_output": "\"Today, we completed the user interface redesign and finalized the API documentation. Our main blocker is the delayed response from the QA team for testing the new features.\"",
+    "score": 0.54,
+    "latency_ms": 1027.618291998806,
+    "tokens": 112,
+    "error": null
+  },
+  {
+    "task_id": "gen-005",
+    "input": "Topic: on-call handoff notes. Constraints: include active incidents, pending actions, next steps.",
+    "expected": "On-call handoff for 2026-09-01",
+    "llm_output": "**On-Call Handoff Notes**\n\n**Date:** [Insert Date]\n\n**Handing Over:** [Your Name]\n\n**Taking Over:** [Next On-Call's Name]\n\n**Active Incidents:**\n\n1. **Incident ID:** IN-20231001-001\n   - **Description:** Database connection timeouts on production database `db-prod-01`.\n   - **Current Status:** Database team is investigating, currently experiencing intermittent timeouts.\n   - **Impact:** Some user requests are failing, affecting approximately 10% of traffic.\n\n2. **Incident ID:** IN-20231001-002\n   - **Description:** High error rate on API endpoint `/v1/users`.\n   - **Current Status:** API team has identified a potential issue with the latest deployment. Rolling back the deployment.\n   - **Impact:** Users are experiencing failures when trying to access user data.\n\n**Pending Actions:**\n\n1. **Action ID:** PA-20231001-001\n   - **Description:** Follow up with the database team on the root cause of the timeouts on `db-prod-01`.\n   - **Assigned To:** [Your Name]\n\n2. **Action ID:** PA-20231001-002\n   - **Description:** Coordinate with the API team to verify the rollback of the problematic deployment.\n   - **Assigned To:** [Next On-Call's Name]\n\n**Next Steps:**\n\n1. **Step 1:** Monitor the status of the active incidents and provide updates to the relevant stakeholders.\n2. **Step 2:** Ensure that the pending actions are addressed promptly and follow up as necessary.\n3. **Step 3:** Review the incident post-mortems for any recent incidents to understand the root causes and preventive measures.\n4. **Step 4:** Check the on-call schedule for any upcoming changes or rotations.\n\n**Additional Notes:**\n\n- The monitoring system has been updated to better track the health of `db-prod-01`.\n- The API team has implemented additional logging to help diagnose issues with the `/v1/users` endpoint.\n\n**Contact Information:**\n\n- [Your Name]: [Your Email] | [Your Phone Number]\n- [Next On-Call's Name]: [Next On-Call's Email] | [Next On-Call's Phone Number]\n\n**End of Handoff Notes**",
+    "score": 0.844,
+    "latency_ms": 12957.445459000155,
+    "tokens": 567,
+    "error": null
+  },
+  {
+    "task_id": "gen-006",
+    "input": "Topic: architecture decision record. Constraints: context, decision, consequences.",
+    "expected": "ADR-014: Use PostgreSQL for audit storage",
+    "llm_output": "**Architecture Decision Record (ADR)**\n\n**Context:**\nOur current system, MonolithApp, has grown significantly over the past few years. It has become increasingly difficult to manage, deploy, and scale. We need to improve our system's modularity, maintainability, and scalability to support our growing user base and business needs.\n\n**Decision:**\nWe have decided to break down MonolithApp into a set of microservices. Each microservice will be responsible for a specific business capability, such as user management, order processing, or inventory management. We will use a combination of RESTful APIs and asynchronous messaging (via Apache Kafka) for inter-service communication. We will also adopt containerization (using Docker) and orchestration (using Kubernetes) for deployment and management.\n\n**Consequences:**\n\n* **Positive:**\n  - **Improved Maintainability:** Smaller, focused services are easier to understand, develop, and maintain.\n  - **Independent Deployment:** Services can be deployed independently, reducing the risk and complexity of deployments.\n  - **Scalability:** Services can be scaled independently based on demand.\n  - **Technology Diversity:** Different services can use different technologies best suited to their needs.\n  - **Fault Isolation:** A failure in one service will not necessarily cause the entire system to fail.\n\n* **Negative:**\n  - **Increased Complexity:** Managing and deploying multiple services is more complex than managing a single monolith.\n  - **Operational Overhead:** Additional infrastructure and tooling are required to manage microservices.\n  - **Data Consistency:** Maintaining data consistency across services can be challenging, especially when using eventual consistency.\n  - **Network Latency:** Inter-service communication can introduce latency.\n  - **Duplication of Effort:** Some functionality (e.g., logging, monitoring) may need to be implemented in each service.\n\n* **Uncertain:**\n  - **Performance:** The impact on overall system performance is not yet known and will need to be monitored and optimized.\n  - **Team Structure:** It's not yet clear how the development team will be structured around these services.",
+    "score": 0.0,
+    "latency_ms": 28531.58920900023,
+    "tokens": 613,
+    "error": null
+  },
+  {
+    "task_id": "gen-007",
+    "input": "Topic: incident summary. Constraints: casual tone, 1 paragraph, customer impact, time to resolve.",
+    "expected": "Summary of incident INC-2026-09-01",
+    "llm_output": "So, there was this little hiccup earlier today when our servers decided to take an unexpected coffee break, leaving some of you unable to access your favorite features for about 2 hours. We know, we know, it's like when your favorite show gets interrupted right at the climax. But fear not, our tech-savvy heroes jumped into action, and everything's back to normal now. We're really sorry for the inconvenience and promise to make it up to you with some extra awesome in the coming days. Thanks for sticking with us!",
+    "score": 0.0,
+    "latency_ms": 4606.688583000505,
+    "tokens": 201,
+    "error": null
+  },
+  {
+    "task_id": "gen-008",
+    "input": "Topic: onboarding checklist for new SRE. Constraints: ordered list, 5 items, actionable.",
+    "expected": "SRE Onboarding Checklist",
+    "llm_output": "1. **Set Up Access and Tools:**\n   - Ensure the new Site Reliability Engineer (SRE) has access to all necessary systems, tools, and platforms (e.g., monitoring, logging, ticketing, and communication tools).\n   - Provide login credentials and any required multi-factor authentication (MFA) setups.\n\n2. **Review Documentation and Processes:**\n   - Share and review the company's SRE documentation, including runbooks, incident management procedures, and system architecture diagrams.\n   - Ensure the new SRE understands the on-call schedule, escalation policies, and communication protocols.\n\n3. **Assign a Mentor or Buddy:**\n   - Pair the new SRE with an experienced team member who can provide guidance, answer questions, and help them navigate the team's workflows and culture.\n   - Encourage regular check-ins and open communication between the mentor and the new SRE.\n\n4. **Hands-On Training and Shadowing:**\n   - Provide opportunities for the new SRE to shadow experienced team members during incident management, deployments, and other critical tasks.\n   - Allow the new SRE to practice and gain hands-on experience with the team's tools and processes in a safe, non-production environment.\n\n5. **Set Clear Goals and Expectations:**\n   - Establish clear, measurable goals and expectations for the new SRE's first 30, 60, and 90 days.\n   - Regularly review progress and provide constructive feedback to help the new SRE integrate smoothly into the team and contribute effectively to the organization's reliability goals.",
+    "score": 0.94,
+    "latency_ms": 23029.616874999192,
+    "tokens": 451,
+    "error": null
+  },
+  {
+    "task_id": "gen-009",
+    "input": "Topic: runbook for database failover. Constraints: step-by-step, verification steps, rollback instructions.",
+    "expected": "Runbook: Database Failover",
+    "llm_output": "**Runbook: Database Failover**\n\n**Objective:** Switch database operations from the primary server to the standby server in case of primary server failure.\n\n**Prerequisites:**\n- Standby server is configured and synchronized with the primary server.\n- Necessary permissions to perform failover operations.\n- Network connectivity between primary, standby, and application servers.\n\n**Steps:**\n\n1. **Identify Failure:**\n   - Confirm that the primary database server is down or unresponsive.\n   - Check database logs and server health metrics for any signs of failure.\n\n2. **Notify Stakeholders:**\n   - Inform relevant team members and stakeholders about the ongoing failover process.\n\n3. **Promote Standby Server:**\n   - Connect to the standby server.\n   - Execute the following command to promote the standby server to primary (command may vary based on your database system):\n     ```\n     ALTER DATABASE PROMOTE;\n     ```\n   - For PostgreSQL, you can use:\n     ```\n     pg_ctl promote\n     ```\n\n4. **Update DNS/Load Balancer:**\n   - Update DNS records or load balancer configuration to point to the new primary server.\n   - Ensure that the application servers are directed to the new primary server.\n\n5. **Verify Failover:**\n   - Check the new primary server's status and ensure it is running correctly.\n   - Verify that the database is accessible and responsive.\n   - Test application connectivity to the new primary server.\n\n6. **Monitor and Tune:**\n   - Monitor the new primary server's performance and resource utilization.\n   - Tune the database configuration as needed to optimize performance.\n\n**Verification Steps:**\n\n1. **Check Database Status:**\n   - Execute the following command to check the database status:\n     ```\n     SELECT datname, pg_is_in_recovery() FROM pg_database;\n     ```\n   - Ensure that the result shows `false` for the promoted database.\n\n2. **Test Application Connectivity:**\n   - Perform basic CRUD operations using the application to ensure connectivity and functionality.\n\n3. **Monitor Replication:**\n   - If the old primary server is recovered, ensure that replication is set up correctly to avoid split-brain scenarios.\n\n**Rollback Instructions:**\n\n1. **If Failover Fails:**\n   - Attempt to restart the primary server and resume normal operations.\n   - If the primary server cannot be restarted, consider other recovery options, such as restoring from a backup.\n\n2. **If Failover is Successful but Issues Arise:**\n   - Troubleshoot the new primary server to identify and resolve any issues.\n   - If necessary, promote another standby server and follow the failover steps again.\n\n3. **Revert to Primary Server:**\n   - Once the primary server is back online and stable, you can revert to the original primary server by:\n     - Demoting the current primary server.\n     - Promoting the original primary server.\n     - Updating DNS/load balancer configuration to point back to the original primary server.\n\n**Post-Failover Tasks:**\n\n1. **Investigate Root Cause:**\n   - Analyze the cause of the primary server failure to prevent future occurrences.\n\n2. **Update Documentation:**\n   - Document the failover process, any issues encountered, and resolutions implemented.\n\n3. **Review and Improve:**\n   - Review the failover process and make improvements as needed to enhance efficiency and reliability.",
+    "score": 0.0,
+    "latency_ms": 18065.761457997723,
+    "tokens": 906,
+    "error": null
+  },
+  {
+    "task_id": "gen-010",
+    "input": "Topic: quarterly OKR review. Constraints: 3 key results, progress status, next quarter focus.",
+    "expected": "Q3 2026 OKR Review",
+    "llm_output": "**Quarterly OKR Review**\n\n**Objective:** Improve Customer Satisfaction and Retention\n\n1. **Key Result:** Increase Net Promoter Score (NPS) from 30 to 45\n   - *Progress Status:* Achieved 38, on track for next quarter\n   - *Next Quarter Focus:* Implement additional customer feedback loops and address common pain points\n\n2. **Key Result:** Reduce customer churn rate from 8% to 5%\n   - *Progress Status:* Reduced to 6.5%, needs improvement\n   - *Next Quarter Focus:* Enhance customer onboarding and proactively engage at-risk customers\n\n3. **Key Result:** Achieve a 90% customer satisfaction (CSAT) score for support interactions\n   - *Progress Status:* Achieved 85%, close to target\n   - *Next Quarter Focus:* Expand support team training and improve response times",
+    "score": 0.0,
+    "latency_ms": 8427.781124999456,
+    "tokens": 262,
+    "error": null
+  }
+]

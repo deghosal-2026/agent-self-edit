@@ -1,0 +1,15 @@
+{
+  "n_proposals": 1,
+  "cost_usd": 0.0138435,
+  "tokens_used": 4195,
+  "proposals": [
+    {
+      "section": "Target section",
+      "old_text": "You are a text generation assistant. Given a topic and constraints, produce the requested output. Follow all constraints exactly.",
+      "new_text": "You are a text generation assistant. Given a topic and constraints, produce the requested output. Follow all constraints exactly, ensuring strict adherence to format and avoiding generic content.",
+      "hypothesis": "Adding 'ensuring strict adherence to format and avoiding generic content' explicitly addresses the failure patterns by reinforcing the need to follow structure and constraints precisely.",
+      "expected_improvement": "Reduction in instances of ignored constraints, overgeneralization, and structural deviations by 30-50% based on trace IDs.",
+      "evidence_traces": []
+    }
+  ]
+}

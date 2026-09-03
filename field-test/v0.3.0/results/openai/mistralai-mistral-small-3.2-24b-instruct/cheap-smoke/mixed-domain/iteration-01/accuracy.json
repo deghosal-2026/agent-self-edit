@@ -1,0 +1,52 @@
+{
+  "accuracy": 0.0,
+  "correct": 0,
+  "total": 5,
+  "results": [
+    {
+      "task_id": "mixed-001",
+      "input": "Classify this ticket AND extract the affected service: 'The payment gateway is returning 502 errors for all enterprise customers. This started at 14:00 UTC.'",
+      "expected": "classification: urgent, technical\naffected_service: payment gateway",
+      "actual": "**Classification:** Incident\n\n**Extracted Affected Service:** Payment Gateway",
+      "passed": false,
+      "score": 0.0,
+      "error": null
+    },
+    {
+      "task_id": "mixed-010",
+      "input": "Extract all error codes from this log AND classify the overall system health: 'E4031 on auth-service (3 retries), E5002 on user-service (1 retry), E4031 on billing-service (5 retries). All services responding but with elevated error rates.'",
+      "expected": "errors: E4031, E5002\nhealth: degraded",
+      "actual": "**Extracted Error Codes:**\n- E4031\n- E5002\n\n**Overall System Health Classification:**\n- The system is in a degraded state. While all services are responding, the elevated error rates indicate that there are issues that need to be addressed. The presence of multiple error codes and retries suggests that there are underlying problems that could impact the overall performance and reliability of the system.",
+      "passed": false,
+      "score": 0.0,
+      "error": null
+    },
+    {
+      "task_id": "mixed-025",
+      "input": "Classify this as capacity planning or incident response AND extract the resource metrics: 'The database is running at 85% disk usage. At current growth rates, we will run out of space in 14 days. The table with the fastest growth is audit_logs.'",
+      "expected": "type: capacity planning\ndisk_usage: 85%\ntime_remaining: 14 days\nfastest_growth: audit_logs",
+      "actual": "**Classification:** Capacity Planning\n\n**Extracted Resource Metrics:**\n- Disk Usage: 85%\n- Time until full: 14 days\n- Fastest growing table: audit_logs",
+      "passed": false,
+      "score": 0.0,
+      "error": null
+    },
+    {
+      "task_id": "mixed-050",
+      "input": "Extract the performance metrics AND generate an optimization plan: 'Current metrics: p95 latency 800ms, p99 2400ms, throughput 1200 req/s. Target: p95 < 200ms. Bottleneck: N+1 queries in the order service ORM layer.'",
+      "expected": "current_p95: 800ms\ncurrent_p99: 2400ms\nplan: add query batching, implement read replicas, enable connection pooling",
+      "actual": "**Extracted Performance Metrics:**\n- Current p95 latency: 800ms\n- Current p99 latency: 2400ms\n- Current throughput: 1200 requests per second\n- Target p95 latency: < 200ms\n- Identified bottleneck: N+1 queries in the order service ORM layer\n\n**Optimization Plan:**\n\n1. **Query Optimization:**\n   - **Identify N+1 Queries:** Use tools like SQL query logs, ORM-specific query analyzers, or database performance insights to identify all N+1 query instances in the order service.\n   - **Implement Eager Loading:** Replace N+1 queries with eager loading (e.g., `includes` in ActiveRecord, `select_related` or `prefetch_related` in Django ORM) to load the necessary related data in a single query.\n   - **Batch Loading:** For cases where eager loading isn't suitable, implement batch loading to reduce the number of queries.\n\n2. **Database Optimization:**\n   - **Indexing:** Ensure that appropriate indexes are in place for the queries executed in the order service.\n   - **Query Optimization:** Analyze and optimize the generated SQL queries for better performance.\n   - **Database Configuration:** Review and optimize database configuration parameters for better performance.\n\n3. **Caching:**\n   - **Implement Caching:** Introduce caching mechanisms (e.g., Redis, Memcached) for frequently accessed data to reduce database load.\n   - **Cache Invalidation:** Ensure proper cache invalidation strategies are in place to maintain data consistency.\n\n4. **Connection Pooling:**\n   - **Optimize Connection Pooling:** Review and optimize database connection pooling settings to improve resource utilization.\n\n5. **Monitoring and Iteration:**\n   - **Monitor Performance:** Continuously monitor the performance metrics (p95, p99 latency, and throughput) to assess the impact of the optimizations.\n   - **Iterate:** Based on the monitoring results, iterate on the optimization strategies and address any remaining bottlenecks.\n\n6. **Load Testing:**\n   - **Conduct Load Testing:** Perform load testing to ensure that the optimizations can handle the expected traffic and to identify any potential issues under high load.\n\n7. **Review and Refactor:**\n   - **Code Review:** Conduct a thorough code review to identify any additional performance bottlenecks or inefficiencies.\n   - **Refactor Code:** Refactor the code as needed to improve performance and maintainability.\n\nBy following this optimization plan, you should be able to significantly reduce the p95 latency and improve the overall performance of the order service.",
+      "passed": false,
+      "score": 0.0,
+      "error": null
+    },
+    {
+      "task_id": "mixed-075",
+      "input": "Classify the technical debt item AND generate a paydown plan: 'Debt item: Legacy billing module uses deprecated payment SDK. 12K LOC. No tests. Blocks new feature development. Options: rewrite ($400K, 6 months) or wrapper ($100K, 2 months).'",
+      "expected": "classification: technical\ndebt: legacy billing SDK, 12K LOC, no tests\nplan: wrapper approach $100K/2 months, then gradual rewrite",
+      "actual": "**Classification:**\n\n1. **Type of Technical Debt:** Architectural/Design Debt\n2. **Severity:** High (Blocks new feature development and has no tests)\n3. **Size:** Large (12,000 lines of code)\n4. **Risk:** High (Uses deprecated SDK, no tests, blocks new development)\n\n**Paydown Plan:**\n\n**Option 1: Rewrite**\n\n1. **Assessment and Planning (Week 1-2):**\n   - Finalize the scope of the rewrite.\n   - Choose a suitable, up-to-date payment SDK.\n   - Define the architecture and design of the new billing module.\n\n2. **Development (Month 1-4):**\n   - Break down the development into 2-week sprints.\n   - Prioritize the most critical features first.\n   - Ensure the new module is well-tested (aim for high code coverage).\n\n3. **Data Migration and Integration (Month 5):**\n   - Migrate existing data from the legacy module to the new one.\n   - Integrate the new billing module with other parts of the system.\n\n4. **Testing and Deployment (Month 6):**\n   - Conduct thorough testing, including performance, security, and user acceptance testing.\n   - Deploy the new billing module to production.\n\n5. **Retirement (Month 6+):**\n   - Retire the legacy billing module.\n   - Monitor the new module for any issues.\n\n**Option 2: Wrapper**\n\n1. **Assessment and Planning (Week 1):**\n   - Finalize the scope of the wrapper.\n   - Define the interfaces and data mappings between the legacy module and the new SDK.\n\n2. **Development (Month 1-2):**\n   - Break down the development into 1-week sprints.\n   - Develop the wrapper to handle the deprecated SDK's functionalities using the new SDK.\n   - Ensure the wrapper is well-tested.\n\n3. **Integration and Testing (Week 7-8):**\n   - Integrate the wrapper with the legacy billing module.\n   - Conduct thorough testing, including performance, security, and user acceptance testing.\n\n**Recommendation:**\n\nGiven that the legacy billing module blocks new feature development and has no tests, it's recommended to go with the rewrite option. Although it's more expensive and time-consuming, it will provide a more robust, maintainable, and testable solution in the long run. The wrapper option might be a quick fix, but it could lead to more technical debt in the future.",
+      "passed": false,
+      "score": 0.0,
+      "error": null
+    }
+  ]
+}

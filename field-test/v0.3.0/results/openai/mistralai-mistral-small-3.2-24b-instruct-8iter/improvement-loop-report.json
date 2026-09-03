@@ -1,0 +1,195 @@
+{
+  "meta": {
+    "provider": "openai",
+    "model": "mistralai/mistral-small-3.2-24b-instruct",
+    "endpoint": "https://openrouter.ai/api/v1",
+    "n_iterations": 8,
+    "baseline_accuracy": 64.0,
+    "final_accuracy": 68.0,
+    "improvement": 4.0,
+    "date": "2026-09-03T06:47:35Z"
+  },
+  "iterations": [
+    {
+      "iteration": 0,
+      "accuracy": 64.0,
+      "gate": "baseline"
+    },
+    {
+      "iteration": 1,
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other.\n\nRules:\n- urgent: immediate action (system down, blocked workf",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other.\n\nRules:\n- urgent: immediate action (system down, blocked workf",
+      "n_proposals": 1,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "Rules",
+          "gate": "near_miss",
+          "winner": "inconclusive",
+          "p_value": 1.0,
+          "mean_delta": 0.025000000000000022,
+          "n_trials": 40
+        }
+      ],
+      "analysis_cost": 0.009203699999999999,
+      "accuracy": 64.0,
+      "accuracy_correct": 16,
+      "accuracy_total": 25,
+      "duration_s": 93.7
+    },
+    {
+      "iteration": 2,
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other.\n\nRules:\n- urgent: immediate action (system down, blocked workf",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other.\n\nRules:\n- urgent: immediate action (system down, blocked workf",
+      "n_proposals": 1,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "Rules",
+          "gate": "near_miss",
+          "winner": "inconclusive",
+          "p_value": 1.0,
+          "mean_delta": 0.025000000000000022,
+          "n_trials": 40
+        }
+      ],
+      "analysis_cost": 0.009504,
+      "accuracy": 64.0,
+      "accuracy_correct": 16,
+      "accuracy_total": 25,
+      "duration_s": 66.0
+    },
+    {
+      "iteration": 3,
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other.\n\nRules:\n- urgent: immediate action (system down, blocked workf",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other.\n\nRules:\n- urgent: immediate action (system down, blocked workf",
+      "n_proposals": 1,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "Rules",
+          "gate": "near_miss",
+          "winner": "inconclusive",
+          "p_value": 0.79,
+          "mean_delta": 0.04999999999999993,
+          "n_trials": 40
+        }
+      ],
+      "analysis_cost": 0.0097383,
+      "accuracy": 64.0,
+      "accuracy_correct": 16,
+      "accuracy_total": 25,
+      "duration_s": 77.0
+    },
+    {
+      "iteration": 4,
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other.\n\nRules:\n- urgent: immediate action (system down, blocked workf",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other.\n\nRules:\n- urgent: immediate action (system down, blocked workf",
+      "n_proposals": 1,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "Rules",
+          "gate": "near_miss",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 40
+        }
+      ],
+      "analysis_cost": 0.0096492,
+      "accuracy": 64.0,
+      "accuracy_correct": 16,
+      "accuracy_total": 25,
+      "duration_s": 80.0
+    },
+    {
+      "iteration": 5,
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other.\n\nRules:\n- urgent: immediate action (system down, blocked workf",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other.\n\nRules:\n- urgent: immediate action (system down, blocked workf",
+      "n_proposals": 1,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "Rules",
+          "gate": "near_miss",
+          "winner": "tie",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 40
+        }
+      ],
+      "analysis_cost": 0.0095733,
+      "accuracy": 64.0,
+      "accuracy_correct": 16,
+      "accuracy_total": 25,
+      "duration_s": 67.6
+    },
+    {
+      "iteration": 6,
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other.\n\nRules:\n- urgent: immediate action (system down, blocked workf",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other.\n\nRules:\n- urgent: immediate action (system down, blocked workf",
+      "n_proposals": 1,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "Rules",
+          "gate": "near_miss",
+          "winner": "inconclusive",
+          "p_value": 1.0,
+          "mean_delta": 0.025000000000000022,
+          "n_trials": 40
+        }
+      ],
+      "analysis_cost": 0.009655799999999999,
+      "accuracy": 64.0,
+      "accuracy_correct": 16,
+      "accuracy_total": 25,
+      "duration_s": 67.9
+    },
+    {
+      "iteration": 7,
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other.\n\nRules:\n- urgent: immediate action (system down, blocked workf",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other.\n\nRules:\n- urgent: immediate action (system down, blocked workf",
+      "n_proposals": 1,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "Rules",
+          "gate": "near_miss",
+          "winner": "inconclusive",
+          "p_value": 1.0,
+          "mean_delta": 0.025000000000000022,
+          "n_trials": 40
+        }
+      ],
+      "analysis_cost": 0.0094314,
+      "accuracy": 64.0,
+      "accuracy_correct": 16,
+      "accuracy_total": 25,
+      "duration_s": 74.5
+    },
+    {
+      "iteration": 8,
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other.\n\nRules:\n- urgent: immediate action (system down, blocked workf",
+      "prompt_after": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other.\n\nRules:\n- urgent: immediate action (system down, blocked workf",
+      "n_proposals": 1,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "Rules",
+          "gate": "near_miss",
+          "winner": "inconclusive",
+          "p_value": 1.0,
+          "mean_delta": 0.0,
+          "n_trials": 40
+        }
+      ],
+      "analysis_cost": 0.0092862,
+      "accuracy": 68.0,
+      "accuracy_correct": 17,
+      "accuracy_total": 25,
+      "duration_s": 105.9
+    }
+  ]
+}

@@ -1,0 +1,113 @@
+{
+  "winner": "tie",
+  "mean_delta": 0.0,
+  "ci_low": 0.0,
+  "ci_high": 0.0,
+  "p_value": 1.0,
+  "effect_size": 0.0,
+  "n_trials": 10,
+  "cost_usd": 0.0050985,
+  "token_count": 1545,
+  "per_task": [
+    {
+      "task_id": "extract-001",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "name: Alice Johnson\nemail: alice@example.com",
+      "output_b": "name: Alice Johnson\nemail: alice@example.com"
+    },
+    {
+      "task_id": "extract-002",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "date: 2026-08-15\ntime: 14:30 UTC\nseverity: HIGH\nservice: api-gateway",
+      "output_b": "date: 2026-08-15\ntime: 14:30 UTC\nseverity: HIGH\nservice: api-gateway"
+    },
+    {
+      "task_id": "extract-003",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "deployment sha: abc123def456\nversion: v2.1.3",
+      "output_b": "deployment sha: abc123def456\nversion: v2.1.3"
+    },
+    {
+      "task_id": "extract-004",
+      "score_a": 0.6666666666666666,
+      "score_b": 0.6666666666666666,
+      "delta": 0.0,
+      "output_a": "email: john.doe@company.com\nphone: +1-555-0123\nname: John",
+      "output_b": "email: john.doe@company.com\nphone: +1-555-0123\nname: John"
+    },
+    {
+      "task_id": "extract-005",
+      "score_a": 0.5,
+      "score_b": 0.5,
+      "delta": 0.0,
+      "output_a": "error code: E4032\nbranch: feature/new-auth",
+      "output_b": "error code: E4032\nbranch: feature/new-auth"
+    },
+    {
+      "task_id": "extract-006",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "field: Server\nvalue: srv-web-03\nfield: CPU usage\nvalue: 78%\nfield: RAM in use\nvalue: 12GB\nfield: Total RAM\nvalue: 16GB",
+      "output_b": "field: Server\nvalue: srv-web-03\n\nfield: CPU usage\nvalue: 78%\n\nfield: RAM in use\nvalue: 12GB\n\nfield: Total RAM\nvalue: 16GB"
+    },
+    {
+      "task_id": "extract-007",
+      "score_a": 0.6666666666666666,
+      "score_b": 0.6666666666666666,
+      "delta": 0.0,
+      "output_a": "ticket: OPS-4567\nopened by: mike@corp.com\ndate: 2026-09-01",
+      "output_b": "ticket: OPS-4567\nopened by: mike@corp.com\ndate: 2026-09-01"
+    },
+    {
+      "task_id": "extract-008",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "field: Error rate on service\nfield: user-service\nfield: increased from\nfield: 0.5%\nfield: to\nfield: 2.3%\nfield: at\nfield: 10:15 UTC",
+      "output_b": "field: Error rate on service\nvalue: user-service\nfield: Increased from\nvalue: 0.5% to 2.3%\nfield: Time\nvalue: 10:15 UTC"
+    },
+    {
+      "task_id": "extract-009",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "pr_number: 892\naction: merged\nmerged_by: alice\nreviewers: bob, carol\nfiles_changed: 14",
+      "output_b": "pr: #892\naction: merged\nmerged by: alice\nreviewers: bob, carol\nfiles changed: 14"
+    },
+    {
+      "task_id": "extract-010",
+      "score_a": 0.6666666666666666,
+      "score_b": 0.6666666666666666,
+      "delta": 0.0,
+      "output_a": "expiration_date: 2026-12-31\nissuer: Let's Encrypt\ndomain: *.example.com",
+      "output_b": "expirationDate: 2026-12-31\nissuer: Let's Encrypt\ndomain: *.example.com"
+    }
+  ],
+  "gate": {
+    "decision": "near_miss",
+    "reason": "1/2 checks passed (failed at: effect_size); near-miss threshold met (50% >= 50%)",
+    "checks": [
+      {
+        "name": "sample_floor",
+        "passed": true,
+        "value": 10.0,
+        "threshold": 5.0,
+        "details": "n_trials (10) >= sample floor (5)"
+      },
+      {
+        "name": "effect_size",
+        "passed": false,
+        "value": 0.0,
+        "threshold": 0.05,
+        "details": "effect size (0.0%) < min (5.0%)"
+      }
+    ]
+  }
+}

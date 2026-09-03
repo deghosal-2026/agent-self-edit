@@ -1,0 +1,233 @@
+{
+  "winner": "inconclusive",
+  "mean_delta": -0.02200000000000002,
+  "ci_low": -0.11866666666666667,
+  "ci_high": 0.068,
+  "p_value": 0.84,
+  "effect_size": -0.051162790697674466,
+  "n_trials": 25,
+  "cost_usd": 0.0140877,
+  "token_count": 4269,
+  "per_task": [
+    {
+      "task_id": "extract-001",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "name: Alice Johnson\nemail: alice@example.com",
+      "output_b": "name: Alice Johnson\nemail: alice@example.com"
+    },
+    {
+      "task_id": "extract-002",
+      "score_a": 1.0,
+      "score_b": 0.75,
+      "delta": -0.25,
+      "output_a": "date: 2026-08-15\ntime: 14:30 UTC\nseverity: HIGH\nservice: api-gateway",
+      "output_b": "date: 2026-08-15\ntime: 14:30\ntimezone: UTC\nseverity: HIGH\nservice: api-gateway"
+    },
+    {
+      "task_id": "extract-003",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "deployment sha: abc123def456\nversion: v2.1.3",
+      "output_b": "deployment sha: abc123def456\nversion: v2.1.3"
+    },
+    {
+      "task_id": "extract-004",
+      "score_a": 0.6666666666666666,
+      "score_b": 0.6666666666666666,
+      "delta": 0.0,
+      "output_a": "email: john.doe@company.com\nphone: +1-555-0123\nname: John",
+      "output_b": "email: john.doe@company.com\nphone: +1-555-0123\nname: John"
+    },
+    {
+      "task_id": "extract-005",
+      "score_a": 0.5,
+      "score_b": 0.5,
+      "delta": 0.0,
+      "output_a": "error code: E4032\nbranch: feature/new-auth",
+      "output_b": "error code: E4032\nbranch: feature/new-auth"
+    },
+    {
+      "task_id": "extract-006",
+      "score_a": 0.0,
+      "score_b": 0.25,
+      "delta": 0.25,
+      "output_a": "field: Server\nvalue: srv-web-03\nfield: CPU Usage\nvalue: 78%\nfield: RAM Usage\nvalue: 12GB of 16GB",
+      "output_b": "server: srv-web-03\nCPU usage: 78%\nRAM usage: 12GB\nTotal RAM: 16GB"
+    },
+    {
+      "task_id": "extract-007",
+      "score_a": 0.6666666666666666,
+      "score_b": 0.3333333333333333,
+      "delta": -0.3333333333333333,
+      "output_a": "ticket: OPS-4567\nopened by: mike@corp.com\ndate: 2026-09-01",
+      "output_b": "ticket: OPS-4567\nopened_by: mike@corp.com\ndate_opened: 2026-09-01"
+    },
+    {
+      "task_id": "extract-008",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "field: Error rate on service\nfield: user-service\nfield: Increased from\nfield: 0.5%\nfield: to\nfield: 2.3%\nfield: at\nfield: 10:15 UTC",
+      "output_b": "field: Error rate\nvalue: 0.5% to 2.3%\nfield: Service\nvalue: user-service\nfield: Time\nvalue: 10:15 UTC"
+    },
+    {
+      "task_id": "extract-009",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "pr_number: 892\naction: merged\nmerged_by: alice\nreviewers: bob, carol\nfiles_changed: 14",
+      "output_b": "pr_number: 892\naction: merged\nmerged_by: alice\nreviewers: bob, carol\nfiles_changed: 14"
+    },
+    {
+      "task_id": "extract-010",
+      "score_a": 0.6666666666666666,
+      "score_b": 0.3333333333333333,
+      "delta": -0.3333333333333333,
+      "output_a": "expiration_date: 2026-12-31\nissuer: Let's Encrypt\ndomain: *.example.com",
+      "output_b": "expirationDate: 2026-12-31\nissuer: Let's Encrypt\ncommonName: *.example.com"
+    },
+    {
+      "task_id": "extract-011",
+      "score_a": 0.75,
+      "score_b": 0.0,
+      "delta": -0.75,
+      "output_a": "Cost for Q3 2026: $12,450 for compute, $3,200 for storage, $890 for network.\n\nCompute: $12,450\nStorage: $3,200\nNetwork: $890",
+      "output_b": "cost: $12,450 for compute, $3,200 for storage, $890 for network\nperiod: Q3 2026"
+    },
+    {
+      "task_id": "extract-012",
+      "score_a": 0.3333333333333333,
+      "score_b": 0.6666666666666666,
+      "delta": 0.3333333333333333,
+      "output_a": "field: on-call engineer: Alice (alice@x.com)\nfield: escalated at: 03:00 UTC",
+      "output_b": "engineer: Alice\ncontact: alice@x.com\nescalated: 03:00 UTC\nservice: pagerduty"
+    },
+    {
+      "task_id": "extract-013",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "image: nginx:1.25.3\npod: web-7f8b9c\nnamespace: prod",
+      "output_b": "container image: nginx:1.25.3\npod: web-7f8b9c\nnamespace: prod"
+    },
+    {
+      "task_id": "extract-014",
+      "score_a": 0.5,
+      "score_b": 1.0,
+      "delta": 0.5,
+      "output_a": "incident_type: DATABASE_FAILURE\nrunbook_location: docs/runbooks/db-failure.md",
+      "output_b": "incident_type: DATABASE_FAILURE\nrunbook: docs/runbooks/db-failure.md"
+    },
+    {
+      "task_id": "extract-015",
+      "score_a": 0.75,
+      "score_b": 0.75,
+      "delta": 0.0,
+      "output_a": "slo: 99.9% uptime over 30 days\nservice: api-gateway\ncurrent: 99.87%",
+      "output_b": "SLO: 99.9% uptime over 30 days\nservice: api-gateway\nCurrent: 99.87%"
+    },
+    {
+      "task_id": "extract-016",
+      "score_a": 0.5,
+      "score_b": 0.3333333333333333,
+      "delta": -0.16666666666666669,
+      "output_a": "address: 123 Main St, Springfield, IL 62704\nname: Alice Johnson\nmanager: Bob Smith",
+      "output_b": "address: 123 Main St, Springfield, IL 62704\nmanager: Bob Smith"
+    },
+    {
+      "task_id": "extract-017",
+      "score_a": 1.0,
+      "score_b": 1.0,
+      "delta": 0.0,
+      "output_a": "server: db-prod-01\ndatacenter: us-east-1\nrack: R12\nslot: 4\nIP: 10.0.12.34",
+      "output_b": "server: db-prod-01\ndatacenter: us-east-1\nrack: R12\nslot: 4\nIP: 10.0.12.34"
+    },
+    {
+      "task_id": "extract-018",
+      "score_a": 0.0,
+      "score_b": 0.2,
+      "delta": 0.2,
+      "output_a": "Customer Name: Acme Corp\nCustomer ID: AC-4521\nNumber of Subscriptions: 3\nSubscription 1: Pro\nSubscription 1 Cost: $99/mo\nSubscription 2: Enterprise\nSubscription 2 Cost: $499/mo\nSubscription 3: Add-on\nSubscription 3 Cost: $25/mo",
+      "output_b": "customer: Acme Corp\nid: AC-4521\nsubscriptions:\n  - name: Pro\n    price: $99/mo\n  - name: Enterprise\n    price: $499/mo\n  - name: Add-on\n    price: $25/mo"
+    },
+    {
+      "task_id": "extract-019",
+      "score_a": 0.16666666666666666,
+      "score_b": 0.16666666666666666,
+      "delta": 0.0,
+      "output_a": "pipeline: deploy-prod\nstages: build (2m), test (5m), scan (1m), deploy (30s)\nstatus: failed at scan",
+      "output_b": "pipeline: deploy-prod\nstages: build (2m), test (5m), scan (1m), deploy (30s)\nstatus: failed at scan"
+    },
+    {
+      "task_id": "extract-020",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "field: Alert\nfield: CPU > 90%\nfield: Host: web-03\nfield: Triggered at: 14:22\nfield: Resolved at: 14:35\nfield: Action: scaling to 4 replicas",
+      "output_b": "field: Alert\nvalue: CPU > 90% on web-03\nfield: Triggered at\nvalue: 14:22\nfield: Resolved at\nvalue: 14:35 by scaling to 4 replicas"
+    },
+    {
+      "task_id": "extract-021",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "name: Alice\nemail: alice@acme.com\nname: Bob\nemail: bob@acme.com\nname: Carol\nemail: carol@acme.com",
+      "output_b": "name: Alice\nemail: alice@acme.com\nname: Bob\nemail: bob@acme.com\nname: Carol\nemail: carol@acme.com"
+    },
+    {
+      "task_id": "extract-022",
+      "score_a": 0.25,
+      "score_b": 0.25,
+      "delta": 0.0,
+      "output_a": "server1: srv-01\nserver1_ip: 10.0.1.1\nserver2: srv-02\nserver2_ip: 10.0.1.2\nserver3: srv-03\nserver3_ip: 10.0.1.3\nregion: us-east-1",
+      "output_b": "server: srv-01\nip: 10.0.1.1\nserver: srv-02\nip: 10.0.1.2\nserver: srv-03\nip: 10.0.1.3\nregion: us-east-1"
+    },
+    {
+      "task_id": "extract-023",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "field: PRs merged today: #101 by alice, #102 by bob, #103 by carol. All into main branch.",
+      "output_b": "field: PRs merged today\nvalue: #101 by alice, #102 by bob, #103 by carol\nfield: branch\nvalue: main"
+    },
+    {
+      "task_id": "extract-024",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "date: 2026-09-20\noriginal date: 2026-09-15",
+      "output_b": "date: 2026-09-20\noriginal date: 2026-09-15"
+    },
+    {
+      "task_id": "extract-025",
+      "score_a": 0.0,
+      "score_b": 0.0,
+      "delta": 0.0,
+      "output_a": "spec sheet RAM: 16GB\nmonitoring RAM: 12GB",
+      "output_b": "spec: 16GB\nmonitoring: 12GB"
+    }
+  ],
+  "gate": {
+    "decision": "near_miss",
+    "reason": "1/2 checks passed (failed at: effect_size); near-miss threshold met (50% >= 50%)",
+    "checks": [
+      {
+        "name": "sample_floor",
+        "passed": true,
+        "value": 25.0,
+        "threshold": 5.0,
+        "details": "n_trials (25) >= sample floor (5)"
+      },
+      {
+        "name": "effect_size",
+        "passed": false,
+        "value": -0.051162790697674466,
+        "threshold": 0.05,
+        "details": "effect size (-5.1%) < min (5.0%)"
+      }
+    ]
+  }
+}

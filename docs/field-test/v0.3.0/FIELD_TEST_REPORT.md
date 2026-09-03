@@ -682,6 +682,125 @@ It is also a better place to make design decisions from. The project no longer n
 - promotion-set calibration
 - confidence / power reporting
 
+### 9.4 Cross-run inference: the system now fails honestly
+
+Across all executed runs, the strongest shared learning is not that the optimizer failed. It is that the optimizer now fails in a way that can be trusted and explained.
+
+Evidence across run families:
+
+- hermetic suite: 807 tests pass, including rollback, adversarial, rejection-aware, seeded-prompts, and role-routing coverage
+- Docker suite: 16/16 pass, including classification, extraction, generation, staged analyzer, mixed-domain, adversarial, A/B cache, and materialize guard
+- local 4B synthetic run: complete artifacts, stable gate behavior, no hidden execution anomaly
+- cloud Mistral synthetic run: complete artifacts, small positive signal appears, still no promotion
+- cheap-smoke runs: same broad failure pattern appears in extraction, generation, and mixed-domain
+
+That combination means we have crossed an important threshold as a project. The framework is no longer the dominant source of uncertainty. The optimizer is.
+
+### 9.5 Cross-run inference: analyzer weakness generalizes across domains
+
+The classification runs could have been dismissed as a domain-specific problem. The cheap-smoke runs make that explanation much less plausible.
+
+Cross-domain evidence:
+
+- classification: repeated urgency-rule tightening, mostly null or cancelling edits
+- extraction: repeated field-name / formatting clarifications, mostly tiny gains or regressions
+- generation: repeated format-adherence tightening, often actively harmful
+- mixed-domain: repeated high-level formatting/conciseness advice, only one late small positive pocket
+
+This is a consistent behavioral signature, not random noise:
+
+- the analyzer sees plausible failure patterns
+- it responds with local wording adjustments
+- it rarely changes prompt structure, examples, or broader task decomposition
+- it does not escape the same narrow edit neighborhood
+
+That means the current optimizer limitation is not tied to one corpus. It is a cross-domain search problem.
+
+### 9.6 Cross-run inference: generation is the most regression-prone corpus
+
+Generation behaved differently from classification and extraction in an important way.
+
+Evidence:
+
+- generation iteration 1: `1` task improved, `7` regressed
+- generation iteration 3: `1` task improved, `2` regressed
+- both generation proposals focused on stricter format adherence and avoiding generic content
+
+Interpretation:
+
+- generation tasks are more sensitive to over-constraining edits
+- a prompt change that sounds directionally correct can still reduce quality on most tasks
+- this makes generation the best corpus for detecting harmful “tighten the wording” edits
+
+So generation is not just another domain. It is the sharpest corpus for exposing when the analyzer confuses stricter instructions with better behavior.
+
+### 9.7 Cross-run inference: mixed-domain is the first sign of broader upside
+
+Mixed-domain produced the most interesting non-classification cheap-smoke result.
+
+Evidence:
+
+- mixed-domain iteration 3 achieved `2` improvements and `0` regressions
+- effect size was reported as `inf`
+- confidence still failed at `p = 0.46`
+
+Interpretation:
+
+- the mixed-domain corpus can surface meaningful local gains
+- broader task diversity may help the analyzer escape the weakest formatting-only edits
+- but even there, the gain is still too small or too unstable for promotion
+
+This is not success, but it is useful signal. Mixed-domain looks like the most promising non-classification place to continue experiments once role-separated runs are available.
+
+### 9.8 Cross-run inference: the gate is separating three different failure classes
+
+The gate is not merely saying “no.” It is separating qualitatively different kinds of bad candidates.
+
+Those classes are now visible in the data:
+
+1. **Null edits**
+   - no task movement
+   - typical in the local 4B run
+2. **Locally plausible but net-zero edits**
+   - one task up, one task down
+   - also present in the local 4B run
+3. **Weak positive but underpowered edits**
+   - small clean gains, but confidence failure
+   - visible in the Mistral run and mixed-domain cheap-smoke run
+
+This matters because future reporting should not lump all gate rejections together. A rejected null edit and a rejected weak-positive candidate are different product signals.
+
+### 9.9 Cross-run inference: reported final accuracy must be treated differently in no-promotion runs
+
+The cloud Mistral classification run reported `64.0% -> 68.0%`, but no prompt was promoted.
+
+That creates an important reporting rule:
+
+- if `prompt-after.md == prompt-a.md`, then held-out “final” accuracy is not a deployed-improvement claim
+- it is part of candidate evaluation context only
+
+This distinction should become a permanent reporting convention because otherwise future readers will overread no-promotion runs as actual shipped prompt improvements.
+
+### 9.10 Cross-run inference: the next high-value experiment is role separation, not more same-model reruns
+
+The runs now point clearly to the best next experiment.
+
+Evidence:
+
+- local 4B model is cheap and mechanically useful, but weak as analyzer
+- cloud Mistral is stronger as analyzer, but still expensive and still trapped in local search
+- generation and mixed-domain both show that the analyzer weakness is not classification-only
+
+Interpretation:
+
+- repeating more single-model runs is unlikely to change the conclusion much
+- the best next experiment is a role-separated run with:
+  - cheaper executor
+  - stronger analyzer
+  - possibly stronger judge for generation
+
+That is now the cleanest way to test whether analyzer quality is still the dominant bottleneck before making gate-calibration changes.
+
 ---
 
 ## 10. Remaining Execution Gaps
@@ -698,6 +817,159 @@ Still pending:
 | seeded-prompts execution run | pending | validates known-failure prompt behavior under live loop conditions |
 | separated-role run | pending | tests small executor + stronger analyzer strategy directly |
 | model-vs-model A/B | pending | isolates model quality from prompt quality |
+
+### 10.1 Cheap-smoke corpus runs completed
+
+After the main classification runs, three reduced-cost `cheap-smoke` runs were executed with:
+
+- `--iterations 3`
+- `--held-out-sample 5`
+- `--promotion-sample 10`
+- `--run-label cheap-smoke`
+
+These runs were designed to answer a narrower question than the main classification field tests: not “can the optimizer succeed end-to-end?” but “does the same local-search weakness generalize across other corpora when run cheaply?”
+
+The answer is yes.
+
+#### Cheap-smoke run summary
+
+| Corpus | Baseline held-out | Final held-out | Promotions | Strongest iteration | Main observed pattern |
+|--------|-------------------|----------------|------------|---------------------|-----------------------|
+| extraction | 80.0% (4/5) | 20.0% (1/5) | 0 | iter 2 (`+1`, `0` down on 10-task A/B) | formatting / field-name micro-edits |
+| generation | 80.0% (4/5) | 20.0% (1/5) | 0 | iter 1 (`+1`, `7` down) | format-adherence wording causes broader regressions |
+| mixed-domain | 0.0% (0/5) | 0.0% (0/5) | 0 | iter 3 (`+2`, `0` down, `effect_size = inf`) | small classification-format gain, still no confidence |
+
+#### Evidence caveat: top-level report overwrite
+
+The per-run artifact layout under:
+
+- `field-test/v0.3.0/results/openai/mistralai-mistral-small-3.2-24b-instruct/cheap-smoke/`
+
+contains the authoritative per-corpus iteration directories (`extraction/`, `generation/`, `mixed-domain/`). However, the single top-level `improvement-loop-report.json` under `cheap-smoke/` is not a reliable combined summary for all three domains. It appears to reflect the most recent run written to that label rather than a merged report.
+
+For that reason, the analysis below uses the per-corpus directories and their `analysis.json`, `ab-comparison.json`, and `accuracy.json` files as the source of truth.
+
+### 10.2 Extraction cheap-smoke run
+
+Artifact root:
+
+- `field-test/v0.3.0/results/openai/mistralai-mistral-small-3.2-24b-instruct/cheap-smoke/extraction/`
+
+Observed metrics:
+
+| Iteration | Proposals | A/B winner | p-value | Effect size | Delta summary | Held-out |
+|-----------|-----------|------------|---------|-------------|---------------|----------|
+| 1 | 1 | tie | 1.0 | 0.0 | `0` up / `0` down / `10` unchanged | 20.0% |
+| 2 | 1 | inconclusive | 0.93 | 0.0455 | `1` up / `0` down / `9` unchanged | 20.0% |
+| 3 | 1 | inconclusive | 0.92 | -0.0645 | `1` up / `2` down / `7` unchanged | 20.0% |
+
+Proposal pattern:
+
+- all three proposals targeted the extraction formatting line
+- all three hypotheses focused on:
+  - exact field naming
+  - concise formatting
+  - lowercase / no-space conventions
+
+This is a useful result because it shows the analyzer is not making nonsense edits. It is spotting a plausible failure family. But it is still trapped in micro-formatting interventions.
+
+Interpretation:
+
+- iteration 2 showed the best extraction candidate, with a small clean positive move (`1` improved, `0` regressed)
+- that still failed effect-size with `0.0455`, just below the 5% threshold
+- iteration 3 over-corrected and regressed more tasks than it helped
+
+This is consistent with the broader classification finding: the analyzer can find plausible local edits, but they are too weak and too narrow to become promotable.
+
+### 10.3 Generation cheap-smoke run
+
+Artifact root:
+
+- `field-test/v0.3.0/results/openai/mistralai-mistral-small-3.2-24b-instruct/cheap-smoke/generation/`
+
+Observed metrics:
+
+| Iteration | Proposals | A/B winner | p-value | Effect size | Delta summary | Held-out |
+|-----------|-----------|------------|---------|-------------|---------------|----------|
+| 1 | 1 | inconclusive | 0.81 | -0.0459 | `1` up / `7` down / `2` unchanged | 80.0% |
+| 2 | 0 | — | — | — | no proposal | 80.0% |
+| 3 | 1 | inconclusive | 0.85 | -0.0629 | `1` up / `2` down / `7` unchanged | 20.0% |
+
+Proposal pattern:
+
+- both generated proposals targeted the top-level instruction line
+- both hypotheses emphasized:
+  - format adherence
+  - avoiding generic content
+  - following structure and constraints strictly
+
+Interpretation:
+
+- the analyzer correctly identifies that generation failures are often about structure and constraint-following
+- but the proposed fix is too blunt
+- in iteration 1 it helped `1` task and harmed `7`
+- in iteration 3 it helped `1` and harmed `2`
+
+This is stronger evidence than the classification run that local prompt tightening can actively degrade behavior. The generation corpus is more sensitive to over-constraining language than classification is.
+
+The `0` proposals result in iteration 2 is also important. It suggests the analyzer is not robustly productive even with a stronger model. Sometimes it finds a weak local edit; sometimes it finds nothing.
+
+### 10.4 Mixed-domain cheap-smoke run
+
+Artifact root:
+
+- `field-test/v0.3.0/results/openai/mistralai-mistral-small-3.2-24b-instruct/cheap-smoke/mixed-domain/`
+
+Observed metrics:
+
+| Iteration | Proposals | A/B winner | p-value | Effect size | Delta summary | Held-out |
+|-----------|-----------|------------|---------|-------------|---------------|----------|
+| 1 | 1 | tie | 1.0 | 0.0 | `0` up / `0` down / `10` unchanged | 0.0% |
+| 2 | 1 | tie | 1.0 | 0.0 | `0` up / `0` down / `10` unchanged | 0.0% |
+| 3 | 1 | inconclusive | 0.46 | `inf` | `2` up / `0` down / `8` unchanged | 0.0% |
+
+Proposal pattern:
+
+- iterations 1 and 2 proposed generic formatting / conciseness standardization at the top-level instruction line
+- iteration 3 finally proposed a more domain-specific clarification for classification behavior inside the multi-domain prompt
+
+Interpretation:
+
+- the first two iterations are classic null-edit outcomes in a broader corpus
+- the third iteration is more interesting:
+  - `2` tasks improved
+  - `0` regressed
+  - `effect_size = inf`
+
+That `inf` effect size means the sampled baseline slice for those tasks was effectively zero while the candidate achieved some positive score. This is a mathematically real output from the current effect-size implementation, but it still was not enough for promotion because confidence remained weak (`p = 0.46`).
+
+This is the strongest cheap-smoke evidence that the mixed-domain corpus is at least capable of surfacing non-trivial candidate gains. But even here, the analyzer still needed three iterations to move out of generic formatting advice and into something domain-specific.
+
+### 10.5 What the cheap-smoke runs add to the overall conclusion
+
+These reduced-cost runs matter because they show the classification result is not just a classification artifact.
+
+Across extraction, generation, and mixed-domain:
+
+- the analyzer still prefers narrow wording changes
+- proposals cluster around formatting, clarity, or local rule tightening
+- the gate still rejects everything
+- when positive movement appears, it is small
+- when the corpus is more open-ended, overly strict prompt wording can cause regressions
+
+That means the v0.3.0 conclusion becomes stronger, not weaker:
+
+- the optimizer weakness generalizes across corpora
+- a stronger model improves signal quality but does not fix search breadth
+- the gate remains conservative, and sometimes the next limiting factor is confidence rather than effect size
+
+### 10.6 Evidence pointers for cheap-smoke runs
+
+| Corpus | Artifact root |
+|--------|---------------|
+| extraction | `field-test/v0.3.0/results/openai/mistralai-mistral-small-3.2-24b-instruct/cheap-smoke/extraction/` |
+| generation | `field-test/v0.3.0/results/openai/mistralai-mistral-small-3.2-24b-instruct/cheap-smoke/generation/` |
+| mixed-domain | `field-test/v0.3.0/results/openai/mistralai-mistral-small-3.2-24b-instruct/cheap-smoke/mixed-domain/` |
 
 ## 11. Open Questions and Next Steps
 

@@ -1,0 +1,52 @@
+{
+  "accuracy": 0.0,
+  "correct": 0,
+  "total": 5,
+  "results": [
+    {
+      "task_id": "mixed-001",
+      "input": "Classify this ticket AND extract the affected service: 'The payment gateway is returning 502 errors for all enterprise customers. This started at 14:00 UTC.'",
+      "expected": "classification: urgent, technical\naffected_service: payment gateway",
+      "actual": "**Classification:** Incident\n\n**Extracted Affected Service:** Payment Gateway",
+      "passed": false,
+      "score": 0.0,
+      "error": null
+    },
+    {
+      "task_id": "mixed-010",
+      "input": "Extract all error codes from this log AND classify the overall system health: 'E4031 on auth-service (3 retries), E5002 on user-service (1 retry), E4031 on billing-service (5 retries). All services responding but with elevated error rates.'",
+      "expected": "errors: E4031, E5002\nhealth: degraded",
+      "actual": "**Extracted Error Codes:**\n- E4031\n- E5002\n\n**Overall System Health Classification:**\n- The system is in a degraded state. While all services are responding, the elevated error rates indicate that there are issues that need to be addressed. The error codes suggest potential authentication and internal server errors that could impact the user experience and system functionality.",
+      "passed": false,
+      "score": 0.0,
+      "error": null
+    },
+    {
+      "task_id": "mixed-025",
+      "input": "Classify this as capacity planning or incident response AND extract the resource metrics: 'The database is running at 85% disk usage. At current growth rates, we will run out of space in 14 days. The table with the fastest growth is audit_logs.'",
+      "expected": "type: capacity planning\ndisk_usage: 85%\ntime_remaining: 14 days\nfastest_growth: audit_logs",
+      "actual": "**Classification:** Capacity Planning\n\n**Extracted Resource Metrics:**\n- Disk Usage: 85%\n- Time until full: 14 days\n- Fastest growing table: audit_logs",
+      "passed": false,
+      "score": 0.0,
+      "error": null
+    },
+    {
+      "task_id": "mixed-050",
+      "input": "Extract the performance metrics AND generate an optimization plan: 'Current metrics: p95 latency 800ms, p99 2400ms, throughput 1200 req/s. Target: p95 < 200ms. Bottleneck: N+1 queries in the order service ORM layer.'",
+      "expected": "current_p95: 800ms\ncurrent_p99: 2400ms\nplan: add query batching, implement read replicas, enable connection pooling",
+      "actual": "**Extracted Performance Metrics:**\n- Current p95 latency: 800ms\n- Current p99 latency: 2400ms\n- Current throughput: 1200 requests per second\n- Target p95 latency: < 200ms\n- Identified bottleneck: N+1 queries in the order service ORM layer\n\n**Optimization Plan:**\n\n1. **Query Optimization:**\n   - **Identify N+1 Queries:** Use tools like SQL query logs, ORM-specific query analyzers, or database performance insights to identify all N+1 query instances in the order service.\n   - **Implement Eager Loading:** Replace lazy loading with eager loading to fetch all necessary data in a single query. This can be done using ORM-specific features like `include`, `join`, or `preload`.\n   - **Batch Queries:** If eager loading is not feasible, batch the queries to reduce the number of database round trips.\n\n2. **Database Optimization:**\n   - **Indexing:** Ensure that the database tables involved in the order service have proper indexing to speed up query execution.\n   - **Query Optimization:** Review and optimize the generated SQL queries for better performance. This might involve rewriting queries, adding/removing joins, or adjusting the query structure.\n\n3. **Caching:**\n   - **Implement Caching:** Introduce caching for frequently accessed data in the order service. This can be done using in-memory caches like Redis or Memcached.\n   - **Cache Invalidation:** Ensure that the cache is properly invalidated when the underlying data changes to maintain data consistency.\n\n4. **Connection Pooling:**\n   - **Tune Connection Pool:** Optimize the database connection pool settings to ensure that there are enough connections available to handle the load, but not so many that they strain the database resources.\n\n5. **Monitoring and Iteration:**\n   - **Monitor Performance:** Continuously monitor the performance metrics after implementing the optimizations to ensure that the changes are having the desired effect.\n   - **Iterate:** Based on the monitoring results, iterate on the optimizations. This might involve further query optimization, adjusting cache settings, or revisiting the database schema.\n\n6. **Load Testing:**\n   - **Conduct Load Tests:** After implementing the optimizations, conduct load tests to ensure that the system can handle the expected throughput and that the latency targets are met.\n\n7. **Review and Refactor:**\n   - **Code Review:** Conduct a thorough code review to identify any other potential performance bottlenecks or areas for improvement.\n   - **Refactor Code:** Refactor the code to improve its efficiency and maintainability. This might involve simplifying complex logic, reducing unnecessary computations, or improving the overall code structure.",
+      "passed": false,
+      "score": 0.0,
+      "error": null
+    },
+    {
+      "task_id": "mixed-075",
+      "input": "Classify the technical debt item AND generate a paydown plan: 'Debt item: Legacy billing module uses deprecated payment SDK. 12K LOC. No tests. Blocks new feature development. Options: rewrite ($400K, 6 months) or wrapper ($100K, 2 months).'",
+      "expected": "classification: technical\ndebt: legacy billing SDK, 12K LOC, no tests\nplan: wrapper approach $100K/2 months, then gradual rewrite",
+      "actual": "**Classification:**\n\n1. **Type of Technical Debt:** Architectural/Design Debt\n2. **Severity:** High (Blocks new feature development, no tests)\n3. **Size:** Large (12K LOC)\n4. **Age:** Legacy (Deprecated SDK)\n\n**Paydown Plan:**\n\n**Option 1: Rewrite**\n\n1. **Assessment & Planning (1 week):**\n   - Analyze the current billing module and deprecated SDK.\n   - Define the new architecture and tech stack.\n   - Create a detailed project plan and timeline.\n\n2. **Development (5 months):**\n   - Break down the project into 2-week sprints.\n   - Prioritize critical features and functionality.\n   - Develop the new billing module with the new SDK.\n\n3. **Testing (3 weeks):**\n   - Write unit, integration, and end-to-end tests.\n   - Perform user acceptance testing (UAT).\n\n4. **Deployment & Monitoring (2 weeks):**\n   - Deploy the new billing module to production.\n   - Monitor for any issues or bugs.\n\n**Option 2: Wrapper**\n\n1. **Assessment & Planning (1 week):**\n   - Analyze the current billing module and deprecated SDK.\n   - Define the wrapper's architecture and functionality.\n   - Create a detailed project plan and timeline.\n\n2. **Development (1.5 months):**\n   - Break down the project into 2-week sprints.\n   - Develop the wrapper to interface between the legacy billing module and the new SDK.\n\n3. **Testing (2 weeks):**\n   - Write unit, integration, and end-to-end tests.\n   - Perform user acceptance testing (UAT).\n\n4. **Deployment & Monitoring (1 week):**\n   - Deploy the wrapper to production.\n   - Monitor for any issues or bugs.\n\n**Post-Paydown:**\n\n- Document the changes and updates.\n- Update any relevant technical documentation.\n- Communicate the changes to the team and stakeholders.\n- Plan for the eventual rewrite or phase-out of the legacy billing module if the wrapper option is chosen.",
+      "passed": false,
+      "score": 0.0,
+      "error": null
+    }
+  ]
+}

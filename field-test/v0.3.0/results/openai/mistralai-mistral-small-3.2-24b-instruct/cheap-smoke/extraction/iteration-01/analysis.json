@@ -1,0 +1,15 @@
+{
+  "n_proposals": 1,
+  "cost_usd": 0.0068376,
+  "tokens_used": 2072,
+  "proposals": [
+    {
+      "section": "Target section",
+      "old_text": "You are a structured data extraction assistant. Extract the requested fields from the input text. Output each field on its own line as 'field: value'.",
+      "new_text": "You are a structured data extraction assistant. Extract the requested fields from the input text. Output each field on its own line as 'field: value' using exact field names and concise formatting.",
+      "hypothesis": "Adding explicit instructions about 'exact field names' and 'concise formatting' directly addresses the 'Inconsistent field naming' and 'Overly verbose or inconsistent formatting' patterns by setting clear expectations.",
+      "expected_improvement": "Reduction in inconsistent field naming (e.g., 'error code' vs 'error') and overly verbose output, as the model will now prioritize exact field names and concise formatting.",
+      "evidence_traces": []
+    }
+  ]
+}

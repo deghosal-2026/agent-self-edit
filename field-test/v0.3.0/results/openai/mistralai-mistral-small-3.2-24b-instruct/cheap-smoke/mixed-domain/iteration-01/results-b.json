@@ -1,0 +1,102 @@
+[
+  {
+    "task_id": "mixed-001",
+    "input": "Classify this ticket AND extract the affected service: The payment gateway is returning 502 errors for all enterprise customers. This started at 14:00 UTC.",
+    "expected": "classification: urgent, technical\naffected_service: payment gateway",
+    "llm_output": "- **Classification**: Incident\n- **Affected Service**: Payment Gateway",
+    "score": 0.0,
+    "latency_ms": 610.1293329993496,
+    "tokens": 117,
+    "error": null
+  },
+  {
+    "task_id": "mixed-002",
+    "input": "Classify this ticket AND generate a one-line summary for the dashboard: User reports their API key was leaked on GitHub. They need it revoked immediately.",
+    "expected": "classification: security, urgent\nsummary: API key leaked on GitHub, revocation requested",
+    "llm_output": "**Classification:**\n- Category: Security\n- Subcategory: API Key Compromise\n- Severity: High\n- Urgency: Immediate\n\n**Summary for Dashboard:**\n\"Urgent: API key leaked on GitHub, requires immediate revocation.\"",
+    "score": 0.0,
+    "latency_ms": 1047.4364170004264,
+    "tokens": 151,
+    "error": null
+  },
+  {
+    "task_id": "mixed-003",
+    "input": "Extract the error code from this text AND classify the severity: Error E5001 occurred in the billing module. 3,400 customers affected. Estimated revenue impact: $12K/hour.",
+    "expected": "error_code: E5001\nseverity: urgent",
+    "llm_output": "- Error Code: \"E5001\"\n- Severity: \"High\"",
+    "score": 0.0,
+    "latency_ms": 517.0740829998977,
+    "tokens": 114,
+    "error": null
+  },
+  {
+    "task_id": "mixed-004",
+    "input": "Generate a customer-facing message about this outage AND extract the affected services: Database cluster db-prod-01 is down. API, dashboard, and webhooks are affected. ETA: 30 minutes.",
+    "expected": "message: We are experiencing a service disruption\naffected: API, dashboard, webhooks",
+    "llm_output": "**Customer-Facing Message:**\n\"Dear Customer,\nWe are currently experiencing an outage affecting our services. We are working to resolve the issue as quickly as possible and expect to have services back to normal within the next 30 minutes. We apologize for any inconvenience this may cause and thank you for your patience.\"\n\n**Affected Services:**\n- API\n- Dashboard\n- Webhooks",
+    "score": 0.0,
+    "latency_ms": 2748.3984580030665,
+    "tokens": 201,
+    "error": null
+  },
+  {
+    "task_id": "mixed-005",
+    "input": "Classify this as urgent or non-urgent AND extract the SLA deadline: A security researcher found an XSS vulnerability in our login form. They reported it via our bug bounty program. Our SLA for critical findings is 4 hours.",
+    "expected": "classification: urgent\nsla: 4 hours",
+    "llm_output": "- **Urgency**: urgent\n- **SLA Deadline**: 4 hours",
+    "score": 0.0,
+    "latency_ms": 534.3702089994622,
+    "tokens": 129,
+    "error": null
+  },
+  {
+    "task_id": "mixed-006",
+    "input": "Extract all mentioned services AND generate a rollback plan summary: Deploy v3.2.1 introduced a regression in the auth-service and user-service. The search-service is unaffected. We need to roll back both affected services to v3.2.0.",
+    "expected": "services: auth-service, user-service\nrollback: auth-service to v3.2.0, user-service to v3.2.0",
+    "llm_output": "**Extracted Services:**\n- auth-service\n- user-service\n- search-service\n\n**Rollback Plan Summary:**\n- Roll back auth-service to v3.2.0\n- Roll back user-service to v3.2.0\n- search-service remains on v3.2.1",
+    "score": 0.0,
+    "latency_ms": 1543.3514590004052,
+    "tokens": 170,
+    "error": null
+  },
+  {
+    "task_id": "mixed-007",
+    "input": "Classify the priority of this incident AND extract the customer impact metrics: CDN outage affecting 45% of traffic in EU region. Error rate: 100%. P95 latency: timeout. Started: 09:15 UTC.",
+    "expected": "priority: urgent\naffected_traffic: 45%\nregion: EU\nerror_rate: 100%\nstarted: 09:15 UTC",
+    "llm_output": "- **Priority**: P1\n- **Customer Impact Metrics**:\n  - **Affected Traffic**: 45%\n  - **Error Rate**: 100%\n  - **P95 Latency**: timeout\n  - **Affected Region**: EU\n  - **Start Time**: 09:15 UTC",
+    "score": 0.0,
+    "latency_ms": 2156.302167000831,
+    "tokens": 156,
+    "error": null
+  },
+  {
+    "task_id": "mixed-008",
+    "input": "Generate a postmortem outline for this incident AND extract the root cause category: Memory leak in the image-resize worker caused OOM kills. The leak was introduced in commit abc123. Fix deployed in v2.4.2.",
+    "expected": "postmortem: outline\nroot_cause: memory leak",
+    "llm_output": "**Postmortem Outline:**\n\n- **Incident Summary:**\n  - Incident: Memory leak in the image-resize worker\n  - Impact: OOM kills\n  - Duration: [Start Time] - [End Time]\n  - Affected Systems/Users: [List affected systems or users]\n\n- **Timeline:**\n  - [Date/Time]: Incident detected\n  - [Date/Time]: Incident acknowledged\n  - [Date/Time]: Investigation started\n  - [Date/Time]: Root cause identified\n  - [Date/Time]: Fix deployed (v2.4.2)\n  - [Date/Time]: Incident resolved\n\n- **Root Cause:**\n  - Root Cause Category: Software Bug\n  - Details: Memory leak in the image-resize worker introduced in commit abc123\n\n- **Resolution and Recovery:**\n  - Fix deployed: v2.4.2\n  - Verification of fix: [Describe how the fix was verified]\n\n- **Root Cause Analysis:**\n  - Type: Software Bug\n  - Subcategory: Memory Leak\n  - Component: Image-resize worker\n  - Commit: abc123\n\n- **Preventive Measures:**\n  - [List any preventive measures to avoid similar incidents in the future]\n\n- **Action Items:**\n  - [List any action items that arose from this incident]\n\n**Extracted Root Cause Category:**\n- Root Cause Category: Software Bug",
+    "score": 0.0,
+    "latency_ms": 8873.403708003025,
+    "tokens": 390,
+    "error": null
+  },
+  {
+    "task_id": "mixed-009",
+    "input": "Classify this as billing/technical/security AND extract the affected customer ID AND estimate severity: Customer AC-7890 reports their data export has been failing for 3 days. They have an enterprise contract with a 99.9% SLA. Export volume: 2TB.",
+    "expected": "classification: technical\ncustomer: AC-7890\nseverity: high",
+    "llm_output": "- **Classification**: technical\n- **Affected Customer ID**: AC-7890\n- **Estimated Severity**: high",
+    "score": 0.0,
+    "latency_ms": 1063.6179169996467,
+    "tokens": 147,
+    "error": null
+  },
+  {
+    "task_id": "mixed-010",
+    "input": "Extract all error codes from this log AND classify the overall system health: E4031 on auth-service (3 retries), E5002 on user-service (1 retry), E4031 on billing-service (5 retries). All services responding but with elevated error rates.",
+    "expected": "errors: E4031, E5002\nhealth: degraded",
+    "llm_output": "- **Error Codes**:\n  - E4031\n  - E5002\n\n- **System Health**: \"Degraded\"",
+    "score": 0.0,
+    "latency_ms": 941.9081250016461,
+    "tokens": 138,
+    "error": null
+  }
+]

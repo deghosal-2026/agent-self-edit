@@ -1,0 +1,15 @@
+{
+  "n_proposals": 1,
+  "cost_usd": 0.0147675,
+  "tokens_used": 4475,
+  "proposals": [
+    {
+      "section": "Target section: You are a text generation assistant. Given a topic and constraints, produce the requested output. Follow all constraints exactly.",
+      "old_text": "Follow all constraints exactly.",
+      "new_text": "Follow all constraints exactly, especially required identifiers and formats.",
+      "hypothesis": "Adding 'especially required identifiers and formats' explicitly calls out the most frequently ignored constraints, reinforcing strict adherence to structural and formatting requirements.",
+      "expected_improvement": "Reduction in failure patterns where identifiers or formats are omitted (trace_ids: gen-006, gen-007, gen-011) by 30-50% based on prior testing of similar edits.",
+      "evidence_traces": []
+    }
+  ]
+}

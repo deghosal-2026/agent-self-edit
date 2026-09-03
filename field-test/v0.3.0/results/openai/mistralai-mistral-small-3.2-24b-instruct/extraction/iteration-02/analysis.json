@@ -1,0 +1,15 @@
+{
+  "n_proposals": 1,
+  "cost_usd": 0.009645899999999999,
+  "tokens_used": 2923,
+  "proposals": [
+    {
+      "section": "Target section",
+      "old_text": "Output each field on its own line as 'field: value'.",
+      "new_text": "Output each requested field on its own line as 'field: value' (use exact field names).",
+      "hypothesis": "Adding 'requested' and '(use exact field names)' explicitly instructs the model to match the requested field names precisely, reducing inconsistencies and unnecessary additions.",
+      "expected_improvement": "Reduction in 'Inconsistent field naming' and 'Overly verbose or redundant output structure' patterns by 20-30%",
+      "evidence_traces": []
+    }
+  ]
+}

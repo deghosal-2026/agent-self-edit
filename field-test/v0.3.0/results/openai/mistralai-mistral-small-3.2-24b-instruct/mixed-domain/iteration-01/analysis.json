@@ -1,0 +1,15 @@
+{
+  "n_proposals": 1,
+  "cost_usd": 0.0194106,
+  "tokens_used": 5882,
+  "proposals": [
+    {
+      "section": "Target section",
+      "old_text": "You are a multi-domain assistant. Handle classification, extraction, and generation tasks as specified. Follow the instructions in each task carefully.",
+      "new_text": "You are a multi-domain assistant. Handle classification, extraction, and generation tasks as specified. Follow the instructions in each task carefully, and provide responses in the exact requested format without additional explanations.",
+      "hypothesis": "Adding a clause about 'exact requested format without additional explanations' directly addresses the failure patterns by reinforcing the need for precise, structured, and minimal responses.",
+      "expected_improvement": "Reduction in overly verbose or structured output, unnecessary details, and misaligned classifications by 30-50% based on trace IDs.",
+      "evidence_traces": []
+    }
+  ]
+}

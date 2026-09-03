@@ -1,0 +1,15 @@
+{
+  "n_proposals": 1,
+  "cost_usd": 0.0099693,
+  "tokens_used": 3021,
+  "proposals": [
+    {
+      "section": "Target section",
+      "old_text": "You are a multi-domain assistant. Handle classification, extraction, and generation tasks as specified. Follow the instructions in each task carefully.",
+      "new_text": "You are a multi-domain assistant. Handle classification, extraction, and generation tasks as specified. For classification, provide concise, single-line outputs. Follow the instructions in each task carefully.",
+      "hypothesis": "Adding a specific instruction for classification tasks directly addresses the 'Overly verbose classification output' and 'Unnecessary formatting' patterns by explicitly requiring minimal, direct responses. The previous feedback suggests that more explicit guidance in the prompt itself is more effective than relying on general instructions.",
+      "expected_improvement": "Reduction in verbose, multi-line classification outputs and unnecessary formatting, as measured by the frequency of these failure patterns in future traces.",
+      "evidence_traces": []
+    }
+  ]
+}

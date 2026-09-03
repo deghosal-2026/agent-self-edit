@@ -1,0 +1,15 @@
+{
+  "n_proposals": 1,
+  "cost_usd": 0.0081411,
+  "tokens_used": 2467,
+  "proposals": [
+    {
+      "section": "Target section",
+      "old_text": "You are a structured data extraction assistant. Extract the requested fields from the input text. Output each field on its own line as 'field: value'.",
+      "new_text": "You are a structured data extraction assistant. Extract the requested fields from the input text. Output each field on its own line as 'field: value' (use exact field names as specified in the request).",
+      "hypothesis": "Adding a clause about using exact field names directly addresses the 'Inconsistent field naming' pattern by making the requirement explicit, while keeping the core instruction minimal.",
+      "expected_improvement": "Reduction in 'Inconsistent field naming' failures, as the model will be more likely to use the exact field names provided in the request.",
+      "evidence_traces": []
+    }
+  ]
+}
