@@ -87,21 +87,23 @@ def estimate_cost(token_count: int, price_per_1k: float = _COST_PER_1K_TOKENS) -
 # ---------------------------------------------------------------------------
 
 
+_TIE_EPSILON = 1e-9
+
+
 def run_task(task: Task, prompt: str, llm: LLMProvider) -> TaskResult:
     """Run ``task`` against one ``prompt`` and measure latency + tokens."""
     if not prompt.strip():
         return TaskResult(output="", success=False, latency_ms=0.0, token_count=0,
                           error="empty prompt")
 
-    full_prompt = f"{prompt}\n\n---\n\nTask: {task.input}"
     start = time.monotonic()
     try:
-        output = llm.complete(prompt=full_prompt, system_prompt="", temperature=0.0)
+        output = llm.complete(prompt=task.input, system_prompt=prompt, temperature=0.0)
     except ProviderError as e:
         return TaskResult(output="", success=False, latency_ms=0.0, token_count=0,
                           error=str(e))
     latency_ms = (time.monotonic() - start) * 1000.0
-    tokens = estimate_tokens(full_prompt) + estimate_tokens(output)
+    tokens = estimate_tokens(prompt) + estimate_tokens(task.input) + estimate_tokens(output)
     return TaskResult(
         output=output,
         success=True,
@@ -120,10 +122,12 @@ def bootstrap_ci(
     scores_b: list[float],
     n_resamples: int = 10000,
     ci_level: float = 0.95,
+    seed: int | None = None,
 ) -> BootstrapResult:
     """Bootstrap CI for the mean delta = mean(score_b - score_a).
 
-    Uses a deterministic seed for reproducibility.
+    ``seed=None`` (default) uses fresh randomness in production; pass
+    ``seed=0`` in tests for reproducibility.
     """
     n = len(scores_a)
     if n == 0:
@@ -137,7 +141,7 @@ def bootstrap_ci(
     if n_resamples <= 0:
         return BootstrapResult(mean=mean_delta, ci_low=mean_delta, ci_high=mean_delta, std=0.0)
 
-    rng = random.Random(0)
+    rng = random.Random(seed)
     means: list[float] = []
     for _ in range(n_resamples):
         sample = [rng.choice(deltas) for _ in range(n)]
@@ -157,17 +161,19 @@ def permutation_test(
     scores_a: list[float],
     scores_b: list[float],
     n_permutations: int = 1000,
+    seed: int | None = None,
 ) -> float:
-    """One-tailed permutation p-value: how often a random split beats observed.
+    """Two-tailed permutation p-value: how often |random| >= |observed|.
 
-    Deterministic seed for reproducibility.
+    ``seed=None`` (default) uses fresh randomness in production; pass
+    ``seed=0`` in tests for reproducibility.
     """
     n = len(scores_a)
     if n == 0:
         return 1.0
     observed_diff = sum(scores_b) / n - sum(scores_a) / n
     pooled = list(scores_a) + list(scores_b)
-    rng = random.Random(0)
+    rng = random.Random(seed)
 
     count = 0
     for _ in range(n_permutations):
@@ -175,7 +181,7 @@ def permutation_test(
         fake_a = pooled[:n]
         fake_b = pooled[n:]
         fake_diff = sum(fake_b) / n - sum(fake_a) / n
-        if fake_diff >= observed_diff:
+        if abs(fake_diff) >= abs(observed_diff):
             count += 1
     return count / n_permutations
 
@@ -275,7 +281,7 @@ def run_ab_test(
         return _inconclusive([], 0)
 
     deltas = [r.delta for r in results]
-    if all(d == 0.0 for d in deltas):
+    if all(abs(d) < _TIE_EPSILON for d in deltas):
         winner: Literal["a", "b", "tie", "inconclusive"] = "tie"
         ci = BootstrapResult(mean=0.0, ci_low=0.0, ci_high=0.0, std=0.0)
         p_value = 1.0

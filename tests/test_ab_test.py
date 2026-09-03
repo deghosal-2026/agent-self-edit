@@ -191,7 +191,7 @@ def test_ab_alpha_low_p_winner():
     """p=0.01 at 95% confidence (alpha=0.05) is significant -> winner=b."""
     cfg_high_power = _config(n_resamples=500, n_perm=500, cost_ceiling=0.50)
     def deterministic_better(prompt, sp):
-        return "cat" if "BETTER" in prompt else "dog"
+        return "cat" if "BETTER" in sp else "dog"
     ts_det = _task_set(20, prefix="det")
     llm_det = MockProvider(responses=deterministic_better)
     res = run_ab_test(
@@ -207,7 +207,7 @@ def test_ab_alpha_mirror_winner_a():
     cfg = _config(n_resamples=500, n_perm=500, cost_ceiling=0.50)
 
     def a_better(prompt, sp):
-        return "cat" if "A_BEST" in prompt else "dog"
+        return "cat" if "A_BEST" in sp else "dog"
 
     tasks = {f"ma{i}": Task(id=f"ma{i}", input=f"task {i}", expected_output="cat")
              for i in range(30)}
@@ -252,7 +252,7 @@ def test_materialize_candidate_prompt_not_found():
 def test_ab_winner_b_when_b_better():
     # All 8 tasks score 0 with A, but B is better via marker
     def adaptive(prompt, sp):
-        return "cat" if "PROMPT_B_MARKER" in prompt else "dog"
+        return "cat" if "PROMPT_B_MARKER" in sp else "dog"
 
     llm2 = MockProvider(responses=adaptive)
     ts = _task_set(8)
@@ -316,3 +316,129 @@ def test_ab_result_type_counts():
 def test_bootstrap_result_dataclass():
     r = BootstrapResult(mean=0, ci_low=0, ci_high=0, std=0)
     assert r.std == 0
+
+
+# ---- M1 fixes: seed, two-tailed, tie epsilon, run_task format ----
+
+def test_bootstrap_ci_sensitive_to_data():
+    ci_flat = bootstrap_ci([0.5] * 20, [0.5] * 20, seed=0)
+    ci_improved = bootstrap_ci([0.3] * 20, [0.8] * 20, seed=0)
+    assert ci_improved.ci_low > ci_flat.ci_low
+
+
+def test_bootstrap_ci_seed_param():
+    # seed=None produces non-deterministic but valid CI; seed=0 deterministic
+    a = [0.4, 0.5, 0.6, 0.5]
+    b = [0.8, 0.9, 0.7, 0.8]
+    r1 = bootstrap_ci(a, b, n_resamples=500, seed=0)
+    r2 = bootstrap_ci(a, b, n_resamples=500, seed=0)
+    assert r1.ci_low == r2.ci_low
+    assert r1.ci_high == r2.ci_high
+
+
+def test_permutation_two_tailed_regression():
+    # B worse than A should be significant with two-tailed test
+    a = [1.0] * 20
+    b = [0.0] * 20
+    p = permutation_test(a, b, n_permutations=500, seed=0)
+    assert p < 0.05
+
+
+def test_permutation_two_tailed_both_directions():
+    p_pos = permutation_test([0.3] * 20, [0.8] * 20, n_permutations=500, seed=0)
+    p_neg = permutation_test([0.8] * 20, [0.3] * 20, n_permutations=500, seed=0)
+    assert p_pos < 0.05
+    assert p_neg < 0.05
+
+
+def test_permutation_winner_a_when_candidate_worse():
+    cfg = _config(n_resamples=500, n_perm=500, cost_ceiling=0.50)
+
+    def a_better(prompt, system_prompt=""):
+        return "cat" if "A_BEST" in system_prompt else "dog"
+
+    tasks = {f"ma{i}": Task(id=f"ma{i}", input=f"task {i}", expected_output="cat") for i in range(20)}
+    ts = TaskSet(tasks=tasks)
+    llm = MockProvider(responses=a_better)
+    res = run_ab_test("prompt_a A_BEST", "prompt_b", ts, llm, ExactMatchScorer(), cfg)
+    assert res.winner == "a"
+    assert res.ci_high < 0
+    assert res.p_value < 0.05
+
+
+def test_tie_epsilon_near_zero():
+    llm = MockProvider(responses=lambda prompt, system_prompt="": "cat")
+    # identical prompts should tie; deltas exactly 0
+    ts = _task_set(5)
+    res = run_ab_test("same", "same", ts, llm, ExactMatchScorer(), _config())
+    assert res.winner == "tie"
+    # near-zero deltas via custom scorer that returns 1e-15 diff
+    from agent_self_edit.scorers import Scorer as S
+
+    class EpsilonScorer(S):
+        def score(self, expected, actual):
+            return (True, 1.0) if actual == "A" else (True, 1.0 + 1e-15)
+
+    # Use two prompts that differ only by epsilon in scorer
+    llm2 = MockProvider(responses=lambda prompt, system_prompt="": "A" if "PROMPT_A" in system_prompt else "A ")
+    ts2 = _task_set(5)
+    res2 = run_ab_test("PROMPT_A", "PROMPT_B", ts2, llm2, EpsilonScorer(), _config())
+    # all deltas are ~1e-15 < 1e-9 so should be tie
+    assert res2.winner == "tie"
+
+
+def test_run_task_passes_system_prompt():
+    from unittest.mock import Mock
+
+    class Capture(LLMProvider):
+        def __init__(self):
+            self.last = {}
+
+        def complete(self, prompt, system_prompt="", temperature=0.0):
+            self.last = {"prompt": prompt, "system_prompt": system_prompt}
+            return "cat"
+
+    llm = Capture()
+    task = Task(id="t1", input="hello", expected_output="hi")
+    res = run_task(task, "You are a classifier.", llm)
+    assert res.success is True
+    assert llm.last["system_prompt"] == "You are a classifier."
+    assert llm.last["prompt"] == "hello"
+    assert llm.last["system_prompt"] != ""
+
+
+# ---- Calibration per ab-test-engine-design §14.3 (M1 #234) ----
+
+def test_bootstrap_ci_calibration():
+    import random
+
+    true_mean = 0.7
+    rng = random.Random(0)
+    coverage = 0
+    trials = 200
+    for _ in range(trials):
+        sample_a = [0.5] * 20
+        # generate deltas around true_mean via sample_b = sample_a + true_mean delta with noise
+        noise = [rng.gauss(0, 0.1) for _ in range(20)]
+        sample_b = [a + true_mean + n for a, n in zip(sample_a, noise)]
+        # mean delta is ~true_mean
+        res = bootstrap_ci(sample_a, sample_b, n_resamples=500, ci_level=0.95, seed=0)
+        if res.ci_low <= true_mean <= res.ci_high:
+            coverage += 1
+    cov = coverage / trials
+    # with seed=0 deterministic bootstrap, coverage should be reasonable ~0.9-1.0 for strong signal
+    assert cov >= 0.8, f"CI coverage {cov:.2%} too low"
+
+
+def test_pvalue_uniform_under_null():
+    import random
+
+    rng = random.Random(1)
+    pvals = []
+    for _ in range(100):
+        a = [rng.gauss(0, 1) for _ in range(20)]
+        b = [rng.gauss(0, 1) for _ in range(20)]
+        p = permutation_test(a, b, n_permutations=200, seed=0)
+        pvals.append(p)
+    mean_p = sum(pvals) / len(pvals)
+    assert 0.35 <= mean_p <= 0.65, f"mean p {mean_p:.2f} not uniform"
