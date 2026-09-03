@@ -1,0 +1,286 @@
+{
+  "test": "docker-run-extraction",
+  "date": "2026-09-03T05:36:11Z",
+  "image": "agent-self-edit:test",
+  "omlx_model": "Qwen3.5-4B-4bit",
+  "exit_code": 0,
+  "llm_calls_captured": 13,
+  "llm_traffic": [
+    {
+      "model": "Qwen3.5-4B-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "user",
+          "content": "You are analyzing execution traces where a prompt-based\nagent failed. Summarize the recurring failure patterns.\n\nFailed traces:\nTrace 1: task_id=t0, input=\"classify this ticket: 'My name is Alice Johnson and my email is alice@example.com.'\", output=\"other\", expected=\"name: Alice Johnson\nemail: alice@example.com\", failure_reason=\"misclassified \u2014 expected name: Alice Johnson\nemail: alice@example.com\"\nTrace 2: task_id=t1, input=\"classify this ticket: 'The incident occurred on 2026-08-15 at 14:30 UTC. Severity: HIGH. Service: api-gateway.'\", output=\"other\", expected=\"date: 2026-08-15\ntime: 14:30 UTC\nseverity: HIGH\nservice: api-gateway\", failure_reason=\"misclassified \u2014 expected date: 2026-08-15\ntime: 14:30 UTC\nseverity: HIGH\nservice: api-gateway\"\nTrace 3: task_id=t2, input=\"classify this ticket: 'The deployment sha is abc123def456 and the version is v2.1.3.'\", output=\"other\", expected=\"sha: abc123def456\nversion: v2.1.3\", failure_reason=\"misclassified \u2014 expected sha: abc123def456\nversion: v2.1.3\"\nTrace 4: task_id=t3, input=\"classify this ticket: 'Contact John at john.doe@company.com or call +1-555-0123.'\", output=\"other\", expected=\"name: John Doe\nemail: john.doe@company.com\nphone: +1-555-0123\", failure_reason=\"misclassified \u2014 expected name: John Doe\nemail: john.doe@company.com\nphone: +1-555-0123\"\nTrace 5: task_id=t4, input=\"classify this ticket: 'The build failed with error code E4032 on branch feature/new-auth.'\", output=\"other\", expected=\"error: E4032\nbranch: feature/new-auth\", failure_reason=\"misclassified \u2014 expected error: E4032\nbranch: feature/new-auth\"\nTrace 6: task_id=t5, input=\"classify this ticket: 'Server srv-web-03 has 78% CPU usage and 12GB of 16GB RAM in use.'\", output=\"other\", expected=\"server: srv-web-03\ncpu: 78%\nram: 12GB\nram_total: 16GB\", failure_reason=\"misclassified \u2014 expected server: srv-web-03\ncpu: 78%\nram: 12GB\nram_total: 16GB\"\nTrace 7: task_id=t6, input=\"classify this ticket: 'The JIRA ticket OPS-4567 was opened by mike@corp.com on 2026-09-01.'\", output=\"other\", expected=\"ticket: OPS-4567\nreporter: mike@corp.com\ndate: 2026-09-01\", failure_reason=\"misclassified \u2014 expected ticket: OPS-4567\nreporter: mike@corp.com\ndate: 2026-09-01\"\nTrace 8: task_id=t7, input=\"classify this ticket: 'Error rate on service user-service increased from 0.5% to 2.3% at 10:15 UTC.'\", output=\"other\", expected=\"service: user-service\nmetric: error rate\nbefore: 0.5%\nafter: 2.3%\ntime: 10:15 UTC\", failure_reason=\"misclassified \u2014 expected service: user-service\nmetric: error rate\nbefore: 0.5%\nafter: 2.3%\ntime: 10:15 UTC\"\nTrace 9: task_id=t8, input=\"classify this ticket: 'PR #892 was merged by alice. Reviewers: bob, carol. Files changed: 14.'\", output=\"other\", expected=\"pr: 892\nmerger: alice\nreviewers: carol\", failure_reason=\"misclassified \u2014 expected pr: 892\nmerger: alice\nreviewers: carol\"\nTrace 10: task_id=t9, input=\"classify this ticket: 'The certificate expires on 2026-12-31. Issued by Let's Encrypt for *.example.com.'\", output=\"other\", expected=\"expires: 2026-12-31\nissuer: Let's Encrypt\ndomain: *.example.com\", failure_reason=\"misclassified \u2014 expected expires: 2026-12-31\nissuer: Let's Encrypt\ndomain: *.example.com\"\n\n\nIdentify the top 2-3 distinct failure patterns. For each pattern, describe:\n- What went wrong (1 sentence)\n- Which traces exhibit this pattern\n- What the prompt likely lacks or misdirects\n\nRespond as a JSON array of objects with keys: pattern, description, trace_ids."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "```json\n[\n  {\n    \"pattern\": \"Failure to extract structured key-value pairs from unstructured text\",\n    \"description\": \"The agent consistently failed to identify and extract specific metadata fields (such as names, dates, error codes, or server metrics) from the input text, defaulting to a generic 'other' classification instead of the expected structured output.\",\n    \"trace_ids\": [\n      \"t0\",\n      \"t1\",\n      \"t2\",\n      \"t3\",\n      \"t4\",\n      \"t5\",\n      \"t6\",\n      \"t7\",\n      \"t8\",\n      \"t9\"\n    ]\n  },\n  {\n    \"pattern\": \"Inability to parse specific domain-specific formats (e.g., email, phone, date, error codes)\",\n    \"description\": \"The model struggled with pattern recognition for specific data formats like email addresses, phone numbers, ISO-like dates, and hexadecimal error codes, failing to map them to their corresponding labels.\",\n    \"trace_ids\": [\n      \"t0\",\n      \"t1\",\n      \"t2\",\n      \"t3\",\n      \"t4\",\n      \"t5\",\n      \"t6\",\n      \"t7\",\n      \"t8\",\n      \"t9\"\n    ]\n  },\n  {\n    \"pattern\": \"Lack of explicit extraction instructions or schema definition in the prompt\",\n    \"description\": \"The prompt provided only a high-level instruction to 'classify' without defining the target schema or explicitly listing the required fields, leading the agent to default to a safe but incorrect 'other' classification.\",\n    \"trace_ids\": [\n      \"t0\",\n      \"t1\",\n      \"t2\",\n      \"t3\",\n      \"t4\",\n      \"t5\",\n      \"t6\",\n      \"t7\",\n      \"t8\",\n      \"t9\"\n    ]\n  }\n]\n```",
+      "usage": {
+        "prompt_tokens": 1155,
+        "completion_tokens": 438,
+        "total_tokens": 1593
+      },
+      "latency_ms": 12466
+    },
+    {
+      "model": "Qwen3.5-4B-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "user",
+          "content": "You are choosing which part of a prompt to edit.\n\nCurrent prompt (frozen sections marked with [FROZEN]):\nYou are a helpful classification assistant.\n\nFailure patterns identified in the traces:\n[\n  {\n    \"pattern\": \"Failure to extract structured key-value pairs from unstructured text\",\n    \"description\": \"The agent consistently failed to identify and extract specific metadata fields (such as names, dates, error codes, or server metrics) from the input text, defaulting to a generic 'other' classification instead of the expected structured output.\",\n    \"trace_ids\": [\n      \"t0\",\n      \"t1\",\n      \"t2\",\n      \"t3\",\n      \"t4\",\n      \"t5\",\n      \"t6\",\n      \"t7\",\n      \"t8\",\n      \"t9\"\n    ]\n  },\n  {\n    \"pattern\": \"Inability to parse specific domain-specific formats (e.g., email, phone, date, error codes)\",\n    \"description\": \"The model struggled with pattern recognition for specific data formats like email addresses, phone numbers, ISO-like dates, and hexadecimal error codes, failing to map them to their corresponding labels.\",\n    \"trace_ids\": [\n      \"t0\",\n      \"t1\",\n      \"t2\",\n      \"t3\",\n      \"t4\",\n      \"t5\",\n      \"t6\",\n      \"t7\",\n      \"t8\",\n      \"t9\"\n    ]\n  },\n  {\n    \"pattern\": \"Lack of explicit extraction instructions or schema definition in the prompt\",\n    \"description\": \"The prompt provided only a high-level instruction to 'classify' without defining the target schema or explicitly listing the required fields, leading the agent to default to a safe but incorrect 'other' classification.\",\n    \"trace_ids\": [\n      \"t0\",\n      \"t1\",\n      \"t2\",\n      \"t3\",\n      \"t4\",\n      \"t5\",\n      \"t6\",\n      \"t7\",\n      \"t8\",\n      \"t9\"\n    ]\n  }\n]\n\n\nSelect exactly ONE section of the prompt to modify. Choose the section whose\nchange would address the most failure patterns with the smallest edit.\n\nDo NOT choose the same section and same edit intent if the previous proposal was rejected.\n\nRespond as JSON: {\"section\": \"...\", \"rationale\": \"...\"}"
+        }
+      ],
+      "temperature": 0.0,
+      "response": "{\n  \"section\": \"You are a helpful classification assistant.\",\n  \"rationale\": \"The failure patterns indicate a complete lack of schema definition, specific extraction instructions, and domain-specific format handling. The current prompt is too high-level, causing the model to default to 'other'. Modifying this single introductory sentence to explicitly define the target schema, list required fields, and provide examples of format mapping would simultaneously address all three failure patterns (missing schema, missing instructions, and missing format examples) with the smallest possible edit.\"\n}",
+      "usage": {
+        "prompt_tokens": 549,
+        "completion_tokens": 109,
+        "total_tokens": 658
+      },
+      "latency_ms": 3253
+    },
+    {
+      "model": "Qwen3.5-4B-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "user",
+          "content": "You are making a minimal edit to a prompt.\n\nCurrent prompt (exact text \u2014 copy old_text verbatim, raw \u2014 no [FROZEN]):\nYou are a helpful classification assistant.\n\nTarget section: You are a helpful classification assistant.\nRationale: The failure patterns indicate a complete lack of schema definition, specific extraction instructions, and domain-specific format handling. The current prompt is too high-level, causing the model to default to 'other'. Modifying this single introductory sentence to explicitly define the target schema, list required fields, and provide examples of format mapping would simultaneously address all three failure patterns (missing schema, missing instructions, and missing format examples) with the smallest possible edit.\n\nFailure patterns to address:\n[\n  {\n    \"pattern\": \"Failure to extract structured key-value pairs from unstructured text\",\n    \"description\": \"The agent consistently failed to identify and extract specific metadata fields (such as names, dates, error codes, or server metrics) from the input text, defaulting to a generic 'other' classification instead of the expected structured output.\",\n    \"trace_ids\": [\n      \"t0\",\n      \"t1\",\n      \"t2\",\n      \"t3\",\n      \"t4\",\n      \"t5\",\n      \"t6\",\n      \"t7\",\n      \"t8\",\n      \"t9\"\n    ]\n  },\n  {\n    \"pattern\": \"Inability to parse specific domain-specific formats (e.g., email, phone, date, error codes)\",\n    \"description\": \"The model struggled with pattern recognition for specific data formats like email addresses, phone numbers, ISO-like dates, and hexadecimal error codes, failing to map them to their corresponding labels.\",\n    \"trace_ids\": [\n      \"t0\",\n      \"t1\",\n      \"t2\",\n      \"t3\",\n      \"t4\",\n      \"t5\",\n      \"t6\",\n      \"t7\",\n      \"t8\",\n      \"t9\"\n    ]\n  },\n  {\n    \"pattern\": \"Lack of explicit extraction instructions or schema definition in the prompt\",\n    \"description\": \"The prompt provided only a high-level instruction to 'classify' without defining the target schema or explicitly listing the required fields, leading the agent to default to a safe but incorrect 'other' classification.\",\n    \"trace_ids\": [\n      \"t0\",\n      \"t1\",\n      \"t2\",\n      \"t3\",\n      \"t4\",\n      \"t5\",\n      \"t6\",\n      \"t7\",\n      \"t8\",\n      \"t9\"\n    ]\n  }\n]\n\n\nPropose ONE minimal edit:\n- old_text: copy the EXACT text from the current prompt above that you want to replace\n- new_text: replacement text (change the fewest characters possible)\n- hypothesis: why this specific change helps (1-2 sentences)\n- expected_improvement: measurable expectation\n\nSmall-edit rule:\n- Prefer changing 1 line only\n- Never change more than 2 lines unless absolutely necessary\n- Prefer adding one short clause over rewriting a whole block\n\nIMPORTANT: The old_text MUST be copied verbatim from the current prompt.\nDo not paraphrase or reformat it.\n\nIf previous feedback shows this exact edit family was rejected, produce a materially different edit.\n\nRespond as JSON: {\"section\": \"...\", \"old_text\": \"...\", \"new_text\": \"...\",\n\"hypothesis\": \"...\", \"expected_improvement\": \"...\"}"
+        }
+      ],
+      "temperature": 0.0,
+      "response": "{\n  \"section\": \"You are a helpful classification assistant.\",\n  \"old_text\": \"You are a helpful classification assistant.\",\n  \"new_text\": \"You are a helpful classification assistant. Your task is to extract structured key-value pairs from the input text. The target schema requires the following fields: name, date, error_code, and email. Map specific formats (e.g., ISO dates, hex codes) to their corresponding labels. Example: 'Server Error 500' -> {name: 'Server', date: 'N/A', error_code: '500', email: 'N/A'}.\",\n  \"hypothesis\": \"This edit replaces the vague high-level instruction with explicit schema definition, required field listing, format mapping rules, and a concrete example, directly addressing the three identified failure patterns.\",\n  \"expected_improvement\": \"The model will no longer default to 'other' but will consistently extract and map specific metadata fields according to the defined schema and examples.\"\n}",
+      "usage": {
+        "prompt_tokens": 776,
+        "completion_tokens": 210,
+        "total_tokens": 986
+      },
+      "latency_ms": 5888
+    },
+    {
+      "model": "Qwen3.5-4B-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful classification assistant."
+        },
+        {
+          "role": "user",
+          "content": "My name is Alice Johnson and my email is alice@example.com."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "Hello Alice! It's nice to meet you. How can I assist you today?",
+      "usage": {
+        "prompt_tokens": 37,
+        "completion_tokens": 17,
+        "total_tokens": 54
+      },
+      "latency_ms": 666
+    },
+    {
+      "model": "Qwen3.5-4B-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful classification assistant. Your task is to extract structured key-value pairs from the input text. The target schema requires the following fields: name, date, error_code, and email. Map specific formats (e.g., ISO dates, hex codes) to their corresponding labels. Example: 'Server Error 500' -> {name: 'Server', date: 'N/A', error_code: '500', email: 'N/A'}."
+        },
+        {
+          "role": "user",
+          "content": "My name is Alice Johnson and my email is alice@example.com."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "```json\n{\n  \"name\": \"Alice Johnson\",\n  \"date\": \"N/A\",\n  \"error_code\": \"N/A\",\n  \"email\": \"alice@example.com\"\n}\n```",
+      "usage": {
+        "prompt_tokens": 125,
+        "completion_tokens": 46,
+        "total_tokens": 171
+      },
+      "latency_ms": 1403
+    },
+    {
+      "model": "Qwen3.5-4B-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful classification assistant."
+        },
+        {
+          "role": "user",
+          "content": "The incident occurred on 2026-08-15 at 14:30 UTC. Severity: HIGH. Service: api-gateway."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "Based on the details provided, here is a structured incident log entry:\n\n**Incident Log**\n*   **Date:** 2026-08-15\n*   **Time:** 14:30 UTC\n*   **Severity:** HIGH\n*   **Service:** api-gateway\n*   **Status:** [Pending Investigation]\n\n**Next Steps:**\n1.  **Verify Impact:** Confirm the scope of the outage or error (e.g., specific endpoints affected, percentage of traffic lost).\n2.  **Gather Logs:** Collect logs from the `api-gateway` service around the 14:30 UTC timestamp.\n3.  **Identify Root Cause:** Determine if this is due to a configuration error, resource exhaustion, external dependency failure, or a known vulnerability.\n4.  **Update Status:** Move the ticket to \"In Progress\" once initial analysis is complete.\n\nWould you like to simulate a specific root cause (e.g., rate limiting, SSL handshake failure, or upstream timeout) for this incident?",
+      "usage": {
+        "prompt_tokens": 58,
+        "completion_tokens": 223,
+        "total_tokens": 281
+      },
+      "latency_ms": 6021
+    },
+    {
+      "model": "Qwen3.5-4B-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful classification assistant. Your task is to extract structured key-value pairs from the input text. The target schema requires the following fields: name, date, error_code, and email. Map specific formats (e.g., ISO dates, hex codes) to their corresponding labels. Example: 'Server Error 500' -> {name: 'Server', date: 'N/A', error_code: '500', email: 'N/A'}."
+        },
+        {
+          "role": "user",
+          "content": "The incident occurred on 2026-08-15 at 14:30 UTC. Severity: HIGH. Service: api-gateway."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "```json\n{\n  \"name\": \"api-gateway\",\n  \"date\": \"2026-08-15\",\n  \"error_code\": \"N/A\",\n  \"email\": \"N/A\"\n}\n```",
+      "usage": {
+        "prompt_tokens": 146,
+        "completion_tokens": 54,
+        "total_tokens": 200
+      },
+      "latency_ms": 1685
+    },
+    {
+      "model": "Qwen3.5-4B-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful classification assistant."
+        },
+        {
+          "role": "user",
+          "content": "The deployment sha is abc123def456 and the version is v2.1.3."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "Based on the information provided, here is the classification of the deployment details:\n\n*   **Deployment SHA:** `abc123def456`\n*   **Version:** `v2.1.3`\n\n**Context:**\nThis combination typically represents a specific release in a **GitOps** or **CI/CD** pipeline (common in Kubernetes environments). The SHA (`abc123def456`) likely refers to a specific commit hash in a Git repository, while the version (`v2.1.3`) indicates the semantic versioning of the application or configuration being deployed.",
+      "usage": {
+        "prompt_tokens": 47,
+        "completion_tokens": 125,
+        "total_tokens": 172
+      },
+      "latency_ms": 3462
+    },
+    {
+      "model": "Qwen3.5-4B-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful classification assistant. Your task is to extract structured key-value pairs from the input text. The target schema requires the following fields: name, date, error_code, and email. Map specific formats (e.g., ISO dates, hex codes) to their corresponding labels. Example: 'Server Error 500' -> {name: 'Server', date: 'N/A', error_code: '500', email: 'N/A'}."
+        },
+        {
+          "role": "user",
+          "content": "The deployment sha is abc123def456 and the version is v2.1.3."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "Based on the input text provided, here is the structured classification:\n\n*   **name**: Deployment\n*   **date**: N/A\n*   **error_code**: N/A\n*   **email**: N/A",
+      "usage": {
+        "prompt_tokens": 135,
+        "completion_tokens": 45,
+        "total_tokens": 180
+      },
+      "latency_ms": 1452
+    },
+    {
+      "model": "Qwen3.5-4B-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful classification assistant."
+        },
+        {
+          "role": "user",
+          "content": "Contact John at john.doe@company.com or call +1-555-0123."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "Here is the contact information you requested:\n\n*   **Email:** john.doe@company.com\n*   **Phone:** +1-555-0123",
+      "usage": {
+        "prompt_tokens": 47,
+        "completion_tokens": 37,
+        "total_tokens": 84
+      },
+      "latency_ms": 1212
+    },
+    {
+      "model": "Qwen3.5-4B-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful classification assistant. Your task is to extract structured key-value pairs from the input text. The target schema requires the following fields: name, date, error_code, and email. Map specific formats (e.g., ISO dates, hex codes) to their corresponding labels. Example: 'Server Error 500' -> {name: 'Server', date: 'N/A', error_code: '500', email: 'N/A'}."
+        },
+        {
+          "role": "user",
+          "content": "Contact John at john.doe@company.com or call +1-555-0123."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "Based on the input text provided, here is the structured extraction:\n\n*   **name**: John\n*   **date**: N/A\n*   **error_code**: N/A\n*   **email**: john.doe@company.com",
+      "usage": {
+        "prompt_tokens": 135,
+        "completion_tokens": 49,
+        "total_tokens": 184
+      },
+      "latency_ms": 1560
+    },
+    {
+      "model": "Qwen3.5-4B-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful classification assistant."
+        },
+        {
+          "role": "user",
+          "content": "The build failed with error code E4032 on branch feature/new-auth."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "The error code **E4032** is specific to **GitLab CI/CD** and indicates a **Syntax Error** in your `.gitlab-ci.yml` file.\n\nThis error occurs when the GitLab CI parser encounters invalid YAML syntax, such as:\n*   Missing colons (`:`) after a key.\n*   Incorrect indentation (spaces vs. tabs).\n*   Using a string value that contains a colon without quoting it.\n*   Missing closing brackets or braces.\n\n### How to Fix It\n\nYou need to inspect the `.gitlab-ci.yml` file on the `feature/new-auth` branch. Here are the most common causes and how to resolve them:\n\n#### 1. Check for Unquoted Colons in Strings\nIf a value in your YAML contains a colon (e.g., a URL or a description), it must be quoted.\n*   **Incorrect:**\n    ```yaml\n    script:\n      - echo \"http://example.com:8080\"\n    ```\n*   **Correct:**\n    ```yaml\n    script:\n      - echo \"http://example.com:8080\"\n    ```\n\n#### 2. Check Indentation\nGitLab CI is very strict about indentation. Ensure you are using **spaces** (usually 2 spaces per level) and that the indentation is consistent.\n*   **Incorrect (Mixed tabs/spaces or wrong level):**\n    ```yaml\n    variables:\n      MY_VAR: value\n    script:\n      - echo \"hello\"\n    ```\n*   **Correct:**\n    ```yaml\n    variables:\n      MY_VAR: value\n    script:\n      - echo \"hello\"\n    ```\n\n#### 3. Check for Missing Colons\nEvery key in a YAML mapping must be followed by a colon.\n*   **Incorrect:**\n    ```yaml\n    image: node:14\n    script: npm run build\n    ```\n*   **Correct:**\n    ```yaml\n    image: node:14\n    script: npm run build\n    ```\n\n#### 4. Check for Trailing Commas\nYAML generally does not allow trailing commas at the end of lists or mappings.\n*   **Incorrect:**\n    ```yaml\n    services:\n      - postgresql\n      - redis,\n    ```\n*   **Correct:**\n    ```yaml\n    services:\n      - postgresql\n      - redis\n    ```\n\n### How to Debug Further\n\n1.  **Locate the Line:** The error message usually includes the line number where the syntax error was found. Look at that specific line in `.gitlab-ci.yml`.\n2.  **Validate the File:** You can run the following command in your terminal to validate the YAML syntax locally before pushing:\n    ```bash\n    gitlab-ci lint\n    ```\n    *(Note: This command might not be available in all environments, but it is often provided by the GitLab Runner or can be installed via `gitlab-ci-lint`).*\n\n3.  **Commit and Push:** Once you fix the syntax, commit the changes and push the branch:\n    ```bash\n    git add .gitlab-ci.yml\n    git commit -m \"fix: resolve E4032 syntax error\"\n    git push origin feature/new-auth\n    ```\n\nIf you can provide the snippet of the `.gitlab-ci.yml` file around the error line, I can give you a more specific fix.",
+      "usage": {
+        "prompt_tokens": 41,
+        "completion_tokens": 739,
+        "total_tokens": 780
+      },
+      "latency_ms": 19208
+    },
+    {
+      "model": "Qwen3.5-4B-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful classification assistant. Your task is to extract structured key-value pairs from the input text. The target schema requires the following fields: name, date, error_code, and email. Map specific formats (e.g., ISO dates, hex codes) to their corresponding labels. Example: 'Server Error 500' -> {name: 'Server', date: 'N/A', error_code: '500', email: 'N/A'}."
+        },
+        {
+          "role": "user",
+          "content": "The build failed with error code E4032 on branch feature/new-auth."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "Based on the input text, here are the extracted key-value pairs:\n\n*   **name**: Build\n*   **date**: N/A\n*   **error_code**: E4032\n*   **email**: N/A",
+      "usage": {
+        "prompt_tokens": 129,
+        "completion_tokens": 49,
+        "total_tokens": 178
+      },
+      "latency_ms": 1515
+    }
+  ],
+  "stdout": "Processing 10 traces (10 failed)\nAnalysis complete: 1 proposals, cost=$0.0095\n  A/B test: tie (p=1.0000, n=5)\n  Gate: reject\nLoop stopped.\n",
+  "stderr": ""
+}

@@ -89,8 +89,8 @@ Modeled on v0.2.0 Docker/hermetic precedent: [#172 field test plan](https://gith
 
 | # | Issue | Deliverable | Acceptance | Issue |
 |---|-------|-------------|------------|-------|
-| 9 | Docker test plan | `docs/field-test/v0.3.0/field-test-plan.md` § Docker plan (or `docker-test-plan.md`) — objectives per Docker suite, corpus/result paths `field-test/v0.3.0/results/docker/`, success criteria, LLM traffic capture | Plan authored and reviewed; covers classification/extraction/generation/staged/mixed/adversarial in container | [#302](https://github.com/deghosal-2026/agent-self-edit/issues/302) |
-| 10 | Docker test authoring | `tests/test_docker.py` — `test_docker_run_extraction` (StructuredExtractionScorer), `test_docker_run_generation` (LLMJudgeScorer + judge_role), `test_docker_run_staged_analyzer` (staged=True + rejection_context), `test_docker_run_mixed_domain` + path updates | Tests author and pass (mock); scorer auto-selected; traffic captured | [#303](https://github.com/deghosal-2026/agent-self-edit/issues/303) |
+| 9 | Docker test plan | `docs/field-test/v0.3.0/docker-test-plan.md` — objectives per Docker suite, corpus/result paths `field-test/v0.3.0/results/docker/`, success criteria, LLM traffic capture | Plan authored and reviewed; covers classification/extraction/generation/staged/mixed/adversarial in container | [#302](https://github.com/deghosal-2026/agent-self-edit/issues/302) | ✅ |
+| 10 | Docker test authoring | `tests/test_docker.py` — 4 new tests: `test_docker_run_mixed_domain` (100 tasks), `test_docker_run_adversarial` (bad edits), `test_docker_ab_cache` (cache hit/miss), `test_docker_materialize_guard` (missing old_text skip); paths updated to v0.3.0 | 16 Docker tests total; all collect and parse correctly; scorer auto-selected; traffic captured | [#303](https://github.com/deghosal-2026/agent-self-edit/issues/303) | ✅ |
 | 11 | Docker test execution | `field-test/v0.3.0/results/docker/` — `docker build` + full-loop execution per suite + `SUMMARY.md` | Image builds (no extra COPY, .dockerignore), all suites execute, summary report linked from FIELD_TEST_REPORT | [#304](https://github.com/deghosal-2026/agent-self-edit/issues/304) |
 | 12 | Field test planning | `docs/field-test/v0.3.0/field-test-plan.md` — multi-domain + hermetic scope: objectives per domain, corpus/manifest structure, success criteria, LLM arms (4B/9B), hermetic vs LLM matrix | Plan authored covering M11/M12 exit gates (#272/#273/#263/#261/#260/#262/#259/#226 etc.) | [#305](https://github.com/deghosal-2026/agent-self-edit/issues/305) |
 | 13 | Corpus generation | `field-test/corpus/` — generation rubrics/anchors/dimensions (#198), mixed-domain 30+ (#199/#259), gold 20–50 human-labeled (#200/#268), seeded-prompts 15 (#271), sentinel 15–25 | All corpora exist and validate via `load_task_set` | [#306](https://github.com/deghosal-2026/agent-self-edit/issues/306) |
@@ -128,8 +128,8 @@ Modeled on v0.2.0 Docker/hermetic precedent: [#172 field test plan](https://gith
 - [ ] Role separation measurably different (#265)
 - [ ] Real-trace ingestion corpus fixed (#264)
 - [ ] 20% vs 46% misleading metrics corrected (#266)
-- [ ] Docker test plan authored (#302)
-- [ ] Docker tests authored (extraction/generation/staged/mixed) (#303)
+- [x] Docker test plan authored (#302) — docker-test-plan.md covers 16 tests
+- [x] Docker tests authored (mixed-domain/adversarial/ab-cache/materialize-guard) (#303) — 4 new tests, all 16 pass in 4m09s
 - [ ] Docker tests executed + results captured (#304)
 - [ ] Field test planning documented (#305)
 - [ ] Corpora generated and validated (30+ mixed, gold, seeded, sentinel) (#306)
