@@ -78,6 +78,7 @@ class GateConfig:
 class AnalyzerConfig:
     max_proposals_per_batch: int = 3
     cost_ceiling_usd: float = 0.50
+    max_edit_lines: int = 10
 
 
 @dataclass(frozen=True)
@@ -228,6 +229,11 @@ def validate_config(config: Config) -> list[str]:
     if config.analyzer.cost_ceiling_usd <= 0:
         errors.append(
             f"cost_ceiling_usd must be > 0, got {config.analyzer.cost_ceiling_usd}"
+        )
+
+    if config.analyzer.max_edit_lines < 1:
+        errors.append(
+            f"max_edit_lines must be >= 1, got {config.analyzer.max_edit_lines}"
         )
 
     if config.trigger not in ("batch", "time", "manual"):
