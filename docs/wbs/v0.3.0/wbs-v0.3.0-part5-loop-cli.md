@@ -19,12 +19,12 @@
 
 | # | Issue | Build (files) | Behavior + edge cases | Issue | Verify | Status |
 |---|-------|---------------|----------------------|-------|--------|--------|
-| 1 | Hoist task set + LLM out of proposal loop | `src/agent_self_edit/cli/run.py`, `propose.py` — load `task_set` + build `LLM` once before `for proposal in proposals:`; reuse | Batch of 3 proposals = 1 YAML read + 1 client init, not 3 | [#288](https://github.com/deghosal-2026/agent-self-edit/issues/288), [#240](https://github.com/deghosal-2026/agent-self-edit/issues/240) | Loop before/after file reads & client inits measured; 1 per batch | ⬜ |
-| 2 | Fix `PromotionGate.check()` bypass / atomic audit | `src/agent_self_edit/cli/run.py`, `propose.py`, `src/agent_self_edit/gate.py` — call `PromotionGate.check()` (not `check_all` directly) so audit log write is atomic with decision; do not bypass | Gate decision and audit log are same txn; previously `check_all` called and log not atomic | [#280](https://github.com/deghosal-2026/agent-self-edit/issues/280), [#216](https://github.com/deghosal-2026/agent-self-edit/issues/216) | `check()` path used; audit log present even when `check_all` raises | ⬜ |
-| 3 | Add A/B result caching | `src/agent_self_edit/ab_test.py` — cache key `(task_id, prompt_hash)`; skip re-running identical pair; cache invalidation on prompt version bump | Same `(task, prompt)` not re-run; cache hit saves tokens | [#230](https://github.com/deghosal-2026/agent-self-edit/issues/230) | Identical pair reuses cached `ABResult` | ⬜ |
-| 4 | Add file-based registry lock | `src/agent_self_edit/registry.py` — `flock` or lockfile during `create`/`rollback`; multi-process safe | Two concurrent `run.py` do not corrupt `v{N}.md` | [#229](https://github.com/deghosal-2026/agent-self-edit/issues/229) | Concurrent write test; lock held | ⬜ |
-| 5 | Classify exceptions (fail-fast vs backoff) | `src/agent_self_edit/cli/run.py` — do not swallow all exceptions; classify: rate-limit→backoff, fatal→exit 1, transient→retry | Previously `except Exception: pass` hides fatal; now fatal exits non-zero, transient backoffs | [#221](https://github.com/deghosal-2026/agent-self-edit/issues/221) | Fatal error exits non-zero; transient backoff | ⬜ |
-| 6 | Fix staged analyzer cost underreport | `src/agent_self_edit/analyzer.py` — sum tokens across 4 stages, not single-pass estimate | Reported cost reflects actual staged tokens | [#210](https://github.com/deghosal-2026/agent-self-edit/issues/210) | Staged cost = sum(stages), not 1x | ⬜ |
+| 1 | Hoist task set + LLM out of proposal loop | `src/agent_self_edit/cli/run.py`, `propose.py` — load `task_set` + build `LLM` once before `for proposal in proposals:`; reuse | Batch of 3 proposals = 1 YAML read + 1 client init, not 3 | [#288](https://github.com/deghosal-2026/agent-self-edit/issues/288), [#240](https://github.com/deghosal-2026/agent-self-edit/issues/240) | Loop before/after file reads & client inits measured; 1 per batch | ✅ |
+| 2 | Fix `PromotionGate.check()` bypass / atomic audit | `src/agent_self_edit/cli/run.py`, `propose.py`, `src/agent_self_edit/gate.py` — call `PromotionGate.check()` (not `check_all` directly) so audit log write is atomic with decision; do not bypass | Gate decision and audit log are same txn; previously `check_all` called and log not atomic | [#280](https://github.com/deghosal-2026/agent-self-edit/issues/280), [#216](https://github.com/deghosal-2026/agent-self-edit/issues/216) | `check()` path used; audit log present even when `check_all` raises | ✅ |
+| 3 | Add A/B result caching | `src/agent_self_edit/ab_test.py` — cache key `(task_id, prompt_hash)`; skip re-running identical pair; cache invalidation on prompt version bump | Same `(task, prompt)` not re-run; cache hit saves tokens | [#230](https://github.com/deghosal-2026/agent-self-edit/issues/230) | Identical pair reuses cached `ABResult` | ✅ |
+| 4 | Add file-based registry lock | `src/agent_self_edit/registry.py` — `flock` or lockfile during `create`/`rollback`; multi-process safe | Two concurrent `run.py` do not corrupt `v{N}.md` | [#229](https://github.com/deghosal-2026/agent-self-edit/issues/229) | Concurrent write test; lock held | ✅ |
+| 5 | Classify exceptions (fail-fast vs backoff) | `src/agent_self_edit/cli/run.py` — do not swallow all exceptions; classify: rate-limit→backoff, fatal→exit 1, transient→retry | Previously `except Exception: pass` hides fatal; now fatal exits non-zero, transient backoffs | [#221](https://github.com/deghosal-2026/agent-self-edit/issues/221) | Fatal error exits non-zero; transient backoff | ✅ |
+| 6 | Fix staged analyzer cost underreport | `src/agent_self_edit/analyzer.py` — sum tokens across 4 stages, not single-pass estimate | Reported cost reflects actual staged tokens | [#210](https://github.com/deghosal-2026/agent-self-edit/issues/210) | Staged cost = sum(stages), not 1x | ✅ |
 
 ### M9 Success Metrics
 
@@ -40,17 +40,17 @@
 
 ### M9 Exit Gate
 
-- [ ] Task+LLM hoisted out of loop (both #288/#240 fixed)
-- [ ] Gate atomic via `PromotionGate.check()` (both #280/#216 fixed)
-- [ ] A/B caching avoids identical re-runs (#230)
-- [ ] File-based registry lock (#229)
-- [ ] Exception classification with backoff/fatal (#221)
-- [ ] Staged cost sums all stages (#210)
-- [ ] Ruff clean: `ruff check .` → 0 errors
-- [ ] Mypy strict clean: `mypy --strict src/agent_self_edit` → 0 errors
-- [ ] All tests pass: `python3 -m pytest --ignore=tests/test_docker.py -x -q` → 0 failures
-- [ ] Coverage > 91%: `pytest --cov=agent_self_edit --cov-fail-under=91`
-- [ ] Documentation updated for the milestone's scope
+- [x] Task+LLM hoisted out of loop (both #288/#240 fixed)
+- [x] Gate atomic via `PromotionGate.check()` (both #280/#216 fixed)
+- [x] A/B caching avoids identical re-runs (#230)
+- [x] File-based registry lock (#229)
+- [x] Exception classification with backoff/fatal (#221)
+- [x] Staged cost sums all stages (#210)
+- [x] Ruff clean: `ruff check .` → 0 errors
+- [x] Mypy strict clean: `mypy --strict src/agent_self_edit` → 0 errors
+- [x] All tests pass: `python3 -m pytest --ignore=tests/test_docker.py -x -q` → 0 failures (765 passed)
+- [x] Coverage > 91%: `pytest --cov=agent_self_edit --cov-fail-under=91` → 95.00%
+- [x] Documentation updated for the milestone's scope
 
 **Dependency:** M5–M8. **Produces for M10+:** cheap loop, atomic gate+audit, safe concurrency, correct cost.
 
