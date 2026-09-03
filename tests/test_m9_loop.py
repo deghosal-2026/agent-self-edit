@@ -231,3 +231,40 @@ def test_registry_lockfile_created():
         reg = Registry(reg_path)
         reg.create("prompt v1", hypothesis="h1")
         assert os.path.exists(os.path.join(reg_path, ".registry.lock"))
+
+
+# ---------------------------------------------------------------------------
+# Task 5: Exception classification (#221)
+# ---------------------------------------------------------------------------
+
+
+def test_exception_classification_rate_limit():
+    from agent_self_edit.cli.run import _classify_exception
+    from agent_self_edit.llm.base import ProviderError
+
+    assert _classify_exception(ProviderError("rate limited")) == "rate_limit"
+    assert _classify_exception(ProviderError("429 too many requests")) == "rate_limit"
+    assert _classify_exception(ProviderError("too many requests")) == "rate_limit"
+
+
+def test_exception_classification_fatal():
+    from agent_self_edit.analyzer import AnalyzerError
+    from agent_self_edit.cli.run import _classify_exception
+    from agent_self_edit.gate import GateError
+    from agent_self_edit.llm.base import ProviderError
+    from agent_self_edit.registry import RegistryError
+
+    assert _classify_exception(ProviderError("invalid auth")) == "fatal"
+    assert _classify_exception(GateError("version mismatch")) == "fatal"
+    assert _classify_exception(AnalyzerError("LLM failed")) == "fatal"
+    assert _classify_exception(RegistryError("version not found")) == "fatal"
+    assert _classify_exception(ValueError("unknown")) == "fatal"
+    assert _classify_exception(RuntimeError("unexpected")) == "fatal"
+
+
+def test_exception_classification_transient():
+    from agent_self_edit.cli.run import _classify_exception
+
+    assert _classify_exception(TimeoutError("timed out")) == "transient"
+    assert _classify_exception(ConnectionError("refused")) == "transient"
+    assert _classify_exception(OSError("disk full")) == "transient"

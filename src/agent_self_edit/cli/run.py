@@ -1,13 +1,33 @@
 """run command: start the self-improvement loop."""
 
 import signal
+import sys
 import time
+from typing import Literal
 
 import click
 
 from ..config import Config, load_config
-from ..registry import Registry
+from ..registry import Registry, RegistryError
 from ..trace import TraceStore
+
+
+def _classify_exception(exc: Exception) -> Literal["rate_limit", "transient", "fatal"]:
+    """Classify an exception for loop retry/exit decisions."""
+    from ..analyzer import AnalyzerError
+    from ..gate import GateError
+    from ..llm.base import ProviderError
+
+    if isinstance(exc, ProviderError):
+        msg = str(exc).lower()
+        if "rate" in msg or "429" in msg or "too many" in msg:
+            return "rate_limit"
+        return "fatal"
+    if isinstance(exc, (GateError, AnalyzerError, RegistryError)):
+        return "fatal"
+    if isinstance(exc, (TimeoutError, ConnectionError, OSError)):
+        return "transient"
+    return "fatal"
 
 
 def _run_once(
@@ -178,39 +198,29 @@ def run(config_path: str, batch_size: int | None, once_flag: bool, dry_run: bool
     signal.signal(signal.SIGTERM, _handler)
 
     while not shutdown:
+        try:
+            _, rejection_context = _run_once(
+                config_path, batch_size, dry_run, rejection_context,
+                store=store, registry=registry, config=config,
+            )
+        except Exception as e:
+            category = _classify_exception(e)
+            if category in ("rate_limit", "transient"):
+                sleep_s = 10 if category == "rate_limit" else 5
+                click.echo(f"{category}: {e}; retrying in {sleep_s}s", err=True)
+                time.sleep(sleep_s)
+                continue
+            click.echo(f"Fatal error: {e}", err=True)
+            sys.exit(1)
+
         if config.trigger == "manual":
-            try:
-                _, rejection_context = _run_once(
-                    config_path, batch_size, dry_run, rejection_context,
-                    store=store, registry=registry, config=config,
-                )
-            except Exception as e:
-                click.echo(f"Error in cycle: {e}", err=True)
             break
-        elif config.trigger == "time":
-            try:
-                _, rejection_context = _run_once(
-                    config_path, batch_size, dry_run, rejection_context,
-                    store=store, registry=registry, config=config,
-                )
-            except Exception as e:
-                click.echo(f"Error in cycle: {e}", err=True)
-            if once_flag or shutdown:
-                break
+        if once_flag or shutdown:
+            break
+        if config.trigger == "time":
             interval = config.trigger_interval_hours * 3600
             time.sleep(interval)
-        else:  # batch
-            try:
-                _, rejection_context = _run_once(
-                    config_path, batch_size, dry_run, rejection_context,
-                    store=store, registry=registry, config=config,
-                )
-            except Exception as e:
-                click.echo(f"Error in cycle: {e}", err=True)
-
-            if once_flag or shutdown:
-                break
-
+        else:
             time.sleep(5)
 
     click.echo("Loop stopped.")

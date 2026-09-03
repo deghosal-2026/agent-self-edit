@@ -692,9 +692,8 @@ def test_run_cli_error_handling(tmp_path: Path) -> None:
     with patch("agent_self_edit.cli.run._run_once", side_effect=Exception("cycle boom")):
         with patch("agent_self_edit.cli.run.time.sleep"):
             result = runner.invoke(main, ["run", "--once", "--config", str(cfg_path)])
-            assert result.exit_code == 0
-            assert "Error in cycle" in result.output
-            assert "Loop stopped" in result.output
+            assert result.exit_code == 1
+            assert "Fatal error" in result.output
 
 
 def test_run_signal_handler_registered(tmp_path: Path) -> None:
