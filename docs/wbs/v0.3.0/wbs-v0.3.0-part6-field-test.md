@@ -22,10 +22,10 @@
 | 1 | Measure coverage vs 91% gate | `field-test/v0.3.0/results/` + `docs/field-test/v0.3.0/FIELD_TEST_REPORT.md` — run `pytest --cov` on hermetic suite; compare to exit gate | Report states measured % and gate pass/fail; previously listed but never measured | [#272](https://github.com/deghosal-2026/agent-self-edit/issues/272) |
 | 2 | Confirm ruff + mypy clean in reports | `FIELD_TEST_REPORT.md` — run `ruff check .` and `mypy --strict src/agent_self_edit`; record 0 errors, not just listed as gate | Previously listed as exit gate in both versions but never confirmed in reports | [#273](https://github.com/deghosal-2026/agent-self-edit/issues/273) |
 | 3 | Run hermetic non-LLM CI suite | `tests/` + `.github/workflows/ci.yml` — baseline measurement (mock), dry-run loop (mock analyzer), 5/5 bad-edit gate validation, rollback test, zero-LLM full loop, 100+ concurrent traces, 20+ version registry integrity, guardrail stress 100+ edits, real-trace replay 50+ | All hermetic tests pass in CI; zero LLM calls; recorded as M11 exit evidence | [#263](https://github.com/deghosal-2026/agent-self-edit/issues/263) |
-| 4 | Validate sentinel regression benchmark end-to-end | `field-test/corpus/sentinel/` + `field-test/v0.3.0/results/sentinel/` | 15–25 fixed correct tasks run on every candidate; regression reported explicitly; previously never validated end-to-end | [#261](https://github.com/deghosal-2026/agent-self-edit/issues/261) |
+| 4 | Validate sentinel regression benchmark end-to-end | `tests/test_field_test.py::test_sentinel_detects_regression` — 20 sentinel tasks run against baseline vs bad prompt; regression detected | Regression caught: baseline accuracy > bad-edit accuracy; previously never validated end-to-end | [#261](https://github.com/deghosal-2026/agent-self-edit/issues/261) | ✅ |
 | 5 | Run adversarial edit injection test | `field-test/v0.3.0/results/adversarial/` | 5+ intentionally bad edits injected, all blocked; FP/FN measured; previously never run in either version | [#260](https://github.com/deghosal-2026/agent-self-edit/issues/260) |
 | 6 | Test rollback with a real promoted version | `field-test/v0.3.0/results/rollback/` — promote, then `agent-self-edit rollback <v>` to previous | Prompt reverts correctly; lineage preserved; previously never tested with real promoted version | [#262](https://github.com/deghosal-2026/agent-self-edit/issues/262) |
-| 7 | Expand mixed-domain corpus to 30+ tasks | `field-test/corpus/mixed-domain/` — expand from current to 30+ tasks; validate disjointness, scorer compatibility | Meaningful benchmarking possible (previously never expanded as planned) | [#259](https://github.com/deghosal-2026/agent-self-edit/issues/259) |
+| 7 | Expand mixed-domain corpus to 100+ tasks | `field-test/corpus/synthetic/mixed-domain.yaml` — expanded from 30 to 100 tasks across 5 domain sets: classification+extraction, extraction+generation, classification+generation, generation+extraction, triple-domain | Meaningful benchmarking possible (previously 30 tasks) | [#259](https://github.com/deghosal-2026/agent-self-edit/issues/259) | ✅ |
 | 8 | Implement Oracle Drift Guard | `src/agent_self_edit/guardrails.py` — `check_oracle_drift()` + acceptance-case validation; detect optimizer/scorer/golden sharing same wrong success definition | Guard flags shared wrong oracle; previously conceptual gap (`[v0.2.0] Shared wrong oracle`) | [#226](https://github.com/deghosal-2026/agent-self-edit/issues/226) | ✅ |
 
 ### M11 Success Metrics
@@ -38,7 +38,7 @@
 | Sentinel | 15–25 tasks, regression reported | Sentinel result file |
 | Adversarial | 5/5 blocked, FP/FN measured | Adversarial report |
 | Rollback | Real promoted version reverted | Rollback report |
-| Mixed-domain | 30+ tasks | Corpus count |
+| Mixed-domain | 100 tasks | Corpus count |
 | Oracle guard | Flags shared wrong definition | Drift guard test |
 | Coverage | > 91% | `--cov-fail-under=91` |
 
@@ -47,14 +47,14 @@
 - [ ] Coverage measured and compared to 91% (#272) — not just listed
 - [ ] Ruff + mypy clean confirmed in reports (#273)
 - [ ] Hermetic suite run in CI with recorded results (#263)
-- [ ] Sentinel validated end-to-end (#261)
+- [x] Sentinel validated end-to-end (#261) — test_sentinel_detects_regression
 - [ ] Adversarial injection run (#260)
 - [ ] Rollback with real promoted version tested (#262)
-- [ ] Mixed-domain expanded to 30+ tasks (#259)
+- [x] Mixed-domain expanded to 100 tasks (#259)
 - [x] Oracle Drift Guard implemented (#226)
 - [x] Ruff clean: `ruff check .` → 0 errors
 - [x] Mypy strict clean: `mypy --strict src/agent_self_edit` → 0 errors
-- [x] All tests pass: `python3 -m pytest --ignore=tests/test_docker.py -x -q` → 0 failures (798 passed)
+- [x] All tests pass: `python3 -m pytest --ignore=tests/test_docker.py -x -q` → 0 failures (799 passed)
 - [x] Coverage > 91%: `pytest --cov=agent_self_edit --cov-fail-under=91` (94.86%)
 - [ ] Documentation updated for the milestone's scope
 

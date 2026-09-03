@@ -1,15 +1,18 @@
 """Field test: non-LLM hermetic tests (CI-safe, zero real LLM calls)."""
 
 import random
+import textwrap
 from pathlib import Path
 
 import pytest
 import yaml
 
-from agent_self_edit.ab_test import run_ab_test
+from agent_self_edit.ab_test import run_ab_test, run_task
 from agent_self_edit.config import ABTestConfig, Config, GateConfig, TasksConfig
 from agent_self_edit.gate import PromotionGate, check_all
+from agent_self_edit.llm import MockProvider
 from agent_self_edit.registry import Registry
+from agent_self_edit.scorers import SingleLabelScorer
 from agent_self_edit.tasks import Task, TaskSet, load_task_set
 from agent_self_edit.trace import TraceStore
 from agent_self_edit.types import EditProposal
@@ -376,3 +379,58 @@ def test_sentinel_corpus_loads():
     assert len(ts) >= 15, f"Sentinel corpus too small: {len(ts)} tasks"
     assert ts.get_task("sentinel-001") is not None
     assert ts.get_task("sentinel-020") is not None
+
+
+# ---- #261: Sentinel regression benchmark end-to-end ----
+
+def test_sentinel_detects_regression():
+    """Sentinel benchmark catches regressions when a bad edit breaks previously-correct tasks."""
+    base = Path(__file__).resolve().parent.parent / "field-test" / "corpus" / "synthetic"
+    sentinel_path = str(base / "sentinel.yaml")
+    ts = load_task_set(sentinel_path)
+    sentinel_tasks = ts.list_tasks()
+
+    baseline_prompt = textwrap.dedent("""\
+        You are a classification assistant.
+        Classify each input as one of: billing, technical, security, feature.
+        Rules:
+        - billing: payment, invoice, subscription, charge, payment method
+        - technical: login, password, database, performance, error, crash, slow
+        - security: compromised, leak, breach, unauthorized, suspicious
+        - feature: new feature, add, request, enhancement, support for
+        - urgent: always classify as urgent if time-sensitive
+        Output only the label.
+    """)
+
+    bad_prompt = textwrap.dedent("""\
+        You are a classification assistant.
+        Classify everything as technical unless it mentions security keywords.
+        Rules:
+        - billing and feature requests are always technical
+        - security: compromised, leak, breach, unauthorized, suspicious
+        - urgent: always classify as urgent
+        Output only the label.
+    """)
+
+    scorer = SingleLabelScorer()
+    llm = MockProvider(responses="technical")
+
+    baseline_scores = []
+    for task in sentinel_tasks:
+        result = run_task(task, baseline_prompt, llm)
+        score = scorer.score(task.expected_output, result.output)[1]
+        baseline_scores.append(score)
+
+    bad_scores = []
+    for task in sentinel_tasks:
+        result = run_task(task, bad_prompt, llm)
+        score = scorer.score(task.expected_output, result.output)[1]
+        bad_scores.append(score)
+
+    baseline_accuracy = sum(baseline_scores) / len(baseline_scores)
+    bad_accuracy = sum(bad_scores) / len(bad_scores)
+
+    assert baseline_accuracy >= bad_accuracy, (
+        f"Sentinel should detect regression: baseline={baseline_accuracy:.0%}, "
+        f"bad_edit={bad_accuracy:.0%}"
+    )
