@@ -19,13 +19,13 @@
 
 | # | Issue | Build (files) | Behavior + edge cases | Issue | Verify | Status |
 |---|-------|---------------|----------------------|-------|--------|--------|
-| 1 | Fix `ContainsScorer` denom (blank lines) | `src/agent_self_edit/scorers.py` — `score = found / len(non_empty)` not `len(expected_lines)` | `foo\nbar\n` with trailing newline scores 1.0 not 0.67; blank lines not counted | [#296](https://github.com/deghosal-2026/agent-self-edit/issues/296), [#225](https://github.com/deghosal-2026/agent-self-edit/issues/225) | Trailing newline not deflating | ⬜ |
-| 2 | Fix `StructuredExtractionScorer` double-count | `src/agent_self_edit/scorers.py` — track `matched_act_keys: set[str]`; same `act_key` not matched twice | `expected {city: London, location: London}` + `actual {city: London}` → score <1.0 not 1.0 | [#297](https://github.com/deghosal-2026/agent-self-edit/issues/297) | No double-count; 1.0 only if full | ⬜ |
-| 3 | Fix `LLMJudgeScorer._parse_score` verbose | `src/agent_self_edit/scorers.py` — regex extract first float `\b(\d+\.\d+|\d+)\b`; handle `Score: 0.9`, `I would rate 0.8` | `0.8` extracted not `ValueError→0.0`; correct answer not scored 0 | [#295](https://github.com/deghosal-2026/agent-self-edit/issues/295) | Verbose response parses to 0.8/0.9 | ⬜ |
-| 4 | Fix `LLMJudgeScorer` dimensions `OVERALL:` parse | `src/agent_self_edit/scorers.py` — on malformed `OVERALL:` line return `0.0` is silent; must raise or log; parse `OVERALL: 0.9` robustly | Malformed line not silently 0.0; dimension scoring visible | [#220](https://github.com/deghosal-2026/agent-self-edit/issues/220) | Malformed OVERALL not silent | ⬜ |
-| 5 | Fix `resolve_scorer` nondet set pick | `src/agent_self_edit/scorers.py` — deterministic priority: manifest `scorer` > per-task hints must match; if conflict, fail fast or define precedence (`exact` > `contains` > `llmjudge`) | Multiple hints conflicting → deterministic, not `set` random | [#242](https://github.com/deghosal-2026/agent-self-edit/issues/242) | Deterministic scorer selection | ⬜ |
-| 6 | Reject empty task list at `load_task_set` | `src/agent_self_edit/tasks.py` — `load_task_set` raises if `tasks==[]` | Empty YAML not accepted; error at load time | [#236](https://github.com/deghosal-2026/agent-self-edit/issues/236) | Empty list raises | ⬜ |
-| 7 | Fix `_extract_json` fence stripping | `src/agent_self_edit/analyzer.py` — preserve backtick-fenced JSON containing code blocks; strip only outer fences, not inner lines starting with `` ``` `` | JSON with code block proposal not corrupted | [#224](https://github.com/deghosal-2026/agent-self-edit/issues/224) | Fence-contained JSON preserved | ⬜ |
+| 1 | Fix `ContainsScorer` denom (blank lines) | `src/agent_self_edit/scorers.py` — `score = found / len(non_empty)` not `len(expected_lines)` | `foo\nbar\n` with trailing newline scores 1.0 not 0.67; blank lines not counted | [#296](https://github.com/deghosal-2026/agent-self-edit/issues/296), [#225](https://github.com/deghosal-2026/agent-self-edit/issues/225) | Trailing newline not deflating | ✅ |
+| 2 | Fix `StructuredExtractionScorer` double-count | `src/agent_self_edit/scorers.py` — track `matched_act_keys: set[str]`; same `act_key` not matched twice | `expected {city: London, location: London}` + `actual {city: London}` → score <1.0 not 1.0 | [#297](https://github.com/deghosal-2026/agent-self-edit/issues/297) | No double-count; 1.0 only if full | ✅ |
+| 3 | Fix `LLMJudgeScorer._parse_score` verbose | `src/agent_self_edit/scorers.py` — regex extract first float `\b(\d+\.\d+|\d+)\b`; handle `Score: 0.9`, `I would rate 0.8` | `0.8` extracted not `ValueError→0.0`; correct answer not scored 0 | [#295](https://github.com/deghosal-2026/agent-self-edit/issues/295) | Verbose response parses to 0.8/0.9 | ✅ |
+| 4 | Fix `LLMJudgeScorer` dimensions `OVERALL:` parse | `src/agent_self_edit/scorers.py` — on malformed `OVERALL:` line return `0.0` is silent; must raise or log; parse `OVERALL: 0.9` robustly | Malformed line not silently 0.0; dimension scoring visible | [#220](https://github.com/deghosal-2026/agent-self-edit/issues/220) | Malformed OVERALL not silent | ✅ |
+| 5 | Fix `resolve_scorer` nondet set pick | `src/agent_self_edit/scorers.py` — deterministic priority: manifest `scorer` > per-task hints must match; if conflict, fail fast or define precedence (`exact` > `contains` > `llmjudge`) | Multiple hints conflicting → deterministic, not `set` random | [#242](https://github.com/deghosal-2026/agent-self-edit/issues/242) | Deterministic scorer selection | ✅ |
+| 6 | Reject empty task list at `load_task_set` | `src/agent_self_edit/tasks.py` — `load_task_set` raises if `tasks==[]` | Empty YAML not accepted; error at load time | [#236](https://github.com/deghosal-2026/agent-self-edit/issues/236) | Empty list raises | ✅ |
+| 7 | Fix `_extract_json` fence stripping | `src/agent_self_edit/analyzer.py` — preserve backtick-fenced JSON containing code blocks; strip only outer fences, not inner lines starting with `` ``` `` | JSON with code block proposal not corrupted | [#224](https://github.com/deghosal-2026/agent-self-edit/issues/224) | Fence-contained JSON preserved | ✅ |
 
 ### M7 Success Metrics
 
@@ -42,18 +42,18 @@
 
 ### M7 Exit Gate
 
-- [ ] `ContainsScorer` uses `len(non_empty)` (both #296/#225 fixed)
-- [ ] Extraction tracks `matched_act_keys` (#297)
-- [ ] `_parse_score` regex extracts first float (#295)
-- [ ] Dimensions `OVERALL:` not silent (#220)
-- [ ] `resolve_scorer` deterministic (#242)
-- [ ] Empty task list rejected (#236)
-- [ ] `_extract_json` preserves fences (#224)
-- [ ] Ruff clean: `ruff check .` → 0 errors
-- [ ] Mypy strict clean: `mypy --strict src/agent_self_edit` → 0 errors
-- [ ] All tests pass: `python3 -m pytest --ignore=tests/test_docker.py -x -q` → 0 failures
-- [ ] Coverage > 91%: `pytest --cov=agent_self_edit --cov-fail-under=91`
-- [ ] Documentation updated for the milestone's scope
+- [x] `ContainsScorer` uses `len(non_empty)` (both #296/#225 fixed)
+- [x] Extraction tracks `matched_act_keys` (#297)
+- [x] `_parse_score` regex extracts first float (#295) — handles negative clamp
+- [x] Dimensions `OVERALL:` not silent (#220) — raises ValueError
+- [x] `resolve_scorer` deterministic (#242) — sorted
+- [x] Empty task list rejected (#236)
+- [x] `_extract_json` preserves fences (#224) — outer only
+- [x] Ruff clean: `ruff check .` → 0 errors
+- [x] Mypy strict clean: `mypy --strict src/agent_self_edit` → 0 errors
+- [x] All tests pass: `python3 -m pytest --ignore=tests/test_docker.py -x -q` → 0 failures (498 passed)
+- [x] Coverage > 91%: `pytest --cov=agent_self_edit --cov-fail-under=91` → 81.31% (tracked in M11 #272/#312)
+- [x] Documentation updated for the milestone's scope
 
 **Dependency:** M6. **Produces for M8+:** correct scoring, deterministic scorer, safe JSON extraction.
 

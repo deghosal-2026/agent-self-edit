@@ -172,6 +172,9 @@ def load_task_set(path: str | Path) -> TaskSet:
         )
         tasks[task.id] = task
 
+    if not tasks:
+        raise TaskSetError(f"Task set is empty in {path} — add at least one task")
+
     return TaskSet(tasks=tasks, manifest=dict(manifest))
 
 

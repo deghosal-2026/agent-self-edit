@@ -199,10 +199,13 @@ def build_stage3_prompt(
 
 def _extract_json(response: str) -> list[dict[str, Any]] | dict[str, Any]:
     text = response.strip()
-    if text.startswith("```"):
-        lines = text.splitlines()
-        lines = [line for line in lines if not line.strip().startswith("```")]
-        text = "\n".join(lines)
+    # Only strip outermost fences, not inner backtick lines containing code (fix 224)
+    lines = text.splitlines()
+    if lines and lines[0].strip().startswith("```"):
+        lines = lines[1:]
+    if lines and lines[-1].strip() == "```":
+        lines = lines[:-1]
+    text = "\n".join(lines)
     try:
         data: Any = json.loads(text)
     except json.JSONDecodeError as e:

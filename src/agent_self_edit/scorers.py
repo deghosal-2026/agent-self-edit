@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import unicodedata
 from abc import ABC, abstractmethod
 from typing import Any
@@ -97,7 +98,7 @@ def resolve_scorer(
             )
 
     if scorer_hints:
-        chosen = next(iter(scorer_hints))
+        chosen = sorted(scorer_hints)[0]
         return get_scorer(chosen, judge_llm=judge_llm, **judge_kwargs)
 
     return get_scorer(default, judge_llm=judge_llm, **judge_kwargs)
@@ -176,23 +177,21 @@ class ContainsScorer(Scorer):
         if not actual.strip():
             return (False, 0.0)
         expected_lines = expected.strip().split("\n")
-        found = 0
-        for line in expected_lines:
-            if line and line.lower() in actual.lower():
-                found += 1
-        # Nothing required to match -> trivially correct.
-        non_empty = [line for line in expected_lines if line]
+        # Count only non-empty (after strip) lines for denominator (fix 296/225)
+        non_empty = [line for line in expected_lines if line.strip()]
         if not non_empty:
             return (True, 1.0)
+        found = 0
+        for line in non_empty:
+            if line.lower() in actual.lower():
+                found += 1
         if self.required_fields:
             missing = not all(
                 f.lower() in actual.lower() for f in self.required_fields if f
             )
             if missing:
-                return (False, found / len(expected_lines) if expected_lines else 0.0)
-        if not expected_lines:
-            return (True, 1.0)
-        score = found / len(expected_lines)
+                return (False, found / len(non_empty) if non_empty else 0.0)
+        score = found / len(non_empty) if non_empty else 1.0
         return (score >= 1.0, score)
 
 
@@ -267,16 +266,21 @@ class StructuredExtractionScorer(Scorer):
         act = self._flatten(act_raw)
 
         matched = 0
+        matched_act_keys: set[str] = set()
         for exp_key, exp_val in exp.items():
             act_val = act.get(exp_key)
-            if act_val is not None and act_val == exp_val:
+            if act_val is not None and act_val == exp_val and exp_key not in matched_act_keys:
                 matched += 1
+                matched_act_keys.add(exp_key)
                 continue
             for act_key, act_val2 in act.items():
+                if act_key in matched_act_keys:
+                    continue
                 if act_val2 == exp_val and self._compare_nested(
                     exp_key, act_key, exp_val, act_val2
                 ):
                     matched += 1
+                    matched_act_keys.add(act_key)
                     break
 
         total = len(exp)
@@ -370,6 +374,19 @@ class LLMJudgeScorer(Scorer):
             for line in reversed(stripped.splitlines()):
                 line = line.strip()
                 if line.startswith("OVERALL:"):
-                    return float(line.split(":", 1)[1].strip())
-            return 0.0
-        return float(stripped)
+                    try:
+                        return float(line.split(":", 1)[1].strip())
+                    except (ValueError, IndexError) as e:
+                        raise ValueError(
+                            f"Could not parse OVERALL: {response[:100]!r}"
+                        ) from e
+            raise ValueError(f"No OVERALL line: {response[:100]!r}")
+        # Extract first float token for verbose responses (fix 295)
+        m = re.search(r"-?\d+(?:\.\d+)?", stripped)
+        if m:
+            try:
+                val = float(m.group(0))
+                return val
+            except ValueError:
+                pass
+        raise ValueError(f"no numeric score in response: {stripped[:200]!r}")
