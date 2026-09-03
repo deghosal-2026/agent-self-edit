@@ -676,7 +676,7 @@ def test_run_cli_once_and_loop_stopped(tmp_path: Path) -> None:
     from agent_self_edit.cli import main
 
     runner = CliRunner()
-    with patch("agent_self_edit.cli.run.time.sleep") as mock_sleep:
+    with patch("time.sleep") as mock_sleep:
         result = runner.invoke(main, ["run", "--once", "--config", str(cfg_path)])
         assert result.exit_code == 0
         assert "Loop stopped" in result.output
@@ -690,7 +690,7 @@ def test_run_cli_error_handling(tmp_path: Path) -> None:
 
     runner = CliRunner()
     with patch("agent_self_edit.cli.run._run_once", side_effect=Exception("cycle boom")):
-        with patch("agent_self_edit.cli.run.time.sleep"):
+        with patch("time.sleep"):
             result = runner.invoke(main, ["run", "--once", "--config", str(cfg_path)])
             assert result.exit_code == 1
             assert "Fatal error" in result.output
@@ -711,8 +711,8 @@ def test_run_signal_handler_registered(tmp_path: Path) -> None:
         captured[sig] = handler
         return None
 
-    with patch("agent_self_edit.cli.run.signal.signal", side_effect=fake_signal):
-        with patch("agent_self_edit.cli.run.time.sleep"):
+    with patch("signal.signal", side_effect=fake_signal):
+        with patch("time.sleep"):
             result = runner.invoke(main, ["run", "--once", "--config", str(cfg_path)])
             assert result.exit_code == 0
             assert orig_signal.SIGINT in captured
