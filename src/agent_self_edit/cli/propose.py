@@ -56,6 +56,10 @@ def propose(config_path: str, dry_run: bool) -> None:
     store = TraceStore(config.project.trace_path, batch_size=config.tasks.batch_size)
     registry = Registry(config.project.registry_path)
 
+    if not store.batch_ready():
+        click.echo(f"Batch not ready: {store.count_pending()} / {config.tasks.batch_size} traces")
+        return
+
     batch = store.get_batch(min(config.tasks.batch_size, store.count_pending()))
     if not batch:
         click.echo("No pending traces to analyze.")

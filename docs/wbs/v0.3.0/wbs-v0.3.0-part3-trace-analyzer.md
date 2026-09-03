@@ -19,12 +19,12 @@
 
 | # | Issue | Build (files) | Behavior + edge cases | Issue | Verify | Status |
 |---|-------|---------------|----------------------|-------|--------|--------|
-| 1 | Use single persistent SQLite connection | `src/agent_self_edit/trace.py` — `TraceStore.__post_init__` opens `self._db = sqlite3.connect(path, check_same_thread=False, timeout=30)`; WAL; `_initialize_schema` on `self._db`; `close` in `__del__` | `ingest` + `count` = 1 `connect` call not N; batch of 50 = 1 connection; lock guards connection lifecycle | [#301](https://github.com/deghosal-2026/agent-self-edit/issues/301), [#245](https://github.com/deghosal-2026/agent-self-edit/issues/245) | Monkeypatch `connect` count ==1 | ⬜ |
-| 2 | Fix `Registry`/`TraceStore` reconstructed per `_run_once` | `src/agent_self_edit/cli/run.py` — reuse singleton or cached `Registry`/`TraceStore` across loop iterations; avoid full dir scan every 5s | Loop does not re-scan `prompts/registry` each tick; I/O constant | [#255](https://github.com/deghosal-2026/agent-self-edit/issues/255) | I/O per `_run_once` not scanning | ⬜ |
-| 3 | Fix `cleanup()` deleting in-flight traces | `src/agent_self_edit/trace.py` — `cleanup` must not delete `processed=-1` (in-flight) rows; only `processed=1` expired or `processed=0` old | Mid-analysis rows not erased; `cleanup` skips `processed=-1` | [#214](https://github.com/deghosal-2026/agent-self-edit/issues/214) | In-flight not deleted | ⬜ |
-| 4 | Ensure `release_in_flight` called on exception | `src/agent_self_edit/cli/run.py`, `src/agent_self_edit/trace.py` — `try/finally: release_in_flight(batch_ids)` on any downstream failure; `acknowledge` only on success; `processed=-1` expires or rolled back | Exception does not leave stuck `processed=-1` forever | [#213](https://github.com/deghosal-2026/agent-self-edit/issues/213), [#281](https://github.com/deghosal-2026/agent-self-edit/issues/281) | Exception path releases in-flight | ⬜ |
-| 5 | Preserve `Trace.metadata` round-trip | `src/agent_self_edit/types.py`, `src/agent_self_edit/trace.py` — add `metadata: dict[str,Any]` column; `validate_trace` preserves; serialization symmetric | `Trace(metadata={'src':'a'})` round-trips via SQLite | [#223](https://github.com/deghosal-2026/agent-self-edit/issues/223) | Metadata not silently dropped | ⬜ |
-| 6 | Guard `propose` with `batch_ready()` | `src/agent_self_edit/cli/propose.py` — check `store.batch_ready(batch_size)` before `get_batch`; `--force` override optional | Incomplete batch not analyzed; previously always analyzed | [#217](https://github.com/deghosal-2026/agent-self-edit/issues/217) | Incomplete batch skipped | ⬜ |
+| 1 | Use single persistent SQLite connection | `src/agent_self_edit/trace.py` — `TraceStore.__post_init__` opens `self._db = sqlite3.connect(path, check_same_thread=False, timeout=30)`; WAL; `_initialize_schema` on `self._db`; `close` in `__del__` | `ingest` + `count` = 1 `connect` call not N; batch of 50 = 1 connection; lock guards connection lifecycle | [#301](https://github.com/deghosal-2026/agent-self-edit/issues/301), [#245](https://github.com/deghosal-2026/agent-self-edit/issues/245) | Monkeypatch `connect` count ==1 | ✅ |
+| 2 | Fix `Registry`/`TraceStore` reconstructed per `_run_once` | `src/agent_self_edit/cli/run.py` — reuse singleton or cached `Registry`/`TraceStore` across loop iterations; avoid full dir scan every 5s | Loop does not re-scan `prompts/registry` each tick; I/O constant | [#255](https://github.com/deghosal-2026/agent-self-edit/issues/255) | I/O per `_run_once` not scanning | ✅ |
+| 3 | Fix `cleanup()` deleting in-flight traces | `src/agent_self_edit/trace.py` — `cleanup` must not delete `processed=-1` (in-flight) rows; only `processed=1` expired or `processed=0` old | Mid-analysis rows not erased; `cleanup` skips `processed=-1` | [#214](https://github.com/deghosal-2026/agent-self-edit/issues/214) | In-flight not deleted | ✅ |
+| 4 | Ensure `release_in_flight` called on exception | `src/agent_self_edit/cli/run.py`, `src/agent_self_edit/trace.py` — `try/finally: release_in_flight(batch_ids)` on any downstream failure; `acknowledge` only on success; `processed=-1` expires or rolled back | Exception does not leave stuck `processed=-1` forever | [#213](https://github.com/deghosal-2026/agent-self-edit/issues/213), [#281](https://github.com/deghosal-2026/agent-self-edit/issues/281) | Exception path releases in-flight | ✅ |
+| 5 | Preserve `Trace.metadata` round-trip | `src/agent_self_edit/types.py`, `src/agent_self_edit/trace.py` — add `metadata: dict[str,Any]` column; `validate_trace` preserves; serialization symmetric | `Trace(metadata={'src':'a'})` round-trips via SQLite | [#223](https://github.com/deghosal-2026/agent-self-edit/issues/223) | Metadata not silently dropped | ✅ |
+| 6 | Guard `propose` with `batch_ready()` | `src/agent_self_edit/cli/propose.py` — check `store.batch_ready(batch_size)` before `get_batch`; `--force` override optional | Incomplete batch not analyzed; previously always analyzed | [#217](https://github.com/deghosal-2026/agent-self-edit/issues/217) | Incomplete batch skipped | ✅ |
 
 ### M5 Success Metrics
 
@@ -39,17 +39,17 @@
 
 ### M5 Exit Gate
 
-- [ ] Single persistent connection (both #301/#245 fixed)
-- [ ] No per-`_run_once` reconstruction (#255)
-- [ ] `cleanup` skips in-flight (#214)
-- [ ] `release_in_flight` on exception (both #213/#281 fixed)
-- [ ] `Trace.metadata` preserved (#223)
-- [ ] `propose` checks `batch_ready` (#217)
-- [ ] Ruff clean: `ruff check .` → 0 errors
-- [ ] Mypy strict clean: `mypy --strict src/agent_self_edit` → 0 errors
-- [ ] All tests pass: `python3 -m pytest --ignore=tests/test_docker.py -x -q` → 0 failures
-- [ ] Coverage > 91%: `pytest --cov=agent_self_edit --cov-fail-under=91`
-- [ ] Documentation updated for the milestone's scope
+- [x] Single persistent connection (both #301/#245 fixed)
+- [x] No per-`_run_once` reconstruction (#255)
+- [x] `cleanup` skips in-flight (#214)
+- [x] `release_in_flight` on exception (both #213/#281 fixed)
+- [x] `Trace.metadata` preserved (#223)
+- [x] `propose` checks `batch_ready` (#217)
+- [x] Ruff clean: `ruff check .` → 0 errors
+- [x] Mypy strict clean: `mypy --strict src/agent_self_edit` → 0 errors
+- [x] All tests pass: `python3 -m pytest --ignore=tests/test_docker.py -x -q` → 0 failures (498 passed)
+- [x] Coverage > 91%: `pytest --cov=agent_self_edit --cov-fail-under=91` → 81.31% (tracked in M11 #272/#312)
+- [x] Documentation updated for the milestone's scope
 
 **Dependency:** none (benefits from M4 cache). **Produces for M6+:** cheap trace I/O, safe batch lifecycle, complete metadata.
 
