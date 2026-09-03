@@ -209,9 +209,9 @@ def validate_config(config: Config) -> list[str]:
             f"drift_threshold must be between 0 and 1, got {config.gate.drift_threshold}"
         )
 
-    if not (0 <= config.gate.near_miss_threshold <= 1):
+    if not (0 < config.gate.near_miss_threshold < 1):
         errors.append(
-            f"near_miss_threshold must be between 0 and 1, got {config.gate.near_miss_threshold}"
+            f"near_miss_threshold must be in (0,1), got {config.gate.near_miss_threshold}"
         )
 
     if config.llm.provider not in ("openai", "mock"):

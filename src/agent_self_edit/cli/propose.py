@@ -70,10 +70,18 @@ def propose(config_path: str, dry_run: bool) -> None:
         return
 
     analyzer_llm = _build_llm_for_role(config, config.analyzer_role)
+    from ..gate import GateAuditLog
+
+    audit_path = config.project.registry_path + "/audit.jsonl"
+    try:
+        near_misses = GateAuditLog(audit_path).near_misses(limit=20)
+    except Exception:
+        near_misses = []
     result = analyze_batch(
         failed, registry.current_prompt, None, analyzer_llm,
         max_proposals=config.analyzer.max_proposals_per_batch,
         config=config,
+        near_misses=near_misses,
     )
 
     click.echo(f"Proposed {len(result.proposals)} edits (cost=${result.cost_usd:.4f})")

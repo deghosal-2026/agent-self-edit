@@ -34,13 +34,21 @@ def _run_once(config_path: str, batch_size: int | None, dry_run: bool,
         return (True, rejection_context)
 
     from ..analyzer import analyze_batch
+    from ..gate import GateAuditLog
     from .propose import _build_llm_for_role
 
     analyzer_llm = _build_llm_for_role(config, config.analyzer_role)
+    # Load recent near-misses for dedup (fix 249/282 — previously always None)
+    audit_path = config.project.registry_path + "/audit.jsonl"
+    try:
+        near_misses = GateAuditLog(audit_path).near_misses(limit=20)
+    except Exception:
+        near_misses = []
     result = analyze_batch(
         failed, registry.current_prompt, None, analyzer_llm,
         max_proposals=config.analyzer.max_proposals_per_batch,
         config=config,
+        near_misses=near_misses,
         rejection_context=rejection_context,
     )
 
@@ -48,6 +56,9 @@ def _run_once(config_path: str, batch_size: int | None, dry_run: bool,
 
     if dry_run or not result.proposals:
         store.acknowledge_rows(batch)
+        # Clear stale context when analyzer produced no proposals (fix 251/289)
+        if not result.proposals and not dry_run:
+            return (True, "")
         return (True, rejection_context)
 
     rejection_context_lines: list[str] = []

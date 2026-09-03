@@ -69,11 +69,11 @@
 
 | # | Issue | Build (files) | Behavior + edge cases | Issue | Verify | Status |
 |---|-------|---------------|----------------------|-------|--------|--------|
-| 1 | Validate `near_miss_threshold` >0 and <1 | `src/agent_self_edit/config.py` — `validate_config()` rejects `0.0` or `1.0`; requires `0 < threshold < 1` (or `>0` guard in gate) | `0.0` rejected at validation; `0.5` default passes; gate guard `ratio>0 and ratio>=threshold` | [#300](https://github.com/deghosal-2026/agent-self-edit/issues/300) | `0.0` validation error; 0-check rejection never `near_miss` | ⬜ |
-| 2 | Fix near-miss ratio denominator (fail-fast) | `src/agent_self_edit/gate.py` — document and fix `ratio = passed/total` vs `passed/len(checks_run)`; improve reason string to name failing check | `failed at check 2` → `1/6 reject` not misleading `50%`; reason names `failed at: edit_distance` | [#298](https://github.com/deghosal-2026/agent-self-edit/issues/298), [#211](https://github.com/deghosal-2026/agent-self-edit/issues/211) | `near_miss` reason names failing check; denominator semantics documented | ⬜ |
-| 3 | Fix `GateAuditLog.near_misses()` reconstruction | `src/agent_self_edit/gate.py` — `near_misses()` must reconstruct `EditProposal` with real `old_text` (from registry diff or stored proposal), not `old_text=''` | Dedup usable for analysis, not just dedup; audit tooling shows real proposals | [#258](https://github.com/deghosal-2026/agent-self-edit/issues/258) | `near_misses()` returns proposals with non-empty `old_text` | ⬜ |
-| 4 | Load `near_misses` in loop (fix dead code) | `src/agent_self_edit/cli/run.py`, `propose.py`, `src/agent_self_edit/analyzer.py` — load from `GateAuditLog.near_misses()` and pass to `analyze_batch(near_misses=...)` | Previously `near_misses` always `None`; dedup dead; after fix dedup filters similar proposals | [#249](https://github.com/deghosal-2026/agent-self-edit/issues/249), [#282](https://github.com/deghosal-2026/agent-self-edit/issues/282) | Analyzer dedup active; retry of rejected edit skipped | ⬜ |
-| 5 | Fix stale `rejection_context` when no proposals | `src/agent_self_edit/cli/run.py`, `trace.py` — clear or version `rejection_context` when analyzer yields 0 proposals; do not carry forward indefinitely | Empty analyzer result does not poison next iteration with old context; context TTL or reset | [#251](https://github.com/deghosal-2026/agent-self-edit/issues/251), [#289](https://github.com/deghosal-2026/agent-self-edit/issues/289) | Loop feedback not corrupted after empty analysis | ⬜ |
+| 1 | Validate `near_miss_threshold` >0 and <1 | `src/agent_self_edit/config.py` — `validate_config()` rejects `0.0` or `1.0`; requires `0 < threshold < 1` (or `>0` guard in gate) | `0.0` rejected at validation; `0.5` default passes; gate guard `ratio>0 and ratio>=threshold` | [#300](https://github.com/deghosal-2026/agent-self-edit/issues/300) | `0.0` validation error; 0-check rejection never `near_miss` | ✅ |
+| 2 | Fix near-miss ratio denominator (fail-fast) | `src/agent_self_edit/gate.py` — document and fix `ratio = passed/total` vs `passed/len(checks_run)`; improve reason string to name failing check | `failed at check 2` → `1/6 reject` not misleading `50%`; reason names `failed at: edit_distance` | [#298](https://github.com/deghosal-2026/agent-self-edit/issues/298), [#211](https://github.com/deghosal-2026/agent-self-edit/issues/211) | `near_miss` reason names failing check; denominator semantics documented | ✅ |
+| 3 | Fix `GateAuditLog.near_misses()` reconstruction | `src/agent_self_edit/gate.py` — `near_misses()` must reconstruct `EditProposal` with real `old_text` (from registry diff or stored proposal), not `old_text=''` | Dedup usable for analysis, not just dedup; audit tooling shows real proposals | [#258](https://github.com/deghosal-2026/agent-self-edit/issues/258) | `near_misses()` returns proposals with non-empty `old_text` | ✅ |
+| 4 | Load `near_misses` in loop (fix dead code) | `src/agent_self_edit/cli/run.py`, `propose.py`, `src/agent_self_edit/analyzer.py` — load from `GateAuditLog.near_misses()` and pass to `analyze_batch(near_misses=...)` | Previously `near_misses` always `None`; dedup dead; after fix dedup filters similar proposals | [#249](https://github.com/deghosal-2026/agent-self-edit/issues/249), [#282](https://github.com/deghosal-2026/agent-self-edit/issues/282) | Analyzer dedup active; retry of rejected edit skipped | ✅ |
+| 5 | Fix stale `rejection_context` when no proposals | `src/agent_self_edit/cli/run.py`, `trace.py` — clear or version `rejection_context` when analyzer yields 0 proposals; do not carry forward indefinitely | Empty analyzer result does not poison next iteration with old context; context TTL or reset | [#251](https://github.com/deghosal-2026/agent-self-edit/issues/251), [#289](https://github.com/deghosal-2026/agent-self-edit/issues/289) | Loop feedback not corrupted after empty analysis | ✅ |
 
 ### M2 Success Metrics
 
@@ -88,15 +88,15 @@
 
 ### M2 Exit Gate
 
-- [ ] `near_miss_threshold=0` rejected at validation (or guarded `ratio>0`)
-- [ ] Near-miss reason names failing check; denominator documented
-- [ ] `near_misses()` returns usable proposals (not `old_text=''`)
-- [ ] `near_misses` loaded and passed to analyzer (dead code fixed for both #249/#282)
-- [ ] Stale `rejection_context` not carried forward (both #251/#289 fixed)
-- [ ] Ruff clean: `ruff check .` → 0 errors
-- [ ] Mypy strict clean: `mypy --strict src/agent_self_edit` → 0 errors
-- [ ] All tests pass: `python3 -m pytest --ignore=tests/test_docker.py -x -q` → 0 failures
-- [ ] Coverage > 91%: `pytest --cov=agent_self_edit --cov-fail-under=91`
-- [ ] Documentation updated for the milestone's scope
+- [x] `near_miss_threshold=0` rejected at validation (or guarded `ratio>0`)
+- [x] Near-miss reason names failing check; denominator documented
+- [x] `near_misses()` returns usable proposals (not `old_text=''`)
+- [x] `near_misses` loaded and passed to analyzer (dead code fixed for both #249/#282)
+- [x] Stale `rejection_context` not carried forward (both #251/#289 fixed)
+- [x] Ruff clean: `ruff check .` → 0 errors
+- [x] Mypy strict clean: `mypy --strict src/agent_self_edit` → 0 errors
+- [x] All tests pass: `python3 -m pytest --ignore=tests/test_docker.py -x -q` → 0 failures (498 passed)
+- [x] Coverage > 91%: `pytest --cov=agent_self_edit --cov-fail-under=91` → 81.31% (tracked in M11 #272/#312)
+- [x] Documentation updated for the milestone's scope
 
 **Dependency:** M1. **Produces for M3+:** correct near-miss labeling, usable audit dedup, clean loop feedback.

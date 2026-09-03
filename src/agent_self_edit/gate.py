@@ -326,21 +326,30 @@ def check_all(
             break  # fail-fast
 
     total = len(_CHECK_ORDER)
+    checks_run = len(checks)
     near_miss_threshold = float(config.gate.near_miss_threshold)
 
     if passed_count == total:
         decision: Literal["promote", "reject", "near_miss"] = "promote"
         reason = "all checks passed"
     else:
-        ratio = passed_count / total
-        if ratio >= near_miss_threshold:
+        # near-miss ratio based on checks that actually ran (fix 211), not total possible.
+        # Require ratio >0 to prevent 0/6 being near-miss when threshold is 0 (fix 300).
+        ratio = passed_count / checks_run if checks_run else 0.0
+        failing_check = checks[-1].name if checks else "unknown"
+        if ratio > 0 and ratio >= near_miss_threshold:
             decision = "near_miss"
-            reason = f"{passed_count}/{total} checks passed; near-miss (>= {ratio:.0%})"
+            reason = (
+                f"{passed_count}/{checks_run} checks passed "
+                f"(failed at: {failing_check}); near-miss threshold met "
+                f"({ratio:.0%} >= {near_miss_threshold:.0%})"
+            )
         else:
             decision = "reject"
             reason = (
-                f"{passed_count}/{total} checks passed; "
-                f"below near-miss threshold ({near_miss_threshold:.0%})"
+                f"{passed_count}/{checks_run} checks passed "
+                f"(failed at: {failing_check}); below near-miss threshold "
+                f"({near_miss_threshold:.0%})"
             )
 
     return GateResult(
@@ -378,8 +387,9 @@ class PromotionGate:
                 ],
             }
             if edit is not None:
-                # Store the proposed new text so near-miss dedup (M7 #49) can
-                # compare future proposals against rejected/near-miss edits.
+                # Store both old and new text so near-miss dedup (M2 #258) can
+                # fully reconstruct proposals (previously old_text was always "").
+                entry["proposal_old_text"] = edit.old_text
                 entry["proposal_text"] = edit.new_text
                 entry["proposal_section"] = edit.section
             self.audit.log(entry)
@@ -400,6 +410,7 @@ class PromotionGate:
             ],
         }
         if edit is not None:
+            entry["proposal_old_text"] = edit.old_text
             entry["proposal_text"] = edit.new_text
             entry["proposal_section"] = edit.section
         self.audit.log(entry)
@@ -453,7 +464,7 @@ class GateAuditLog:
             proposals.append(
                 _EditProposal(
                     section=entry.get("proposal_section") or "",
-                    old_text="",
+                    old_text=entry.get("proposal_old_text") or "",
                     new_text=text,
                     hypothesis=entry.get("reason") or "",
                     expected_improvement="",
