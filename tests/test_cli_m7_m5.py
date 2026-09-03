@@ -324,9 +324,10 @@ def test_propose_original_prompt_v1(tmp_path: Path) -> None:
         with patch("agent_self_edit.tasks.load_task_set", return_value=MagicMock()):
             with patch("agent_self_edit.scorers.resolve_scorer", return_value=MagicMock()):
                 with patch("agent_self_edit.ab_test.run_ab_test", return_value=ab):
-                    with patch("agent_self_edit.gate.check_all", return_value=gate_res) as mock_check:
+                    with patch("agent_self_edit.gate.check_all", return_value=gate_res):
                         with patch("agent_self_edit.gate.PromotionGate") as mock_gate_cls:
                             mock_gate = MagicMock()
+                            mock_gate.check.return_value = gate_res
                             mock_gate_cls.return_value = mock_gate
                             with patch("agent_self_edit.cli.propose._build_llm_for_role", return_value=MagicMock()):
                                 runner = CliRunner()
@@ -334,7 +335,7 @@ def test_propose_original_prompt_v1(tmp_path: Path) -> None:
                                 assert result.exit_code == 0
                                 # original_prompt should be v1 text
                                 v1_text, _ = reg.get(1)
-                                assert mock_check.call_args[0][3] == v1_text
+                                assert mock_gate.check.call_args[0][3] == v1_text
                                 assert "Promoted to version" in result.output
 
 
@@ -370,7 +371,10 @@ def test_propose_original_prompt_exception_fallback(tmp_path: Path) -> None:
             with patch("agent_self_edit.scorers.resolve_scorer", return_value=MagicMock()):
                 with patch("agent_self_edit.ab_test.run_ab_test", return_value=ab):
                     with patch("agent_self_edit.gate.check_all", return_value=gate_res):
-                        with patch("agent_self_edit.gate.PromotionGate", return_value=MagicMock()):
+                        with patch("agent_self_edit.gate.PromotionGate") as mock_gate_cls:
+                            mock_gate = MagicMock()
+                            mock_gate.check.return_value = gate_res
+                            mock_gate_cls.return_value = mock_gate
                             with patch("agent_self_edit.cli.propose._build_llm_for_role", return_value=MagicMock()):
                                 # force registry.get to raise
                                 with patch.object(Registry, "get", side_effect=Exception("boom")):
@@ -431,7 +435,10 @@ def test_propose_gate_reject_and_near_miss_context(tmp_path: Path) -> None:
             with patch("agent_self_edit.scorers.resolve_scorer", return_value=MagicMock()):
                 with patch("agent_self_edit.ab_test.run_ab_test", return_value=ab):
                     with patch("agent_self_edit.gate.check_all", side_effect=check_side):
-                        with patch("agent_self_edit.gate.PromotionGate", return_value=MagicMock()):
+                        with patch("agent_self_edit.gate.PromotionGate") as mock_gate_cls:
+                            mock_gate = MagicMock()
+                            mock_gate.check.side_effect = check_side
+                            mock_gate_cls.return_value = mock_gate
                             with patch("agent_self_edit.cli.propose._build_llm_for_role", return_value=MagicMock()):
                                 runner = CliRunner()
                                 result = runner.invoke(propose_cmd, ["--config", str(cfg_path)])
@@ -612,8 +619,11 @@ def test_run_near_miss_load_and_original_prompt(tmp_path: Path) -> None:
             with patch("agent_self_edit.tasks.load_task_set", return_value=MagicMock()):
                 with patch("agent_self_edit.scorers.resolve_scorer", return_value=MagicMock()):
                     with patch("agent_self_edit.ab_test.run_ab_test", return_value=ab):
-                        with patch("agent_self_edit.gate.check_all", return_value=gate_res) as mock_check:
-                            with patch("agent_self_edit.gate.PromotionGate", return_value=MagicMock()):
+                        with patch("agent_self_edit.gate.check_all", return_value=gate_res):
+                            with patch("agent_self_edit.gate.PromotionGate") as mock_gate_cls:
+                                mock_gate = MagicMock()
+                                mock_gate.check.return_value = gate_res
+                                mock_gate_cls.return_value = mock_gate
                                 with patch("agent_self_edit.cli.propose._build_llm_for_role", return_value=MagicMock()):
                                     had_work, new_ctx = _run_once(str(cfg_path), batch_size=1, dry_run=False, rejection_context="prev")
                                     assert had_work is True
@@ -621,7 +631,7 @@ def test_run_near_miss_load_and_original_prompt(tmp_path: Path) -> None:
                                     assert mock_ab.call_args.kwargs["near_misses"] == nm
                                     # original prompt is v1
                                     v1, _ = reg.get(1)
-                                    assert mock_check.call_args[0][3] == v1
+                                    assert mock_gate.check.call_args[0][3] == v1
 
 
 def test_run_original_prompt_exception_fallback(tmp_path: Path) -> None:
@@ -647,7 +657,10 @@ def test_run_original_prompt_exception_fallback(tmp_path: Path) -> None:
             with patch("agent_self_edit.scorers.resolve_scorer", return_value=MagicMock()):
                 with patch("agent_self_edit.ab_test.run_ab_test", return_value=ab):
                     with patch("agent_self_edit.gate.check_all", return_value=gate_res):
-                        with patch("agent_self_edit.gate.PromotionGate", return_value=MagicMock()):
+                        with patch("agent_self_edit.gate.PromotionGate") as mock_gate_cls:
+                            mock_gate = MagicMock()
+                            mock_gate.check.return_value = gate_res
+                            mock_gate_cls.return_value = mock_gate
                             with patch("agent_self_edit.cli.propose._build_llm_for_role", return_value=MagicMock()):
                                 with patch.object(Registry, "get", side_effect=Exception("boom")):
                                     had_work, new_ctx = _run_once(str(cfg_path), batch_size=1, dry_run=False, rejection_context="")

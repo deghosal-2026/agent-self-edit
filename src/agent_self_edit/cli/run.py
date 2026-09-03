@@ -49,8 +49,11 @@ def _run_once(
 
     # Ensure in-flight batch is released on any exception (fix 213/281)
     try:
+        from ..ab_test import run_ab_test
         from ..analyzer import analyze_batch
-        from ..gate import GateAuditLog
+        from ..gate import GateAuditLog, PromotionGate
+        from ..scorers import resolve_scorer
+        from ..tasks import load_task_set
         from .propose import _build_llm_for_role
 
         analyzer_llm = _build_llm_for_role(config, config.analyzer_role)
@@ -95,16 +98,12 @@ def _run_once(
         except Exception:
             original_prompt = registry.current_prompt
 
-        for proposal in result.proposals:
-            from ..ab_test import run_ab_test
-            from ..gate import PromotionGate, check_all
-            from ..scorers import resolve_scorer
-            from ..tasks import load_task_set
+        task_set = load_task_set(config.tasks.task_set_path)
+        executor_llm = _build_llm_for_role(config, config.executor_role)
+        judge_llm = _build_llm_for_role(config, config.judge_role)
+        scorer = resolve_scorer(task_set, judge_llm=judge_llm)
 
-            task_set = load_task_set(config.tasks.task_set_path)
-            executor_llm = _build_llm_for_role(config, config.executor_role)
-            judge_llm = _build_llm_for_role(config, config.judge_role)
-            scorer = resolve_scorer(task_set, judge_llm=judge_llm)
+        for proposal in result.proposals:
             candidate_prompt = registry.current_prompt.replace(
                 proposal.old_text, proposal.new_text
             )
@@ -117,7 +116,7 @@ def _run_once(
             )
 
             gate = PromotionGate(audit_path=config.project.registry_path + "/audit.jsonl")
-            gate_result = check_all(
+            gate_result = gate.check(
                 proposal, ab_result, registry.current_prompt, original_prompt, config
             )
             click.echo(f"  Gate: {gate_result.decision}")
@@ -142,8 +141,6 @@ def _run_once(
                     gate_result={"decision": gate_result.decision, "reason": gate_result.reason},
                 )
                 click.echo(f"  Promoted to version {registry.current_version}")
-
-            gate.log_result(gate_result, edit=proposal)
 
         store.acknowledge_rows(batch)
 
