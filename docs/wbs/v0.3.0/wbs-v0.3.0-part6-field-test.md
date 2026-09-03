@@ -21,7 +21,7 @@
 |---|-------|-------------|------------|-------|
 | 1 | Measure coverage vs 91% gate | `field-test/v0.3.0/results/` + `docs/field-test/v0.3.0/FIELD_TEST_REPORT.md` — run `pytest --cov` on hermetic suite; compare to exit gate | Report states measured % and gate pass/fail; previously listed but never measured | [#272](https://github.com/deghosal-2026/agent-self-edit/issues/272) |
 | 2 | Confirm ruff + mypy clean in reports | `FIELD_TEST_REPORT.md` — run `ruff check .` and `mypy --strict src/agent_self_edit`; record 0 errors, not just listed as gate | Previously listed as exit gate in both versions but never confirmed in reports | [#273](https://github.com/deghosal-2026/agent-self-edit/issues/273) |
-| 3 | Run hermetic non-LLM CI suite | `tests/` + `.github/workflows/ci.yml` — baseline measurement (mock), dry-run loop (mock analyzer), 5/5 bad-edit gate validation, rollback test, zero-LLM full loop, 100+ concurrent traces, 20+ version registry integrity, guardrail stress 100+ edits, real-trace replay 50+ | All hermetic tests pass in CI; zero LLM calls; recorded as M11 exit evidence | [#263](https://github.com/deghosal-2026/agent-self-edit/issues/263) |
+| 3 | Run hermetic non-LLM CI suite | `tests/test_field_test.py` — baseline measurement (mock), dry-run loop (mock analyzer), 5/5 bad-edit gate validation, rollback test, zero-LLM full loop, 100+ concurrent traces, 20+ version registry integrity, guardrail stress 100+ edits, real-trace replay 50+ | All hermetic tests pass in CI; zero LLM calls; recorded as M11 exit evidence | [#263](https://github.com/deghosal-2026/agent-self-edit/issues/263) | ✅ |
 | 4 | Validate sentinel regression benchmark end-to-end | `tests/test_field_test.py::test_sentinel_detects_regression` — 20 sentinel tasks run against baseline vs bad prompt; regression detected | Regression caught: baseline accuracy > bad-edit accuracy; previously never validated end-to-end | [#261](https://github.com/deghosal-2026/agent-self-edit/issues/261) | ✅ |
 | 5 | Run adversarial edit injection test | `tests/test_field_test.py::test_adversarial_edits_all_blocked` — 8 adversarial edits, all blocked; positive control promoted; FN=0 measured | 8/8 bad edits blocked, FN=0, drift check catches adversarial changes | [#260](https://github.com/deghosal-2026/agent-self-edit/issues/260) | ✅ |
 | 6 | Test rollback with a real promoted version | `tests/test_registry.py::test_rollback_preserves_lineage_after_real_promotion` — promote v1->v2 with full metadata (hypothesis, ab_results, gate_result), then rollback to v1; lineage preserved | Prompts reverts correctly; 3-version lineage with hypothesis + rollback metadata; previously never tested with real promoted version | [#262](https://github.com/deghosal-2026/agent-self-edit/issues/262) | ✅ |
@@ -46,7 +46,7 @@
 
 - [ ] Coverage measured and compared to 91% (#272) — not just listed
 - [ ] Ruff + mypy clean confirmed in reports (#273)
-- [ ] Hermetic suite run in CI with recorded results (#263)
+- [x] Hermetic suite run in CI with recorded results (#263) — 15 hermetic tests, all pass, zero LLM
 - [x] Sentinel validated end-to-end (#261) — test_sentinel_detects_regression
 - [x] Adversarial injection run (#260) — 8/8 blocked, FN=0, drift check catches
 - [x] Rollback with real promoted version tested (#262) — test_rollback_preserves_lineage_after_real_promotion
@@ -54,7 +54,7 @@
 - [x] Oracle Drift Guard implemented (#226)
 - [x] Ruff clean: `ruff check .` → 0 errors
 - [x] Mypy strict clean: `mypy --strict src/agent_self_edit` → 0 errors
-- [x] All tests pass: `python3 -m pytest --ignore=tests/test_docker.py -x -q` → 0 failures (801 passed)
+- [x] All tests pass: `python3 -m pytest --ignore=tests/test_docker.py -x -q` → 0 failures (802 passed)
 - [x] Coverage > 91%: `pytest --cov=agent_self_edit --cov-fail-under=91` (94.86%)
 - [ ] Documentation updated for the milestone's scope
 

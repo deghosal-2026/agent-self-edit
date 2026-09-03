@@ -519,7 +519,7 @@ def test_adversarial_edits_all_blocked():
     print(f"\nAdversarial edit results ({len(edits)} edits):")
     print(f"  Positive control promoted: {positive_control_promoted}")
     print(f"  FN (bad edits promoted): {fn}/{len(edits)}")
-    print(f"  FP rate: context-dependent — adversarial edits trigger drift check")
+    print("  FP rate: context-dependent — adversarial edits trigger drift check")
 
     assert fn == 0, (
         f"{fn}/{len(edits)} adversarial edits promoted (false negatives) — "
@@ -529,3 +529,46 @@ def test_adversarial_edits_all_blocked():
         "Positive control (small safe edit) should be promoted — "
         "gate is too aggressive if it blocks"
     )
+
+
+# ---- #263: Real-trace replay (50+ traces) ----
+
+def test_real_trace_replay_50_plus(tmp_path):
+    """Load 50+ real traces from the usable corpus and replay through TraceStore."""
+    base = Path(__file__).resolve().parent.parent / "field-test" / "corpus" / "real-traces" / "usable"
+    jsonl_files = list(base.glob("*.jsonl"))
+    assert len(jsonl_files) >= 1, "No usable real-trace files found"
+
+    import json
+    traces = []
+    for f in jsonl_files:
+        with open(f) as fh:
+            for line in fh:
+                line = line.strip()
+                if line:
+                    traces.append(json.loads(line))
+
+    assert len(traces) >= 50, f"Need 50+ real traces, got {len(traces)}"
+
+    store = TraceStore(str(tmp_path / "traces.db"), batch_size=50)
+    for entry in traces:
+        store.ingest({
+            "task_id": entry["task_id"],
+            "task_input": entry["task_input"],
+            "final_output": entry["final_output"],
+            "expected_output": entry.get("expected_output", ""),
+            "success": entry.get("success", False),
+            "timestamp": entry.get("timestamp", ""),
+        })
+
+    total = store.count()
+    successes = store.count(success=True)
+    failures = store.count(success=False)
+    success_rate = successes / total if total > 0 else 0
+
+    print(f"\nReal-trace replay ({len(traces)} traces ingested):")
+    print(f"  Total: {total}")
+    print(f"  Success: {successes} ({success_rate:.0%})")
+    print(f"  Failure: {failures} ({1 - success_rate:.0%})")
+
+    assert total >= 50, f"Should have 50+ traces, got {total}"
