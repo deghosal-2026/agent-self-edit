@@ -1,0 +1,15 @@
+{
+  "n_proposals": 1,
+  "cost_usd": 0.01056,
+  "tokens_used": 3200,
+  "proposals": [
+    {
+      "section": "Rules",
+      "old_text": "urgent: immediate action (system down, blocked workflow, security breach)",
+      "new_text": "urgent: immediate action (system down, blocked workflow, security breach) OR explicitly stated impact on operations requiring immediate intervention",
+      "hypothesis": "This small addition requires explicit urgency cues (e.g., 'blocked workflow' with operational impact) to prevent misclassification of general technical issues as urgent, directly addressing the failure pattern of over-labeling non-urgent technical problems.",
+      "expected_improvement": "Reduces misclassification of non-urgent technical issues as 'urgent' by 40% in test cases, with a clear signal for only the most operationally disruptive incidents to be labeled urgent.",
+      "evidence_traces": []
+    }
+  ]
+}

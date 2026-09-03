@@ -1,0 +1,15 @@
+{
+  "n_proposals": 1,
+  "cost_usd": 0.0132462,
+  "tokens_used": 4014,
+  "proposals": [
+    {
+      "section": "Rules",
+      "old_text": "urgent: immediate action (system down, blocked workflow, security breach)\n- billing: payments, invoices, refunds, subscriptions, charges\n- technical: bugs, errors, deployment issues, account access\n- feature: feature requests, integrations, enhancements\n- security: phishing, account compromise, unauthorized access\n- other: praise, general questions, unresolved ambiguity, meta-questions",
+      "new_text": "urgent: immediate action (system down, blocked workflow, security breach)\n- billing: payments, invoices, refunds, subscriptions, charges \u2014 these are distinct from technical or security issues and should not be assumed to be part of a technical or security incident.\n- technical: bugs, errors, deployment issues, account access\n- feature: feature requests, integrations, enhancements\n- security: phishing, account compromise, unauthorized access\n- other: praise, general questions, unresolved ambiguity, meta-questions",
+      "hypothesis": "By explicitly stating that billing issues are distinct from technical or security concerns, the model is less likely to conflate billing with technical or security issues, directly addressing the failure to recognize billing as a separate domain.",
+      "expected_improvement": "Reduction in misclassification of billing-related issues as technical or security by at least 30% in test cases involving multi-domain complaints (e.g., billing + technical), with clear separation in trace IDs like classify-single-004 and classify-multi-024.",
+      "evidence_traces": []
+    }
+  ]
+}
