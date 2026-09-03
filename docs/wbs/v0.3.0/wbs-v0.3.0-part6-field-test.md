@@ -26,7 +26,7 @@
 | 5 | Run adversarial edit injection test | `field-test/v0.3.0/results/adversarial/` | 5+ intentionally bad edits injected, all blocked; FP/FN measured; previously never run in either version | [#260](https://github.com/deghosal-2026/agent-self-edit/issues/260) |
 | 6 | Test rollback with a real promoted version | `field-test/v0.3.0/results/rollback/` — promote, then `agent-self-edit rollback <v>` to previous | Prompt reverts correctly; lineage preserved; previously never tested with real promoted version | [#262](https://github.com/deghosal-2026/agent-self-edit/issues/262) |
 | 7 | Expand mixed-domain corpus to 30+ tasks | `field-test/corpus/mixed-domain/` — expand from current to 30+ tasks; validate disjointness, scorer compatibility | Meaningful benchmarking possible (previously never expanded as planned) | [#259](https://github.com/deghosal-2026/agent-self-edit/issues/259) |
-| 8 | Implement Oracle Drift Guard | `src/agent_self_edit/guardrails.py` or new `oracle.py` — `check_oracle_drift()` + acceptance-case validation; detect optimizer/scorer/golden sharing same wrong success definition | Guard flags shared wrong oracle; previously conceptual gap (`[v0.2.0] Shared wrong oracle`) | [#226](https://github.com/deghosal-2026/agent-self-edit/issues/226) |
+| 8 | Implement Oracle Drift Guard | `src/agent_self_edit/guardrails.py` — `check_oracle_drift()` + acceptance-case validation; detect optimizer/scorer/golden sharing same wrong success definition | Guard flags shared wrong oracle; previously conceptual gap (`[v0.2.0] Shared wrong oracle`) | [#226](https://github.com/deghosal-2026/agent-self-edit/issues/226) | ✅ |
 
 ### M11 Success Metrics
 
@@ -51,11 +51,11 @@
 - [ ] Adversarial injection run (#260)
 - [ ] Rollback with real promoted version tested (#262)
 - [ ] Mixed-domain expanded to 30+ tasks (#259)
-- [ ] Oracle Drift Guard implemented (#226)
-- [ ] Ruff clean: `ruff check .` → 0 errors
-- [ ] Mypy strict clean: `mypy --strict src/agent_self_edit` → 0 errors
-- [ ] All tests pass: `python3 -m pytest --ignore=tests/test_docker.py -x -q` → 0 failures
-- [ ] Coverage > 91%: `pytest --cov=agent_self_edit --cov-fail-under=91`
+- [x] Oracle Drift Guard implemented (#226)
+- [x] Ruff clean: `ruff check .` → 0 errors
+- [x] Mypy strict clean: `mypy --strict src/agent_self_edit` → 0 errors
+- [x] All tests pass: `python3 -m pytest --ignore=tests/test_docker.py -x -q` → 0 failures (798 passed)
+- [x] Coverage > 91%: `pytest --cov=agent_self_edit --cov-fail-under=91` (94.86%)
 - [ ] Documentation updated for the milestone's scope
 
 **Dependency:** M1–M10. **Produces for M12:** measured foundations, usable hermetic suite, Oracle guard.

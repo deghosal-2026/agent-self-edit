@@ -487,8 +487,8 @@ def test_gate_run_individual_checks_covers_all_branches(tmp_path) -> None:  # no
     ab = _ab()
     p = _proposal("stable", "stable")
     checks = _run_individual_checks(p, ab, "stable", "stable", _config())
-    assert len(checks) == 6
-    assert [c.name for c in checks] == ["sample_floor", "effect_size", "confidence", "frozen_sections", "edit_distance", "drift"]
+    assert len(checks) == 7
+    assert [c.name for c in checks] == ["sample_floor", "effect_size", "confidence", "frozen_sections", "edit_distance", "drift", "oracle_drift"]
 
 
 def test_gate_audit_near_misses_old_text_reconstruction(tmp_path) -> None:

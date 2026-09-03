@@ -412,7 +412,7 @@ def test_promote_all_checks_present():
     ab = _ab_result(n_trials=15, p=0.001, effect=0.4)
     r = check_all(p, ab, "stable prompt", "stable prompt", _config())
     assert r.decision == "promote"
-    assert len(r.checks) == 6
+    assert len(r.checks) == 7
 
 
 def test_near_miss_when_first_failure_at_4th_check():

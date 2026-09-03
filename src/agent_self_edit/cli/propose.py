@@ -139,7 +139,7 @@ def propose(config_path: str, dry_run: bool) -> None:
 
         gate = PromotionGate(audit_path=config.project.registry_path + "/audit.jsonl")
         gate_result = gate.check(
-            proposal, ab_result, registry.current_prompt, original_prompt, config
+            proposal, ab_result, registry.current_prompt, original_prompt, config, traces=batch,
         )
         click.echo(f"  Gate: {gate_result.decision}")
 

@@ -423,7 +423,7 @@ def test_propose_gate_reject_and_near_miss_context(tmp_path: Path) -> None:
     ab.effect_size = 0.0
 
     # first reject, second near_miss
-    def check_side(edit, ab_result, cur, orig, cfg):
+    def check_side(edit, ab_result, cur, orig, cfg, **kwargs):
         from agent_self_edit.types import GateResult
 
         if edit.hypothesis == "h1":

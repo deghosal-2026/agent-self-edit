@@ -11,8 +11,20 @@ from typing import Any, Literal
 
 from .ab_test import ABResult
 from .config import Config
-from .guardrails import compute_drift_tfidf, compute_edit_distance, parse_frozen_sections
-from .types import CheckResult, EditProposal, GateResult, materialize_candidate_prompt, utc_now_iso
+from .guardrails import (
+    check_oracle_drift,
+    compute_drift_tfidf,
+    compute_edit_distance,
+    parse_frozen_sections,
+)
+from .types import (
+    CheckResult,
+    EditProposal,
+    GateResult,
+    Trace,
+    materialize_candidate_prompt,
+    utc_now_iso,
+)
 
 StdList = list
 
@@ -25,6 +37,7 @@ _CHECK_ORDER = [
     "frozen_sections",
     "edit_distance",
     "drift",
+    "oracle_drift",
 ]
 
 
@@ -278,6 +291,7 @@ def _run_individual_checks(
     current_prompt: str,
     original_prompt: str,
     config: Config,
+    traces: list[Trace] | None = None,
 ) -> list[CheckResult]:
     checks: list[CheckResult] = []
     frozen_cfg = getattr(config.gate, "frozen_sections", None)
@@ -294,6 +308,8 @@ def _run_individual_checks(
             checks.append(check_edit_distance(edit, current_prompt, config))
         elif name == "drift":
             checks.append(check_drift(edit, current_prompt, original_prompt, config))
+        elif name == "oracle_drift":
+            checks.append(check_oracle_drift(traces or []))
     return checks
 
 
@@ -303,6 +319,7 @@ def check_all(
     current_prompt: str,
     original_prompt: str,
     config: Config,
+    traces: list[Trace] | None = None,
 ) -> GateResult:
     """Run the 6 checks in fail-fast order and classify promote/reject/near-miss."""
     if not current_prompt.strip() or not original_prompt.strip():
@@ -322,8 +339,15 @@ def check_all(
             result = check_frozen_sections(edit, current_prompt, frozen_sections=frozen_cfg)
         elif name == "edit_distance":
             result = check_edit_distance(edit, current_prompt, config)
-        else:  # drift
+        elif name == "drift":
             result = check_drift(edit, current_prompt, original_prompt, config)
+        elif name == "oracle_drift":
+            result = check_oracle_drift(traces or [])
+        else:
+            result = CheckResult(
+                name=name, passed=True, value=0.0, threshold=0.0,
+                details=f"unknown check '{name}' — skipped",
+            )
 
         checks.append(result)
         if result.passed:
@@ -379,8 +403,9 @@ class PromotionGate:
         current_prompt: str,
         original_prompt: str,
         config: Config,
+        traces: list[Trace] | None = None,
     ) -> GateResult:
-        result = check_all(edit, ab_result, current_prompt, original_prompt, config)
+        result = check_all(edit, ab_result, current_prompt, original_prompt, config, traces=traces)
         if self.audit is not None:
             entry: dict[str, Any] = {
                 "timestamp": utc_now_iso(),
