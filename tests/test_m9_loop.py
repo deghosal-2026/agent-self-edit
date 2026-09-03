@@ -100,3 +100,91 @@ def test_propose_py_uses_gate_check_not_check_all():
     source = Path("src/agent_self_edit/cli/propose.py").read_text()
     assert "gate.check(" in source, "propose.py should use gate.check()"
     assert "gate.log_result" not in source, "propose.py should not call gate.log_result()"
+
+
+# ---------------------------------------------------------------------------
+# Task 3: A/B result caching — persistent SQLite (#230)
+# ---------------------------------------------------------------------------
+
+
+def test_ab_cache_hit_skips_llm_calls():
+    """Second identical run_ab_test call should hit cache and skip LLM."""
+    from agent_self_edit.ab_test import _ABResultCache, run_ab_test
+    from agent_self_edit.config import ABTestConfig, Config, GateConfig, TasksConfig
+    from agent_self_edit.llm.mock import MockProvider
+    from agent_self_edit.scorers import ExactMatchScorer
+    from agent_self_edit.tasks import Task, TaskSet
+
+    tasks = TaskSet(tasks={"t1": Task(id="t1", input="hello", expected_output="hello")})
+    scorer = ExactMatchScorer()
+
+    with tempfile.TemporaryDirectory() as tmp:
+        cache = _ABResultCache(tmp, enabled=True)
+        llm = MockProvider(responses="hello")
+        cfg = Config(
+            tasks=TasksConfig(sample_floor=1),
+            ab_test=ABTestConfig(min_effect_size=0.0, confidence_level=0.5),
+            gate=GateConfig(near_miss_threshold=0.5, max_edit_distance=20, drift_threshold=0.3),
+        )
+
+        result1 = run_ab_test("prompt a", "prompt b", tasks, llm, scorer, cfg, cache=cache)
+        calls_after_first = len(llm.calls)
+
+        result2 = run_ab_test("prompt a", "prompt b", tasks, llm, scorer, cfg, cache=cache)
+        assert len(llm.calls) == calls_after_first, "LLM should not be called on cache hit"
+        assert result1.winner == result2.winner
+        assert result1.n_trials == result2.n_trials
+
+
+def test_ab_cache_miss_on_task_change():
+    """Different task_set should cause cache miss."""
+    from agent_self_edit.ab_test import _ABResultCache, run_ab_test
+    from agent_self_edit.config import ABTestConfig, Config, GateConfig, TasksConfig
+    from agent_self_edit.llm.mock import MockProvider
+    from agent_self_edit.scorers import ExactMatchScorer
+    from agent_self_edit.tasks import Task, TaskSet
+
+    scorer = ExactMatchScorer()
+
+    with tempfile.TemporaryDirectory() as tmp:
+        cache = _ABResultCache(tmp, enabled=True)
+        llm = MockProvider(responses="hello")
+        cfg = Config(
+            tasks=TasksConfig(sample_floor=1),
+            ab_test=ABTestConfig(min_effect_size=0.0, confidence_level=0.5),
+            gate=GateConfig(near_miss_threshold=0.5, max_edit_distance=20, drift_threshold=0.3),
+        )
+
+        tasks1 = TaskSet(tasks={"t1": Task(id="t1", input="hello", expected_output="hello")})
+        tasks2 = TaskSet(tasks={"t1": Task(id="t1", input="world", expected_output="world")})
+
+        run_ab_test("prompt a", "prompt b", tasks1, llm, scorer, cfg, cache=cache)
+        calls_after_first = len(llm.calls)
+
+        run_ab_test("prompt a", "prompt b", tasks2, llm, scorer, cfg, cache=cache)
+        assert len(llm.calls) > calls_after_first, "Different tasks should cause cache miss"
+
+
+def test_ab_cache_disabled_skips_cache():
+    """cache_enabled=False should not use cache."""
+    from agent_self_edit.ab_test import _ABResultCache, run_ab_test
+    from agent_self_edit.config import ABTestConfig, Config, GateConfig, TasksConfig
+    from agent_self_edit.llm.mock import MockProvider
+    from agent_self_edit.scorers import ExactMatchScorer
+    from agent_self_edit.tasks import Task, TaskSet
+
+    tasks = TaskSet(tasks={"t1": Task(id="t1", input="hello", expected_output="hello")})
+    scorer = ExactMatchScorer()
+
+    with tempfile.TemporaryDirectory() as tmp:
+        cache = _ABResultCache(tmp, enabled=False)
+        llm = MockProvider(responses="hello")
+        cfg = Config(
+            tasks=TasksConfig(sample_floor=1),
+            ab_test=ABTestConfig(min_effect_size=0.0, confidence_level=0.5),
+            gate=GateConfig(near_miss_threshold=0.5, max_edit_distance=20, drift_threshold=0.3),
+        )
+
+        run_ab_test("prompt a", "prompt b", tasks, llm, scorer, cfg, cache=cache)
+        run_ab_test("prompt a", "prompt b", tasks, llm, scorer, cfg, cache=cache)
+        assert len(llm.calls) > 0, "Cache disabled: LLM should be called both times"
