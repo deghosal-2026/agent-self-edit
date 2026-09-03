@@ -415,7 +415,7 @@ def test_stage4_validate_passes_directly():
 
 def test_staged_analyze_empty_traces_returns_empty():
     sa = StagedAnalyzer(MockProvider(responses=""))
-    assert sa.analyze([], CURRENT, None) == []
+    proposals, _ = sa.analyze([], CURRENT, None); assert proposals == []
 
 
 def test_staged_analyze_successful_pipeline():
@@ -438,7 +438,7 @@ def test_staged_analyze_successful_pipeline():
     llm = MockProvider(responses=responder)
     sa = StagedAnalyzer(llm)
     traces = [_trace("t1")]
-    result = sa.analyze(traces, CURRENT, None)
+    result, _ = sa.analyze(traces, CURRENT, None)
     assert len(result) == 1
     assert result[0].old_text in CURRENT
 
@@ -451,7 +451,7 @@ def test_staged_analyze_section_empty_returns_empty():
             return '{"section":"","rationale":"r"}'
         return "{}"
     sa = StagedAnalyzer(MockProvider(responses=responder))
-    assert sa.analyze([_trace("t1")], CURRENT, None) == []
+    proposals, _ = sa.analyze([_trace("t1")], CURRENT, None); assert proposals == []
 
 
 def test_staged_analyze_proposal_none_returns_empty():
@@ -464,7 +464,7 @@ def test_staged_analyze_proposal_none_returns_empty():
             return '[]'  # list not dict => stage3 returns None
         return "[]"
     sa = StagedAnalyzer(MockProvider(responses=responder))
-    assert sa.analyze([_trace("t1")], CURRENT, None) == []
+    proposals, _ = sa.analyze([_trace("t1")], CURRENT, None); assert proposals == []
 
 
 def test_staged_analyze_validation_fails_returns_empty():
@@ -483,7 +483,7 @@ def test_staged_analyze_validation_fails_returns_empty():
             })
         return "[]"
     sa = StagedAnalyzer(MockProvider(responses=responder))
-    assert sa.analyze([_trace("t1")], CURRENT, None) == []
+    proposals, _ = sa.analyze([_trace("t1")], CURRENT, None); assert proposals == []
 
 
 def test_staged_analyze_exception_returns_empty():
@@ -496,8 +496,8 @@ def test_staged_analyze_exception_returns_empty():
             raise ProviderError("down")
 
     sa = StagedAnalyzer(FailingProvider())
-    result = sa.analyze([_trace("t1")], CURRENT, None)
-    assert result == []
+    proposals, _ = sa.analyze([_trace("t1")], CURRENT, None)
+    assert proposals == []
 
 
 def test_staged_llm_provider_override():
@@ -531,7 +531,7 @@ def test_staged_llm_provider_override():
     llm_b = TagProvider("B", responder)
     sa = StagedAnalyzer(llm_a)
     traces = [_trace("t1")]
-    result = sa.analyze(traces, CURRENT, None, llm_provider=llm_b)
+    result, _ = sa.analyze(traces, CURRENT, None, llm_provider=llm_b)
     assert len(llm_b.my_calls) > 0
     assert len(llm_a.my_calls) == 0
     # original llm restored after call
@@ -540,7 +540,7 @@ def test_staged_llm_provider_override():
     llm_a.my_calls.clear()
     llm_b.my_calls.clear()
     sa2 = StagedAnalyzer(llm_a)
-    result2 = sa2.analyze(traces, CURRENT, None, llm_provider=None)
+    result2, _ = sa2.analyze(traces, CURRENT, None, llm_provider=None)
     assert len(llm_a.my_calls) > 0
 
 
@@ -550,7 +550,7 @@ def test_analyze_batch_staged_vs_single_pass_call_count():
     traces = [_trace("t1"), _trace("t2")]
 
     # staged=True should call StagedAnalyzer.analyze once, not single-pass
-    with patch("agent_self_edit.analyzer.StagedAnalyzer.analyze", return_value=[_proposal()]) as mock_staged:
+    with patch("agent_self_edit.analyzer.StagedAnalyzer.analyze", return_value=([_proposal()], None)) as mock_staged:
         llm = MockProvider(responses=json.dumps([{
             "section": "classify",
             "old_text": "When classifying, check the subject line.",
@@ -562,7 +562,7 @@ def test_analyze_batch_staged_vs_single_pass_call_count():
         assert mock_staged.call_count == 1
 
     # staged=False should NOT call StagedAnalyzer.analyze, uses single-pass
-    with patch("agent_self_edit.analyzer.StagedAnalyzer.analyze", return_value=[_proposal()]) as mock_staged2:
+    with patch("agent_self_edit.analyzer.StagedAnalyzer.analyze", return_value=([_proposal()], None)) as mock_staged2:
         llm2 = MockProvider(responses=json.dumps([{
             "section": "classify",
             "old_text": "When classifying, check the subject line.",

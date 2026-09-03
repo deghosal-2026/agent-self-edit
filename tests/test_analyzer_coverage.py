@@ -286,7 +286,9 @@ def test_stage4_validate_fuzzy_fails():
 
 def test_staged_analyze_empty_traces():
     sa = StagedAnalyzer(MockProvider(""))
-    assert sa.analyze([], "prompt", None) == []
+    proposals, reason = sa.analyze([], "prompt", None)
+    assert proposals == []
+    assert reason is None
 
 
 def test_staged_analyze_no_section():
@@ -296,8 +298,8 @@ def test_staged_analyze_no_section():
         json.dumps({"section": "", "rationale": ""}),
     ])
     sa = StagedAnalyzer(llm)
-    result = sa.analyze([_trace()], "prompt", None)
-    assert result == []
+    proposals, reason = sa.analyze([_trace()], "prompt", None)
+    assert proposals == []
 
 
 def test_staged_analyze_no_proposal():
@@ -308,11 +310,8 @@ def test_staged_analyze_no_proposal():
         json.dumps(["not a dict"]),
     ])
     sa = StagedAnalyzer(llm)
-    result = sa.analyze([_trace()], "prompt", None)
-    assert result == []
-
-
-def test_staged_analyze_validation_errors():
+    proposals, _ = sa.analyze([_trace()], "prompt", None)
+    assert proposals == []
     """Stage4 returns errors -> empty result."""
     llm = MockProvider(responses=[
         json.dumps([{"pattern": "p1", "description": "d1", "trace_ids": ["t1"]}]),
@@ -326,8 +325,8 @@ def test_staged_analyze_validation_errors():
         }),
     ])
     sa = StagedAnalyzer(llm)
-    result = sa.analyze([_trace()], "some prompt", None)
-    assert result == []
+    proposals, _ = sa.analyze([_trace()], "some prompt", None)
+    assert proposals == []
 
 
 def test_staged_analyze_exception_returns_empty():
@@ -338,8 +337,8 @@ def test_staged_analyze_exception_returns_empty():
             raise AnalyzerError("LLM call failed")
 
     sa = StagedAnalyzer(FailingProvider())
-    result = sa.analyze([_trace()], "prompt", None)
-    assert result == []
+    proposals, _ = sa.analyze([_trace()], "prompt", None)
+    assert proposals == []
 
 
 def test_staged_analyze_llm_provider_override():
@@ -357,8 +356,8 @@ def test_staged_analyze_llm_provider_override():
         }),
     ])
     sa = StagedAnalyzer(provider_a)
-    result = sa.analyze([_trace()], "classify by subject", None, llm_provider=provider_b)
-    assert len(result) == 1
+    proposals, _ = sa.analyze([_trace()], "classify by subject", None, llm_provider=provider_b)
+    assert len(proposals) == 1
     assert provider_a.calls == []
     assert len(provider_b.calls) == 3
 
@@ -381,8 +380,7 @@ def test_staged_analyze_override_restores_original():
     sa.analyze([_trace()], "classify by subject", None, llm_provider=provider_b)
     assert sa.llm is provider_a
 
-
-# ---- Validate proposal: line count ----
+    # ---- Validate proposal: line count ----
 
 def test_validate_edit_span_too_large():
     """11-line old_text exceeds default max_edit_lines=10."""

@@ -71,14 +71,14 @@
 
 | # | Issue | Build (files) | Behavior + edge cases | Issue | Verify | Status |
 |---|-------|---------------|----------------------|-------|--------|--------|
-| 1 | Fix `_interpolate_env` partial | `src/agent_self_edit/config.py` — use `re.sub(r"\$\{(\w+)\}", replacer, value)` expanding all occurrences; raise if env var missing | `Bearer ${MY_KEY}` → `Bearer abc123`; `http://${HOST}:8000/v1` expanded | [#293](https://github.com/deghosal-2026/agent-self-edit/issues/293) | Partial interpolation expanded | ⬜ |
-| 2 | Validate model role providers | `src/agent_self_edit/config.py` — loop `executor_role, analyzer_role, judge_role` per-role `provider in ('openai','mock')`; report `which role` in error | Typo `opneai` in `analyzer_role` fails validation not runtime `ProviderError` | [#299](https://github.com/deghosal-2026/agent-self-edit/issues/299) | Bad role provider caught at validation | ⬜ |
-| 3 | Remove hardcoded allowlist block on roadmap extensions | `src/agent_self_edit/config.py` — allow provider extensions (e.g. `anthropic`, `azure`) if supported or via `extra_body`; not hard error | Roadmap provider not blocked | [#239](https://github.com/deghosal-2026/agent-self-edit/issues/239) | Roadmap provider accepted | ⬜ |
-| 4 | Add `task_timeout_seconds`, `trigger_interval_hours`, `cache_enabled` | `src/agent_self_edit/config.py`, `pyproject.toml`, docs | Config schema includes all three; defaults documented; validation | [#235](https://github.com/deghosal-2026/agent-self-edit/issues/235) | Schema accepts new knobs | ⬜ |
-| 5 | Add exponential backoff for rate-limit in `run_task` | `src/agent_self_edit/ab_test.py` — retry on 429 with `backoff_factor * 2**attempt`; jitter; max retries | Rate-limit does not fail A/B suite; retries with backoff | [#231](https://github.com/deghosal-2026/agent-self-edit/issues/231) | Rate-limit retry with backoff | ⬜ |
-| 6 | Surface staged analyzer failure reason | `src/agent_self_edit/analyzer.py` — propagate LLM error text, not vague generic string | `failure_reason` contains provider error, not `unknown` | [#238](https://github.com/deghosal-2026/agent-self-edit/issues/238) | LLM error visible to caller | ⬜ |
-| 7 | Implement trigger modes (time/manual ignored) | `src/agent_self_edit/config.py`, `src/agent_self_edit/cli/run.py` — honor `trigger: batch|time|manual`; time interval and manual flag | `trigger: time` runs every N hours; manual requires flag | [#228](https://github.com/deghosal-2026/agent-self-edit/issues/228) | Time/manual triggers handled | ⬜ |
-| 8 | Support model-vs-model A/B (`llm_b`) | `src/agent_self_edit/ab_test.py` — `run_ab_test(..., llm_b: LLMProvider \| None)` compare two models on same prompt | Model comparison enabled, not just prompt-vs-prompt | [#227](https://github.com/deghosal-2026/agent-self-edit/issues/227) | `llm_b` param compares models | ⬜ |
+| 1 | Fix `_interpolate_env` partial | `src/agent_self_edit/config.py` — use `re.sub(r"\$\{(\w+)\}", replacer, value)` expanding all occurrences; raise if env var missing | `Bearer ${MY_KEY}` → `Bearer abc123`; `http://${HOST}:8000/v1` expanded | [#293](https://github.com/deghosal-2026/agent-self-edit/issues/293) | Partial interpolation expanded | ✅ |
+| 2 | Validate model role providers | `src/agent_self_edit/config.py` — loop `executor_role, analyzer_role, judge_role` per-role `provider in ('openai','mock')`; report `which role` in error | Typo `opneai` in `analyzer_role` fails validation not runtime `ProviderError` | [#299](https://github.com/deghosal-2026/agent-self-edit/issues/299) | Bad role provider caught at validation | ✅ |
+| 3 | Remove hardcoded allowlist block on roadmap extensions | `src/agent_self_edit/config.py` — allow provider extensions (e.g. `anthropic`, `azure`) if supported or via `extra_body`; not hard error | Roadmap provider not blocked | [#239](https://github.com/deghosal-2026/agent-self-edit/issues/239) | Roadmap provider accepted | ✅ |
+| 4 | Add `task_timeout_seconds`, `trigger_interval_hours`, `cache_enabled` | `src/agent_self_edit/config.py`, `pyproject.toml`, docs | Config schema includes all three; defaults documented; validation | [#235](https://github.com/deghosal-2026/agent-self-edit/issues/235) | Schema accepts new knobs | ✅ |
+| 5 | Add exponential backoff for rate-limit in `run_task` | `src/agent_self_edit/ab_test.py` — retry on 429 with `backoff_factor * 2**attempt`; jitter; max retries | Rate-limit does not fail A/B suite; retries with backoff | [#231](https://github.com/deghosal-2026/agent-self-edit/issues/231) | Rate-limit retry with backoff | ✅ |
+| 6 | Surface staged analyzer failure reason | `src/agent_self_edit/analyzer.py` — propagate LLM error text, not vague generic string | `failure_reason` contains provider error, not `unknown` | [#238](https://github.com/deghosal-2026/agent-self-edit/issues/238) | LLM error visible to caller | ✅ |
+| 7 | Implement trigger modes (time/manual ignored) | `src/agent_self_edit/config.py`, `src/agent_self_edit/cli/run.py` — honor `trigger: batch|time|manual`; time interval and manual flag | `trigger: time` runs every N hours; manual requires flag | [#228](https://github.com/deghosal-2026/agent-self-edit/issues/228) | Time/manual triggers handled | ✅ |
+| 8 | Support model-vs-model A/B (`llm_b`) | `src/agent_self_edit/ab_test.py` — `run_ab_test(..., llm_b: LLMProvider \| None)` compare two models on same prompt | Model comparison enabled, not just prompt-vs-prompt | [#227](https://github.com/deghosal-2026/agent-self-edit/issues/227) | `llm_b` param compares models | ✅ |
 
 ### M8 Success Metrics
 
@@ -96,18 +96,18 @@
 
 ### M8 Exit Gate
 
-- [ ] Partial `${VAR}` via `re.sub` (#293)
-- [ ] Per-role provider validation (#299)
-- [ ] Allowlist not blocking roadmap (#239)
-- [ ] `task_timeout_seconds`, `trigger_interval_hours`, `cache_enabled` added (#235)
-- [ ] Exponential backoff in `run_task` (#231)
-- [ ] Failure reason surfaces LLM error (#238)
-- [ ] Trigger modes implemented (#228)
-- [ ] `llm_b` model-vs-model A/B (#227)
-- [ ] Ruff clean: `ruff check .` → 0 errors
-- [ ] Mypy strict clean: `mypy --strict src/agent_self_edit` → 0 errors
-- [ ] All tests pass: `python3 -m pytest --ignore=tests/test_docker.py -x -q` → 0 failures
-- [ ] Coverage > 91%: `pytest --cov=agent_self_edit --cov-fail-under=91`
-- [ ] Documentation updated for the milestone's scope
+- [x] Partial `${VAR}` via `re.sub` (#293)
+- [x] Per-role provider validation (#299)
+- [x] Allowlist not blocking roadmap (#239)
+- [x] `task_timeout_seconds`, `trigger_interval_hours`, `cache_enabled` added (#235)
+- [x] Exponential backoff in `run_task` (#231)
+- [x] Failure reason surfaces LLM error (#238)
+- [x] Trigger modes implemented (#228)
+- [x] `llm_b` model-vs-model A/B (#227)
+- [x] Ruff clean: `ruff check .` → 0 errors
+- [x] Mypy strict clean: `mypy --strict src/agent_self_edit` → 0 errors
+- [x] All tests pass: `python3 -m pytest --ignore=tests/test_docker.py -x -q` → 0 failures (752 passed)
+- [x] Coverage > 91%: `pytest --cov=agent_self_edit --cov-fail-under=91` → 94.93%
+- [x] Documentation updated for the milestone's scope
 
 **Dependency:** M6/M7 parallel. **Produces for M9+:** correct config, resilient runners, model-vs-model capability.
