@@ -971,6 +971,222 @@ That means the v0.3.0 conclusion becomes stronger, not weaker:
 | generation | `field-test/v0.3.0/results/openai/mistralai-mistral-small-3.2-24b-instruct/cheap-smoke/generation/` |
 | mixed-domain | `field-test/v0.3.0/results/openai/mistralai-mistral-small-3.2-24b-instruct/cheap-smoke/mixed-domain/` |
 
+### 10.7 Separated-role classification run
+
+Artifact root:
+
+- `field-test/v0.3.0/results/openai/qwen-qwen3-30b-a3b-instruct-2507+analyzer-mistralai-mistral-small-3.2-24b-instruct/separated-role/`
+
+Run configuration:
+
+- executor: `qwen/qwen3-30b-a3b-instruct-2507`
+- analyzer: `mistralai/mistral-small-3.2-24b-instruct`
+- iterations: `3`
+- held-out sample: `5`
+- promotion sample: `10`
+
+Top-line metrics:
+
+| Metric | Value |
+|--------|-------|
+| Baseline held-out | `60.0%` (`3/5`) |
+| Final held-out | `60.0%` (`3/5`) |
+| Improvement | `0.0%` |
+| Promotions | `0` |
+
+Per-iteration evidence:
+
+| Iteration | Proposals | Analysis cost | A/B artifacts | Accuracy |
+|-----------|-----------|---------------|----------------|----------|
+| 1 | `0` | `0.0` | none | `60.0%` (`3/5`) |
+| 2 | `0` | `0.0` | none | `60.0%` (`3/5`) |
+| 3 | `0` | `0.0` | none | `60.0%` (`3/5`) |
+
+Artifact inspection showed:
+
+- `analysis.json` exists in every iteration
+- each `analysis.json` records `0` proposals and `0.0` cost
+- `prompt-a.md` exists in every iteration
+- `prompt-b.md` does **not** exist in any iteration
+- `ab-comparison.json` does **not** exist in any iteration
+- `prompt-after.md` does **not** exist in any iteration
+- no `error.txt` files were written
+
+Interpretation:
+
+- the separated-role runner itself worked
+- the unique output directory logic worked
+- the executor model produced a plausible baseline (`60%`), so this was not the broken `0% baseline` failure seen with the wrong OpenRouter Qwen model
+- but the analyzer produced **no proposals at all**
+
+This is a useful result because it rules out one hypothesis. The problem is not simply “the analyzer needs to be stronger than the executor.” Here the analyzer *was* stronger, yet the analyzer path still produced no proposed edit in 3 iterations.
+
+What this likely means:
+
+- either the analyzer prompt is poorly matched to this role-separated setup
+- or the smaller held-out/promotion smoke configuration reduced the visible failure structure too far
+- or the analyzer is highly sensitive to the specific executor outputs it sees, and the Qwen 30B executor changed those failures enough that the staged analyzer no longer found a stable edit candidate
+
+Cross-run implication:
+
+- local 4B single-model: weak local edits
+- cloud Mistral single-model: weak positive edits
+- separated-role Qwen 30B + Mistral: no proposals at all
+
+That means role separation is **not** an automatic fix. It may still be valuable, but the first separated-role result does not show an immediate improvement over the single-model Mistral run.
+
+This is also the strongest evidence yet that the optimizer problem is not reducible to “just use a better analyzer.” The interaction between executor outputs, analyzer prompts, and proposal generation behavior appears to matter more than simple model ranking.
+
+#### Why the artifact shape matters
+
+This run is especially informative because of what is **missing** from the iteration directories, not just what is present.
+
+For all 3 iterations:
+
+- `analysis.json` exists
+- `prompt-a.md` exists
+- `accuracy.json` exists
+- `prompt-b.md` does not exist
+- `ab-comparison.json` does not exist
+- `prompt-after.md` does not exist
+- `error.txt` does not exist
+
+That pattern narrows the failure point very precisely.
+
+It means:
+
+1. the iteration started normally
+2. failed traces were collected successfully
+3. the analyzer pipeline returned a result object
+4. but that result contained zero proposals
+5. so the run exited before candidate prompt materialization or A/B testing
+
+This is a materially different failure class from the local 4B and single-model Mistral runs, where proposals existed but were too weak to promote.
+
+#### Why `analysis_cost = 0.0` matters
+
+Every `analysis.json` reported:
+
+- `n_proposals = 0`
+- `cost_usd = 0.0`
+
+That combination is a strong clue.
+
+If the analyzer had run a normal paid model pass and simply failed to parse output into proposals, we would typically expect non-zero token or cost evidence. Instead, the zero-cost result suggests one of two things:
+
+1. the analyzer path short-circuited before real proposal generation, or
+2. the analyzer returned an empty result extremely early in the staged flow
+
+That makes this run different from a plain “weak proposal” case. The analyzer is not merely proposing bad edits here. It is not proposing **anything**.
+
+#### Comparison to the single-model Mistral run
+
+This separated-role result should be read against the earlier cloud single-model Mistral classification run.
+
+| Dimension | Single-model Mistral | Separated-role Qwen 30B + Mistral |
+|-----------|----------------------|------------------------------------|
+| Baseline held-out | `64.0%` | `60.0%` |
+| Iterations | 8 | 3 |
+| Proposals produced | yes, 1 per iter | no, 0 in all iterations |
+| Positive task movement | yes, small | none observed |
+| Promotions | 0 | 0 |
+| Main failure mode | weak, local proposals | no proposals |
+
+This comparison is important because it shows that role separation did **not** simply preserve the analyzer behavior and improve executor behavior independently. Instead, changing the executor also changed the failure surface seen by the analyzer enough that proposal generation collapsed entirely.
+
+#### What this implies about analyzer dependence on executor outputs
+
+The analyzer does not reason over abstract task labels. It reasons over concrete failed traces.
+
+That means the executor model indirectly shapes the analyzer search space:
+
+- different executor outputs create different failure reasons
+- different failure reasons produce different analyzer prompts
+- different analyzer prompts may surface or suppress different edit families
+
+The separated-role run is the first strong evidence that the optimizer is sensitive to this interaction.
+
+The implication is significant:
+
+- upgrading the analyzer alone is not enough as a mental model
+- the quality and structure of executor failures matter just as much
+- role separation changes the optimization landscape, not just model quality per role
+
+#### Why this is still a successful experiment
+
+Even though the run produced no proposals, it is not a wasted experiment.
+
+It rules out a very plausible simplifying story:
+
+- “just keep the executor cheap and swap in a stronger analyzer”
+
+The result says that story is incomplete.
+
+What we learned instead is more valuable:
+
+- executor/analyzer interaction matters
+- proposal generation is not purely a function of analyzer model strength
+- a stronger analyzer can still produce no output if the incoming failure surface is not fertile for proposal extraction
+
+That is exactly the kind of interaction effect the runner did not allow us to measure before #315.
+
+#### Most likely explanations for the zero-proposal outcome
+
+The run does not by itself prove which explanation is correct, but the evidence makes some hypotheses more plausible than others.
+
+Most plausible:
+
+1. **Executor-output shift**
+   - Qwen 30B produced different failures than the single-model Mistral run
+   - those failures may have been less clustered or less actionable from the analyzer’s perspective
+
+2. **Smoke-size underexposure**
+   - `--held-out-sample 5` and `--promotion-sample 10` reduce cost, but they may also reduce failure diversity too far
+   - with only 3 seeded failures in an iteration, the analyzer may not see enough recurring structure to propose an edit
+
+3. **Staged analyzer brittleness**
+   - the staged analyzer may be more sensitive than expected to the exact phrasing of failures coming from a different executor model
+
+Less plausible:
+
+4. **Framework bug**
+   - the iteration artifacts are structurally consistent
+   - no crash files were produced
+   - the runner completed normally
+   - that makes a hidden execution bug less likely than a real model/interaction limitation
+
+#### What this run does and does not prove
+
+What it proves:
+
+- #315 works mechanically
+- separated-role flags parse and run
+- unique output dirs prevent collisions
+- a role-separated run completes without crashing
+- executor/analyzer interaction can materially change proposal generation behavior
+
+What it does not prove:
+
+- that role separation is useless
+- that Qwen 30B is a bad executor in general
+- that Mistral is a bad analyzer in general
+
+It only proves that this specific role-separated pairing, at this sample size, on this corpus, did not produce actionable proposals.
+
+#### Best next follow-up from this result
+
+If we ever continue this line of testing, the highest-value follow-up is not “rerun the same thing longer.” It is:
+
+1. increase sample richness slightly while preserving separate roles
+2. inspect the actual failed traces the analyzer saw under the Qwen executor
+3. compare those failure clusters against the single-model Mistral run
+
+That would tell us whether the no-proposal outcome came from:
+
+- weaker failure clustering
+- less interpretable error surfaces
+- or a brittle analyzer prompt pipeline
+
 ## 11. Open Questions and Next Steps
 
 1. Inspect the exact task deltas from the strongest Mistral iteration (`iteration-03`).

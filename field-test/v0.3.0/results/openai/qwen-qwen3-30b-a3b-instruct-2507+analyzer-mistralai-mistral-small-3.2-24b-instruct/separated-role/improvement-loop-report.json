@@ -1,0 +1,49 @@
+{
+  "meta": {
+    "provider": "openai",
+    "model": "qwen/qwen3-30b-a3b-instruct-2507",
+    "endpoint": "https://openrouter.ai/api/v1",
+    "n_iterations": 3,
+    "baseline_accuracy": 60.0,
+    "final_accuracy": 60.0,
+    "improvement": 0.0,
+    "date": "2026-09-03T08:32:42Z"
+  },
+  "iterations": [
+    {
+      "iteration": 0,
+      "accuracy": 60.0,
+      "gate": "baseline"
+    },
+    {
+      "iteration": 1,
+      "gate": "no_proposals",
+      "n_proposals": 0,
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other.\n\nRules:\n- urgent: immediate action (system down, blocked workf",
+      "accuracy": 60.0,
+      "accuracy_correct": 3,
+      "accuracy_total": 5,
+      "duration_s": 43.9
+    },
+    {
+      "iteration": 2,
+      "gate": "no_proposals",
+      "n_proposals": 0,
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other.\n\nRules:\n- urgent: immediate action (system down, blocked workf",
+      "accuracy": 60.0,
+      "accuracy_correct": 3,
+      "accuracy_total": 5,
+      "duration_s": 40.9
+    },
+    {
+      "iteration": 3,
+      "gate": "no_proposals",
+      "n_proposals": 0,
+      "prompt_a": "You are a helpful classification assistant. Classify the input into exactly one of: urgent, billing, technical, feature, security, other.\n\nRules:\n- urgent: immediate action (system down, blocked workf",
+      "accuracy": 60.0,
+      "accuracy_correct": 3,
+      "accuracy_total": 5,
+      "duration_s": 29.1
+    }
+  ]
+}
