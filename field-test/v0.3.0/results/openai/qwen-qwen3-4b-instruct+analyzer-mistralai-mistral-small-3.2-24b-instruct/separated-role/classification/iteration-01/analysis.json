@@ -1,0 +1,15 @@
+{
+  "n_proposals": 1,
+  "cost_usd": 0.008646000000000001,
+  "tokens_used": 2620,
+  "proposals": [
+    {
+      "section": "Examples",
+      "old_text": "Input: \"The search feature ignores filters.\" -> technical\nInput: \"I was charged twice this month.\" -> billing\nInput: \"Can you add dark mode?\" -> feature\nInput: \"Someone logged into my account from another country.\" -> security\nInput: \"Our entire deployment pipeline is broken.\" -> urgent\nInput: \"Great work on the new release!\" -> other\nInput: \"Is this a billing issue or a technical one? I'm not sure.\" -> other",
+      "new_text": "Input: \"The search feature ignores filters.\" -> technical\nInput: \"I was charged twice this month.\" -> billing\nInput: \"Can you add dark mode?\" -> feature\nInput: \"Someone logged into my account from another country.\" -> security\nInput: \"Our entire deployment pipeline is broken.\" -> urgent\nInput: \"Great work on the new release!\" -> other\nInput: \"Is this a billing issue or a technical one? I'm not sure.\" -> other\nInput: \"The API returns a 500 error when submitting forms.\" -> technical\nInput: \"My subscription auto-renewed unexpectedly.\" -> billing\nInput: \"Can we support OAuth 2.0 for authentication?\" -> feature",
+      "hypothesis": "Adding more specific examples for technical, billing, and feature categories will help the model better distinguish between them, reducing misclassification.",
+      "expected_improvement": "Reduction in misclassification between technical, billing, and feature categories by 20-30% and elimination of empty outputs due to clearer examples.",
+      "evidence_traces": []
+    }
+  ]
+}

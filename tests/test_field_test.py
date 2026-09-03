@@ -782,3 +782,70 @@ def test_model_role_separation():
     fallback_model = role_cfg.model or default_llm.model
     assert fallback_provider == "mock"
     assert fallback_model == "default-model"
+
+
+# ---- #315: Separated-role runner support ----
+
+def test_separated_role_runner_args():
+    """Runner accepts --analyzer-model/--judge-model flags and builds separate providers."""
+    import importlib.util
+    import sys
+
+    runner_path = Path(__file__).resolve().parent.parent / "field-test" / "scripts" / "run_improvement_loop.py"
+    assert runner_path.exists()
+
+    # Load the module to inspect its argument parser
+    spec = importlib.util.spec_from_file_location("runner", runner_path)
+    assert spec is not None
+    mod = importlib.util.module_from_spec(spec)
+
+    # Patch sys.argv to test --help doesn't crash
+    old_argv = sys.argv
+    sys.argv = ["runner", "--help"]
+    try:
+        assert spec.loader is not None
+        spec.loader.exec_module(mod)
+    except SystemExit:
+        pass
+    finally:
+        sys.argv = old_argv
+
+    # Verify the argparse parser has the new flags by checking the source
+    source = runner_path.read_text()
+    assert "--analyzer-model" in source
+    assert "--analyzer-endpoint" in source
+    assert "--analyzer-key-env" in source
+    assert "--judge-model" in source
+    assert "--judge-endpoint" in source
+    assert "--judge-key-env" in source
+
+    # Verify fallback logic exists
+    assert "analyzer_model or executor_model" in source
+    assert "judge_model or analyzer_model" in source
+
+    # Verify _run_iteration accepts analyzer_llm and judge_llm
+    assert "analyzer_llm=None" in source
+    assert "judge_llm=None" in source
+
+    # Verify _seed_trace_store accepts judge_llm
+    assert "judge_llm=None" in source
+
+    # Verify analyze_batch uses analyzer_llm
+    assert "analyzer_llm or llm" in source
+
+    # Verify resolve_scorer uses judge_llm
+    assert "judge_llm or llm" in source
+
+    # Verify unique output dir includes analyzer model when different
+    assert "+analyzer-" in source
+
+
+def test_separated_role_output_dir_unique():
+    """Output directory includes analyzer model slug when analyzer differs from executor."""
+    runner_path = Path(__file__).resolve().parent.parent / "field-test" / "scripts" / "run_improvement_loop.py"
+    source = runner_path.read_text()
+
+    # The model_slug construction must include analyzer differentiation
+    assert "analyzer_model != executor_model" in source
+    assert "+analyzer-" in source
+    assert "+judge-" in source

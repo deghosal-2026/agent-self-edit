@@ -1,0 +1,102 @@
+[
+  {
+    "task_id": "promote-001",
+    "input": "I can't log in after the security update. Is this a bug or a security issue?",
+    "expected": "technical",
+    "llm_output": "",
+    "score": 0.0,
+    "latency_ms": 0.0,
+    "tokens": 0,
+    "error": "Error code: 400 - {'error': {'message': 'qwen/qwen3-4b-instruct is not a valid model ID', 'code': 400}, 'user_id': 'user_3FOaxn6kL0MqAfsdJQWYBShs7GS'}"
+  },
+  {
+    "task_id": "promote-002",
+    "input": "The payment failed with error 'card declined'. I need help urgently.",
+    "expected": "urgent",
+    "llm_output": "",
+    "score": 0.0,
+    "latency_ms": 0.0,
+    "tokens": 0,
+    "error": "Error code: 400 - {'error': {'message': 'qwen/qwen3-4b-instruct is not a valid model ID', 'code': 400}, 'user_id': 'user_3FOaxn6kL0MqAfsdJQWYBShs7GS'}"
+  },
+  {
+    "task_id": "promote-003",
+    "input": "My invoice doesn't show the discount I was promised. Can you fix this?",
+    "expected": "billing",
+    "llm_output": "",
+    "score": 0.0,
+    "latency_ms": 0.0,
+    "tokens": 0,
+    "error": "Error code: 400 - {'error': {'message': 'qwen/qwen3-4b-instruct is not a valid model ID', 'code': 400}, 'user_id': 'user_3FOaxn6kL0MqAfsdJQWYBShs7GS'}"
+  },
+  {
+    "task_id": "promote-004",
+    "input": "The API endpoint /v2/users returns 500 errors intermittently.",
+    "expected": "technical",
+    "llm_output": "",
+    "score": 0.0,
+    "latency_ms": 0.0,
+    "tokens": 0,
+    "error": "Error code: 400 - {'error': {'message': 'qwen/qwen3-4b-instruct is not a valid model ID', 'code': 400}, 'user_id': 'user_3FOaxn6kL0MqAfsdJQWYBShs7GS'}"
+  },
+  {
+    "task_id": "promote-005",
+    "input": "Can we get a webhook for new user signups? This is blocking our integration.",
+    "expected": "feature",
+    "llm_output": "",
+    "score": 0.0,
+    "latency_ms": 0.0,
+    "tokens": 0,
+    "error": "Error code: 400 - {'error': {'message': 'qwen/qwen3-4b-instruct is not a valid model ID', 'code': 400}, 'user_id': 'user_3FOaxn6kL0MqAfsdJQWYBShs7GS'}"
+  },
+  {
+    "task_id": "promote-006",
+    "input": "Our production database is down and we're losing customers by the minute.",
+    "expected": "urgent",
+    "llm_output": "",
+    "score": 0.0,
+    "latency_ms": 0.0,
+    "tokens": 0,
+    "error": "Error code: 400 - {'error': {'message': 'qwen/qwen3-4b-instruct is not a valid model ID', 'code': 400}, 'user_id': 'user_3FOaxn6kL0MqAfsdJQWYBShs7GS'}"
+  },
+  {
+    "task_id": "promote-007",
+    "input": "The two-factor authentication keeps sending codes to my old phone number.",
+    "expected": "technical",
+    "llm_output": "",
+    "score": 0.0,
+    "latency_ms": 0.0,
+    "tokens": 0,
+    "error": "Error code: 400 - {'error': {'message': 'qwen/qwen3-4b-instruct is not a valid model ID', 'code': 400}, 'user_id': 'user_3FOaxn6kL0MqAfsdJQWYBShs7GS'}"
+  },
+  {
+    "task_id": "promote-008",
+    "input": "I was charged for a plan upgrade I didn't authorize. Please investigate.",
+    "expected": "security",
+    "llm_output": "",
+    "score": 0.0,
+    "latency_ms": 0.0,
+    "tokens": 0,
+    "error": "Error code: 400 - {'error': {'message': 'qwen/qwen3-4b-instruct is not a valid model ID', 'code': 400}, 'user_id': 'user_3FOaxn6kL0MqAfsdJQWYBShs7GS'}"
+  },
+  {
+    "task_id": "promote-009",
+    "input": "The export feature generates empty CSV files for large datasets.",
+    "expected": "technical",
+    "llm_output": "",
+    "score": 0.0,
+    "latency_ms": 0.0,
+    "tokens": 0,
+    "error": "Error code: 400 - {'error': {'message': 'qwen/qwen3-4b-instruct is not a valid model ID', 'code': 400}, 'user_id': 'user_3FOaxn6kL0MqAfsdJQWYBShs7GS'}"
+  },
+  {
+    "task_id": "promote-010",
+    "input": "We need role-based access control for the admin panel. This is a must-have for compliance.",
+    "expected": "feature",
+    "llm_output": "",
+    "score": 0.0,
+    "latency_ms": 0.0,
+    "tokens": 0,
+    "error": "Error code: 400 - {'error': {'message': 'qwen/qwen3-4b-instruct is not a valid model ID', 'code': 400}, 'user_id': 'user_3FOaxn6kL0MqAfsdJQWYBShs7GS'}"
+  }
+]

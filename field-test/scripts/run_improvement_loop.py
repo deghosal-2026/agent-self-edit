@@ -190,7 +190,7 @@ def _load_task_set(paths: list[Path]):
     return ts
 
 
-def _seed_trace_store(trace_path: str, task_set_paths: list[Path], n: int, current_prompt: str, llm):
+def _seed_trace_store(trace_path: str, task_set_paths: list[Path], n: int, current_prompt: str, llm, judge_llm=None):
     import yaml
 
     from agent_self_edit.scorers import resolve_scorer
@@ -203,7 +203,7 @@ def _seed_trace_store(trace_path: str, task_set_paths: list[Path], n: int, curre
     store = TraceStore(str(db_path), batch_size=n)
 
     ts = _load_task_set(task_set_paths)
-    scorer = resolve_scorer(ts, allow_mixed=True, judge_llm=llm)
+    scorer = resolve_scorer(ts, allow_mixed=True, judge_llm=judge_llm or llm)
 
     tasks = []
     for path in task_set_paths:
@@ -281,6 +281,8 @@ def _run_iteration(
     store,
     registry,
     rejection_context: str = "",
+    analyzer_llm=None,
+    judge_llm=None,
 ) -> dict:
     from agent_self_edit.ab_test import run_ab_test
     from agent_self_edit.analyzer import analyze_batch
@@ -299,7 +301,7 @@ def _run_iteration(
 
     print(f"  Analyzing {len(failed)} failed traces...", flush=True)
     analysis = analyze_batch(
-        failed, prompt_a, None, llm,
+        failed, prompt_a, None, analyzer_llm or llm,
         max_proposals=config.analyzer.max_proposals_per_batch,
         rejection_context=rejection_context,
         config=config,
@@ -327,7 +329,7 @@ def _run_iteration(
         store.release_in_flight(batch)
         return {"iteration": iteration, "gate": "no_proposals", "n_proposals": 0, "prompt_a": prompt_a[:200]}
 
-    scorer = resolve_scorer(task_set, allow_mixed=True, judge_llm=llm)
+    scorer = resolve_scorer(task_set, allow_mixed=True, judge_llm=judge_llm or llm)
     all_results: list[dict] = []
 
     for pi, proposal in enumerate(analysis.proposals):
@@ -493,6 +495,18 @@ def main() -> None:
         "--real-traces", type=str, default="",
         help="Path to real traces JSONL file. Enables real-trace mode.",
     )
+    parser.add_argument("--analyzer-model", default="",
+                        help="Override model for analyzer role (falls back to --model)")
+    parser.add_argument("--analyzer-endpoint", default="",
+                        help="Override endpoint for analyzer role (falls back to --endpoint)")
+    parser.add_argument("--analyzer-key-env", default="ANALYZER_KEY",
+                        help="Env var name for analyzer API key (falls back to OMLX_KEY)")
+    parser.add_argument("--judge-model", default="",
+                        help="Override model for judge role (falls back to analyzer or --model)")
+    parser.add_argument("--judge-endpoint", default="",
+                        help="Override endpoint for judge role (falls back to analyzer or --endpoint)")
+    parser.add_argument("--judge-key-env", default="JUDGE_KEY",
+                        help="Env var name for judge API key (falls back to ANALYZER_KEY or OMLX_KEY)")
     args = parser.parse_args()
     api_key = os.environ.get("OMLX_KEY", "")
 
@@ -506,8 +520,28 @@ def main() -> None:
     if args.held_out_sample > 0:
         corpus_cfg["held_out"] = corpus_cfg["held_out"][:args.held_out_sample]
 
-    model_slug = _slug_model(args.model)
-    provider = _provider_from_endpoint(args.endpoint)
+    # Build executor LLM
+    executor_model = args.model
+    executor_endpoint = args.endpoint
+    executor_key = api_key
+
+    # Build analyzer LLM (falls back to executor)
+    analyzer_model = args.analyzer_model or executor_model
+    analyzer_endpoint = args.analyzer_endpoint or executor_endpoint
+    analyzer_key = os.environ.get(args.analyzer_key_env, "") or executor_key
+
+    # Build judge LLM (falls back to analyzer, then executor)
+    judge_model = args.judge_model or analyzer_model
+    judge_endpoint = args.judge_endpoint or analyzer_endpoint
+    judge_key = os.environ.get(args.judge_key_env, "") or analyzer_key
+
+    # Output dir includes analyzer model when different from executor
+    model_slug = _slug_model(executor_model)
+    if analyzer_model != executor_model:
+        model_slug = model_slug + "+analyzer-" + _slug_model(analyzer_model)
+    if judge_model != analyzer_model and judge_model != executor_model:
+        model_slug = model_slug + "+judge-" + _slug_model(judge_model)
+    provider = _provider_from_endpoint(executor_endpoint)
     run_slug = args.run_label if args.run_label else corpus_label
     model_dir = RESULTS_ROOT / provider / model_slug / run_slug
     model_dir.mkdir(parents=True, exist_ok=True)
@@ -516,10 +550,16 @@ def main() -> None:
     trace_db = Path(tempfile.mkdtemp(prefix="ase-traces-")) / "traces.db"
 
     task_set_path = str(corpus_cfg["task_files"][0])
-    config = _build_config(args.model, api_key, args.endpoint, str(persist_registry_path), str(trace_db), task_set_path)
+    config = _build_config(executor_model, executor_key, executor_endpoint, str(persist_registry_path), str(trace_db), task_set_path)
+
+    # Build analyzer config for the analyzer LLM
+    if analyzer_model != executor_model:
+        analyzer_config = _build_config(analyzer_model, analyzer_key, analyzer_endpoint, str(persist_registry_path), str(trace_db), task_set_path)
+    else:
+        analyzer_config = config
 
     if args.promotion_sample > 0:
-        from agent_self_edit.tasks import Task, TaskSet, load_task_set
+        from agent_self_edit.tasks import TaskSet, load_task_set
         full_ts = load_task_set(str(corpus_cfg["promotion_path"]))
         all_tasks = list(full_ts.list_tasks())
         sampled = all_tasks[:args.promotion_sample]
@@ -541,10 +581,12 @@ def main() -> None:
         print("Registry already exists")
 
     llm = _build_llm(config)
+    analyzer_llm = _build_llm(analyzer_config) if analyzer_model != executor_model else llm
+    judge_llm = _build_llm(_build_config(judge_model, judge_key, judge_endpoint, str(persist_registry_path), str(trace_db), task_set_path)) if judge_model != executor_model else llm
 
     from agent_self_edit.scorers import resolve_scorer
     held_out_ts = _load_task_set(corpus_cfg["task_files"])
-    accuracy_scorer = resolve_scorer(held_out_ts, allow_mixed=True, judge_llm=llm)
+    accuracy_scorer = resolve_scorer(held_out_ts, allow_mixed=True, judge_llm=judge_llm)
 
     print("Measuring baseline accuracy...", flush=True)
     baseline = measure_accuracy(corpus_cfg["baseline_prompt"], llm, corpus_cfg["held_out"], scorer=accuracy_scorer)
@@ -570,12 +612,14 @@ def main() -> None:
         if args.real_traces and rp is not None:
             store = _seed_real_traces(str(trace_db), str(rp), args.traces_per_iteration)
         else:
-            store = _seed_trace_store(str(trace_db), corpus_cfg["task_files"], args.traces_per_iteration, current_prompt, llm)
+            store = _seed_trace_store(str(trace_db), corpus_cfg["task_files"], args.traces_per_iteration, current_prompt, llm, judge_llm=judge_llm)
 
         try:
             iter_result = _run_iteration(
                 i, iteration_dir, config, llm, ab_task_set, store, registry,
                 rejection_context=rejection_context,
+                analyzer_llm=analyzer_llm,
+                judge_llm=judge_llm,
             )
         except Exception as e:
             print(f"  ERROR: {e}", flush=True)

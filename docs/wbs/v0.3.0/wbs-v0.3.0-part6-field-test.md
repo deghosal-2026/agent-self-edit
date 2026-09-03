@@ -95,7 +95,8 @@ Modeled on v0.2.0 Docker/hermetic precedent: [#172 field test plan](https://gith
 | 12 | Field test planning | `docs/field-test/v0.3.0/field-test-plan.md` — multi-domain + hermetic scope: objectives per domain, corpus/manifest structure, success criteria, LLM arms (4B/9B), hermetic vs LLM matrix | Plan authored covering M11/M12 exit gates (#272/#273/#263/#261/#260/#262/#259/#226 etc.) | [#305](https://github.com/deghosal-2026/agent-self-edit/issues/305) |
 | 13 | Corpus generation | `field-test/corpus/` — generation rubrics/anchors/dimensions (#198), mixed-domain 30+ (#199/#259), gold 20–50 human-labeled (#200/#268), seeded-prompts 15 (#271), sentinel 15–25 | All corpora exist and validate via `load_task_set` | [#306](https://github.com/deghosal-2026/agent-self-edit/issues/306) |
 | 14 | Field test execution | `field-test/v0.3.0/results/` — classification/extraction/generation/mixed/adversarial/real-trace/hermetic/LLM-integration suites run | Correct scorer per suite; adversarial 5/5 blocked; real-trace gold scored; hermetic 0 LLM | [#307](https://github.com/deghosal-2026/agent-self-edit/issues/307) |
-| 15 | Field test plan documentation | `docs/field-test/v0.3.0/field-test-plan.md` + `FIELD_TEST_REPORT.md` — final docs per #172/#179 precedent, with cost/evidence | Both docs authored, reviewed, cross-linked from WBS/README | [#308](https://github.com/deghosal-2026/agent-self-edit/issues/308) |
+| 15 | Field test plan documentation | `docs/field-test/v0.3.0/field-test-plan.md` + `FIELD_TEST_REPORT.md` — final docs per #172/#179 precedent, with cost/evidence | Both docs authored, reviewed, cross-linked from WBS/README | [#308](https://github.com/deghosal-2026/agent-self-edit/issues/308) | ✅ |
+| 16 | Separated-role runner support | `field-test/scripts/run_improvement_loop.py` — `--analyzer-model`, `--analyzer-endpoint`, `--analyzer-key-env`, `--judge-model`, `--judge-endpoint`, `--judge-key-env`; 3 providers with fallback; unique output dir; `analyze_batch` uses analyzer_llm; `resolve_scorer` uses judge_llm; `test_separated_role_runner_args` + `test_separated_role_output_dir_unique` | Runner supports 6 new flags, all roles fall back correctly, unique output dir, 809 tests pass | [#315](https://github.com/deghosal-2026/agent-self-edit/issues/315) | ✅ |
 
 ### M12 Success Metrics
 
@@ -125,7 +126,7 @@ Modeled on v0.2.0 Docker/hermetic precedent: [#172 field test plan](https://gith
 - [x] Rejection-aware behavioral diff measured (#270) — test_rejection_aware_behavioral_diff measures novelty/repeat/fixed/broken
 - [x] Cost-per-iteration documented (#269) — in FIELD_TEST_REPORT.md with Docker test data
 - [x] Seeded-prompts 15 used (#271) — load_seeded_prompts() + test validates all 15 prompts
-- [ ] Role separation measurably different (#265) — test_model_role_separation validates config + _build_llm_for_role
+- [x] Role separation measurably different (#265) — test_model_role_separation validates config + _build_llm_for_role; full OMLX separated-role run deferred to #315
 - [x] Real-trace ingestion corpus fixed (#264) — REAL_TRACES_PATH → labeled/gold-corpus.jsonl, RESULTS_ROOT → v0.3.0
 - [x] 20% vs 46% misleading metrics corrected (#266) — documented in FIELD_TEST_REPORT.md
 - [x] Docker test plan authored (#302) — docker-test-plan.md covers 16 tests
@@ -134,12 +135,12 @@ Modeled on v0.2.0 Docker/hermetic precedent: [#172 field test plan](https://gith
 - [x] Field test planning documented (#305) — field-test-plan.md updated to reflect current state (397→401 lines)
 - [x] Corpora generated and validated (30+ mixed, gold, seeded, sentinel) (#306) — all 13 corpora validated, 285 total tasks
 - [x] Field test suites executed (multi-domain/adversarial/real-trace/hermetic) (#307) — 5-iteration classification loop run, 60% baseline, 0% delta, 305s
-- [ ] Field test plan documentation authored (#308)
+- [x] Field test plan documentation authored (#308) — field-test-plan.md, FIELD_TEST_REPORT.md, learnings.md, docker-test-run-report.md all complete
 - [x] Ruff clean: `ruff check .` → 0 errors
 - [x] Mypy strict clean: `mypy --strict src/agent_self_edit` → 0 errors
 - [x] All tests pass: `python3 -m pytest --ignore=tests/test_docker.py -x -q` → 0 failures (807 passed)
-- [ ] Coverage > 91%: `pytest --cov=agent_self_edit --cov-fail-under=91`
-- [ ] Documentation updated for the milestone's scope
+- [x] Coverage > 91%: `pytest --cov=agent_self_edit --cov-fail-under=91` (94.86%)
+- [x] Documentation updated for the milestone's scope
 
 **Dependency:** M11. **Produces:** complete corpora, honest reporting, statistical ceiling clarity for v0.4.0 fleet.
 
