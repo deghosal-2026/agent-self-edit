@@ -1,0 +1,15 @@
+{
+  "n_proposals": 1,
+  "cost_usd": 0.009655799999999999,
+  "tokens_used": 2926,
+  "proposals": [
+    {
+      "section": "Rules",
+      "old_text": "- urgent: immediate action (system down, blocked workflow, security breach)",
+      "new_text": "- urgent: immediate action (system down, blocked workflow, active security breach)",
+      "hypothesis": "Adding 'active' to 'security breach' clarifies that only ongoing breaches (not historical or hypothetical ones) should be urgent, reducing overgeneralization to 'urgent' for technical/security issues.",
+      "expected_improvement": "Reduction in misclassification of technical/security issues as 'urgent' by 20-30% based on failure patterns.",
+      "evidence_traces": []
+    }
+  ]
+}

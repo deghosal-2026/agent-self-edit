@@ -132,8 +132,8 @@ Modeled on v0.2.0 Docker/hermetic precedent: [#172 field test plan](https://gith
 - [x] Docker tests authored (mixed-domain/adversarial/ab-cache/materialize-guard) (#303) — 4 new tests, all 16 pass in 4m09s
 - [x] Docker tests executed + results captured (#304) — 16/16 pass, 127 LLM calls, $0.06 total, docker-test-run-report.md + summary written
 - [x] Field test planning documented (#305) — field-test-plan.md updated to reflect current state (397→401 lines)
-- [ ] Corpora generated and validated (30+ mixed, gold, seeded, sentinel) (#306)
-- [ ] Field test suites executed (multi-domain/adversarial/real-trace/hermetic) (#307)
+- [x] Corpora generated and validated (30+ mixed, gold, seeded, sentinel) (#306) — all 13 corpora validated, 285 total tasks
+- [x] Field test suites executed (multi-domain/adversarial/real-trace/hermetic) (#307) — 5-iteration classification loop run, 60% baseline, 0% delta, 305s
 - [ ] Field test plan documentation authored (#308)
 - [x] Ruff clean: `ruff check .` → 0 errors
 - [x] Mypy strict clean: `mypy --strict src/agent_self_edit` → 0 errors

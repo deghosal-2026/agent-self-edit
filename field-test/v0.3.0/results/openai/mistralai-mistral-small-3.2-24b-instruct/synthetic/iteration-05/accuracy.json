@@ -1,0 +1,232 @@
+{
+  "accuracy": 64.0,
+  "correct": 16,
+  "total": 25,
+  "results": [
+    {
+      "task_id": "classify-006",
+      "input": "I think my account was compromised \u2014 someone logged in from an unknown IP.",
+      "expected": "security",
+      "actual": "security",
+      "passed": true,
+      "score": 1.0,
+      "error": null
+    },
+    {
+      "task_id": "classify-011",
+      "input": "I'm paying for a service I can't use because the login page is down.",
+      "expected": "urgent",
+      "actual": "urgent",
+      "passed": true,
+      "score": 1.0,
+      "error": null
+    },
+    {
+      "task_id": "classify-015",
+      "input": "When will the maintenance window end? Our team is blocked.",
+      "expected": "urgent",
+      "actual": "urgent",
+      "passed": true,
+      "score": 1.0,
+      "error": null
+    },
+    {
+      "task_id": "classify-019",
+      "input": "I'm getting a 403 Forbidden error on endpoints I used to access.",
+      "expected": "security",
+      "actual": "technical",
+      "passed": false,
+      "score": 0.0,
+      "error": null
+    },
+    {
+      "task_id": "classify-024",
+      "input": "I want to request a new integration feature and also report that the billing page is broken.",
+      "expected": "feature, billing",
+      "actual": "feature",
+      "passed": false,
+      "score": 0.0,
+      "error": null
+    },
+    {
+      "task_id": "classify-single-001",
+      "input": "My billing page shows the wrong amount for my subscription.",
+      "expected": "technical",
+      "actual": "billing",
+      "passed": false,
+      "score": 0.0,
+      "error": null
+    },
+    {
+      "task_id": "classify-single-003",
+      "input": "When will the new feature be available in production?",
+      "expected": "feature",
+      "actual": "other",
+      "passed": false,
+      "score": 0.0,
+      "error": null
+    },
+    {
+      "task_id": "classify-single-005",
+      "input": "Can you add SSO support for our enterprise account?",
+      "expected": "feature",
+      "actual": "feature",
+      "passed": true,
+      "score": 1.0,
+      "error": null
+    },
+    {
+      "task_id": "classify-single-008",
+      "input": "I need to downgrade my plan before the next billing cycle.",
+      "expected": "billing",
+      "actual": "billing",
+      "passed": true,
+      "score": 1.0,
+      "error": null
+    },
+    {
+      "task_id": "classify-single-010",
+      "input": "This is a critical security vulnerability that needs immediate attention.",
+      "expected": "urgent",
+      "actual": "urgent",
+      "passed": true,
+      "score": 1.0,
+      "error": null
+    },
+    {
+      "task_id": "classify-single-012",
+      "input": "Can you help me reset my password?",
+      "expected": "technical",
+      "actual": "technical",
+      "passed": true,
+      "score": 1.0,
+      "error": null
+    },
+    {
+      "task_id": "classify-single-014",
+      "input": "I found a bug in the search functionality \u2014 it ignores filters.",
+      "expected": "technical",
+      "actual": "technical",
+      "passed": true,
+      "score": 1.0,
+      "error": null
+    },
+    {
+      "task_id": "classify-single-016",
+      "input": "I want to report a phishing email that appears to be from your company.",
+      "expected": "security",
+      "actual": "security",
+      "passed": true,
+      "score": 1.0,
+      "error": null
+    },
+    {
+      "task_id": "classify-single-018",
+      "input": "Our team needs a higher rate limit for the API.",
+      "expected": "feature",
+      "actual": "feature",
+      "passed": true,
+      "score": 1.0,
+      "error": null
+    },
+    {
+      "task_id": "classify-single-020",
+      "input": "The invoice shows a different amount than what I agreed to in the contract.",
+      "expected": "billing",
+      "actual": "billing",
+      "passed": true,
+      "score": 1.0,
+      "error": null
+    },
+    {
+      "task_id": "classify-ambig-026",
+      "input": "I can't log in and I think my payment failed. Which team should handle this?",
+      "expected": "other",
+      "actual": "other",
+      "passed": true,
+      "score": 1.0,
+      "error": null
+    },
+    {
+      "task_id": "classify-ambig-027",
+      "input": "The system is slow after the last update. Is this a bug or a feature regression?",
+      "expected": "other",
+      "actual": "technical",
+      "passed": false,
+      "score": 0.0,
+      "error": null
+    },
+    {
+      "task_id": "classify-ambig-029",
+      "input": "Hi, I just wanted to say the new UI looks great! Keep up the good work.",
+      "expected": "other",
+      "actual": "other",
+      "passed": true,
+      "score": 1.0,
+      "error": null
+    },
+    {
+      "task_id": "classify-ambig-030",
+      "input": "Can you tell me about your company's sustainability initiatives?",
+      "expected": "other",
+      "actual": "other",
+      "passed": true,
+      "score": 1.0,
+      "error": null
+    },
+    {
+      "task_id": "classify-multi-022",
+      "input": "The API is down AND I'm being charged for premium tier that I can't use.",
+      "expected": "technical, billing",
+      "actual": "urgent",
+      "passed": false,
+      "score": 0.0,
+      "error": null
+    },
+    {
+      "task_id": "classify-multi-023",
+      "input": "Someone is using my stolen credit card on your platform and I need urgent help.",
+      "expected": "urgent, security",
+      "actual": "urgent",
+      "passed": false,
+      "score": 0.0,
+      "error": null
+    },
+    {
+      "task_id": "classify-multi-025",
+      "input": "The deployment failed and it exposed a security vulnerability in the auth module.",
+      "expected": "technical, security",
+      "actual": "urgent",
+      "passed": false,
+      "score": 0.0,
+      "error": null
+    },
+    {
+      "task_id": "boundary-002",
+      "input": "Is this a security issue or just a bug? The login page shows an SSL error but also has a typo.",
+      "expected": "other",
+      "actual": "other",
+      "passed": true,
+      "score": 1.0,
+      "error": null
+    },
+    {
+      "task_id": "boundary-008",
+      "input": "I need to cancel my subscription but there's no cancel button in the UI.",
+      "expected": "billing",
+      "actual": "technical",
+      "passed": false,
+      "score": 0.0,
+      "error": null
+    },
+    {
+      "task_id": "boundary-015",
+      "input": "The deployment failed halfway through and now some users see the old version and some see the new version.",
+      "expected": "urgent",
+      "actual": "urgent",
+      "passed": true,
+      "score": 1.0,
+      "error": null
+    }
+  ]
+}
