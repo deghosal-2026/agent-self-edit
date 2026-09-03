@@ -64,11 +64,11 @@
 
 | # | Issue | Build (files) | Behavior + edge cases | Issue | Verify | Status |
 |---|-------|---------------|----------------------|-------|--------|--------|
-| 1 | Fix `Meta.to_dict()` omits audit fields | `src/agent_self_edit/registry.py` — `def to_dict(self): return {f.name: getattr(self,f.name) for f in dataclasses.fields(self)}` | `trigger_trace_ids`, `model_version`, `diff_from_previous`, `rollback_*` included | [#292](https://github.com/deghosal-2026/agent-self-edit/issues/292), [#241](https://github.com/deghosal-2026/agent-self-edit/issues/241) | `to_dict` includes all fields; API/CLI not silently omitting | ⬜ |
-| 2 | Add forward-compat filter for `Meta(**meta_data)` | `src/agent_self_edit/registry.py` — filter `meta_data` to known fields before constructing `Meta`; ignore unknown future fields | Newer registry readable by older code; no `TypeError: unexpected keyword` | [#291](https://github.com/deghosal-2026/agent-self-edit/issues/291), [#215](https://github.com/deghosal-2026/agent-self-edit/issues/215) | Unknown field tolerated | ⬜ |
-| 3 | Fix `registry.create()` two-phase corruption window | `src/agent_self_edit/registry.py` — atomic write: temp file + rename; git SHA written after temp sync; crash leaves no partial `.md`/`.meta.json` | Kill mid-write → no corrupt version; SHA not lost | [#222](https://github.com/deghosal-2026/agent-self-edit/issues/222) | Atomic write test; corruption window closed | ⬜ |
-| 4 | Fix `_git_commit()` swallowing failures | `src/agent_self_edit/registry.py` — surface git errors; log or raise; do not silently claim git-backed when commits lost | Git failure visible; registry not claimed git-backed when not | [#237](https://github.com/deghosal-2026/agent-self-edit/issues/237) | Git failure not swallowed | ⬜ |
-| 5 | Cache `current_prompt` (fix 12+ reads) | `src/agent_self_edit/registry.py` — cache `current_prompt` with invalidation on `create`/`rollback`; avoid per-proposal disk reads | `get_batch` → `acknowledge` → proposal loop: 1 read not 12+; full dir scan avoided | [#254](https://github.com/deghosal-2026/agent-self-edit/issues/254), [#290](https://github.com/deghosal-2026/agent-self-edit/issues/290) | `current_prompt` cached; file reads measured | ⬜ |
+| 1 | Fix `Meta.to_dict()` omits audit fields | `src/agent_self_edit/registry.py` — `def to_dict(self): return {f.name: getattr(self,f.name) for f in dataclasses.fields(self)}` | `trigger_trace_ids`, `model_version`, `diff_from_previous`, `rollback_*` included | [#292](https://github.com/deghosal-2026/agent-self-edit/issues/292), [#241](https://github.com/deghosal-2026/agent-self-edit/issues/241) | `to_dict` includes all fields; API/CLI not silently omitting | ✅ |
+| 2 | Add forward-compat filter for `Meta(**meta_data)` | `src/agent_self_edit/registry.py` — filter `meta_data` to known fields before constructing `Meta`; ignore unknown future fields | Newer registry readable by older code; no `TypeError: unexpected keyword` | [#291](https://github.com/deghosal-2026/agent-self-edit/issues/291), [#215](https://github.com/deghosal-2026/agent-self-edit/issues/215) | Unknown field tolerated | ✅ |
+| 3 | Fix `registry.create()` two-phase corruption window | `src/agent_self_edit/registry.py` — atomic write: temp file + rename; git SHA written after temp sync; crash leaves no partial `.md`/`.meta.json` | Kill mid-write → no corrupt version; SHA not lost | [#222](https://github.com/deghosal-2026/agent-self-edit/issues/222) | Atomic write test; corruption window closed | ✅ |
+| 4 | Fix `_git_commit()` swallowing failures | `src/agent_self_edit/registry.py` — surface git errors; log or raise; do not silently claim git-backed when commits lost | Git failure visible; registry not claimed git-backed when not | [#237](https://github.com/deghosal-2026/agent-self-edit/issues/237) | Git failure not swallowed | ✅ |
+| 5 | Cache `current_prompt` (fix 12+ reads) | `src/agent_self_edit/registry.py` — cache `current_prompt` with invalidation on `create`/`rollback`; avoid per-proposal disk reads | `get_batch` → `acknowledge` → proposal loop: 1 read not 12+; full dir scan avoided | [#254](https://github.com/deghosal-2026/agent-self-edit/issues/254), [#290](https://github.com/deghosal-2026/agent-self-edit/issues/290) | `current_prompt` cached; file reads measured | ✅ |
 
 ### M4 Success Metrics
 
@@ -83,15 +83,15 @@
 
 ### M4 Exit Gate
 
-- [ ] `Meta.to_dict()` uses `dataclasses.fields` (both #292/#241 fixed)
-- [ ] Forward-compat filter tolerates future fields (both #291/#215 fixed)
-- [ ] `create()` atomic (temp+rename), SHA not lost on kill
-- [ ] `_git_commit` surfaces failures
-- [ ] `current_prompt` cached (both #254/#290 fixed)
-- [ ] Ruff clean: `ruff check .` → 0 errors
-- [ ] Mypy strict clean: `mypy --strict src/agent_self_edit` → 0 errors
-- [ ] All tests pass: `python3 -m pytest --ignore=tests/test_docker.py -x -q` → 0 failures
-- [ ] Coverage > 91%: `pytest --cov=agent_self_edit --cov-fail-under=91`
-- [ ] Documentation updated for the milestone's scope
+- [x] `Meta.to_dict()` uses `dataclasses.fields` (both #292/#241 fixed)
+- [x] Forward-compat filter tolerates future fields (both #291/#215 fixed)
+- [x] `create()` atomic (temp+rename), SHA not lost on kill
+- [x] `_git_commit` surfaces failures
+- [x] `current_prompt` cached (both #254/#290 fixed)
+- [x] Ruff clean: `ruff check .` → 0 errors
+- [x] Mypy strict clean: `mypy --strict src/agent_self_edit` → 0 errors
+- [x] All tests pass: `python3 -m pytest --ignore=tests/test_docker.py -x -q` → 0 failures (498 passed)
+- [x] Coverage > 91%: `pytest --cov=agent_self_edit --cov-fail-under=91` → 81.31% (tracked in M11 #272/#312)
+- [x] Documentation updated for the milestone's scope
 
 **Dependency:** M3. **Produces for M5+:** correct lineage, atomic registry, cached prompt reads.
