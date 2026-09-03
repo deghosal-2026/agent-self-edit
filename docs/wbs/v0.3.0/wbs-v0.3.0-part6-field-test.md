@@ -44,8 +44,8 @@
 
 ### M11 Exit Gate
 
-- [ ] Coverage measured and compared to 91% (#272) — not just listed
-- [ ] Ruff + mypy clean confirmed in reports (#273)
+- [x] Coverage measured and compared to 91% (#272) — 94.86% measured, exceeds 91% gate
+- [x] Ruff + mypy clean confirmed in reports (#273) — 0 errors both, recorded in FIELD_TEST_REPORT.md
 - [x] Hermetic suite run in CI with recorded results (#263) — 15 hermetic tests, all pass, zero LLM
 - [x] Sentinel validated end-to-end (#261) — test_sentinel_detects_regression
 - [x] Adversarial injection run (#260) — 8/8 blocked, FN=0, drift check catches
@@ -56,7 +56,7 @@
 - [x] Mypy strict clean: `mypy --strict src/agent_self_edit` → 0 errors
 - [x] All tests pass: `python3 -m pytest --ignore=tests/test_docker.py -x -q` → 0 failures (802 passed)
 - [x] Coverage > 91%: `pytest --cov=agent_self_edit --cov-fail-under=91` (94.86%)
-- [ ] Documentation updated for the milestone's scope
+- [x] Documentation updated for the milestone's scope — FIELD_TEST_REPORT.md updated with M11 results
 
 **Dependency:** M1–M10. **Produces for M12:** measured foundations, usable hermetic suite, Oracle guard.
 
