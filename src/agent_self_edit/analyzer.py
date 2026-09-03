@@ -326,11 +326,13 @@ class StagedAnalyzer:
 
     def __init__(self, llm: LLMProvider) -> None:
         self.llm = llm
+        self._stage_tokens: list[int] = []
 
     def stage1_summarize(self, traces: list[Trace], rejection_context: str = "") -> str:
         """Return a JSON string of failure patterns."""
         prompt = build_stage1_prompt(traces, rejection_context=rejection_context)
         response = _llm_call(self.llm, prompt)
+        self._stage_tokens.append(estimate_tokens(prompt) + estimate_tokens(response))
         data = _extract_json(response)
         if isinstance(data, list):
             return json.dumps(data, indent=2)
@@ -344,6 +346,7 @@ class StagedAnalyzer:
             current_prompt, failure_patterns, rejection_context=rejection_context
         )
         response = _llm_call(self.llm, prompt)
+        self._stage_tokens.append(estimate_tokens(prompt) + estimate_tokens(response))
         data = _extract_json(response)
         if isinstance(data, dict):
             return data.get("section", ""), data.get("rationale", "")
@@ -366,6 +369,7 @@ class StagedAnalyzer:
             rejection_context=rejection_context,
         )
         response = _llm_call(self.llm, prompt)
+        self._stage_tokens.append(estimate_tokens(prompt) + estimate_tokens(response))
         data = _extract_json(response)
         if isinstance(data, dict):
             return _build_proposal(data)
@@ -471,10 +475,11 @@ class StagedAnalyzer:
         frozen_sections: list[str] | None,
         llm_provider: LLMProvider | None = None,
         rejection_context: str = "",
-    ) -> tuple[list[EditProposal], str | None]:
-        """Run the full staged pipeline. Returns (proposals, failure_reason)."""
+    ) -> tuple[list[EditProposal], str | None, int]:
+        """Run the full staged pipeline. Returns (proposals, failure_reason, total_tokens)."""
+        self._stage_tokens = []
         if not traces:
-            return [], None
+            return [], None, 0
 
         effective_llm = llm_provider if llm_provider is not None else self.llm
         orig_llm = self.llm
@@ -486,7 +491,7 @@ class StagedAnalyzer:
                 current_prompt, patterns, rejection_context=rejection_context
             )
             if not section:
-                return [], None
+                return [], None, sum(self._stage_tokens)
             proposal = self.stage3_synthesize(
                 current_prompt,
                 section,
@@ -495,13 +500,13 @@ class StagedAnalyzer:
                 rejection_context=rejection_context,
             )
             if proposal is None:
-                return [], None
+                return [], None, sum(self._stage_tokens)
             errors, proposal = self.stage4_validate(proposal, current_prompt, frozen_sections)
             if errors:
-                return [], f"validation failed: {errors}"
-            return [proposal], None
+                return [], f"validation failed: {errors}", sum(self._stage_tokens)
+            return [proposal], None, sum(self._stage_tokens)
         except AnalyzerError as e:
-            return [], f"staged analyzer error: {e}"
+            return [], f"staged analyzer error: {e}", sum(self._stage_tokens)
         finally:
             self.llm = orig_llm
 
@@ -568,17 +573,14 @@ def analyze_batch(
     if staged:
         # Staged path: early branch, no single-pass prompt (fix 285)
         sa = StagedAnalyzer(llm_provider)
-        proposals, stage_reason = sa.analyze(
+        proposals, stage_reason, staged_tokens = sa.analyze(
             failed,
             current_prompt,
             frozen_sections,
             llm_provider,
             rejection_context=rejection_context,
         )
-        # Approximate cost for staged (4 LLM calls) — use failed count as proxy
-        total_tokens = estimate_tokens(current_prompt) + sum(
-            estimate_tokens(t.task_input) for t in failed
-        )
+        total_tokens = staged_tokens
         total_cost = estimate_cost(total_tokens)
         ceiling = config.analyzer.cost_ceiling_usd if config else 0.50
         if total_cost > ceiling:

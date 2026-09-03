@@ -286,7 +286,7 @@ def test_stage4_validate_fuzzy_fails():
 
 def test_staged_analyze_empty_traces():
     sa = StagedAnalyzer(MockProvider(""))
-    proposals, reason = sa.analyze([], "prompt", None)
+    proposals, reason, _ = sa.analyze([], "prompt", None)
     assert proposals == []
     assert reason is None
 
@@ -298,7 +298,7 @@ def test_staged_analyze_no_section():
         json.dumps({"section": "", "rationale": ""}),
     ])
     sa = StagedAnalyzer(llm)
-    proposals, reason = sa.analyze([_trace()], "prompt", None)
+    proposals, reason, _ = sa.analyze([_trace()], "prompt", None)
     assert proposals == []
 
 
@@ -310,7 +310,7 @@ def test_staged_analyze_no_proposal():
         json.dumps(["not a dict"]),
     ])
     sa = StagedAnalyzer(llm)
-    proposals, _ = sa.analyze([_trace()], "prompt", None)
+    proposals, _, _ = sa.analyze([_trace()], "prompt", None)
     assert proposals == []
     """Stage4 returns errors -> empty result."""
     llm = MockProvider(responses=[
@@ -325,7 +325,7 @@ def test_staged_analyze_no_proposal():
         }),
     ])
     sa = StagedAnalyzer(llm)
-    proposals, _ = sa.analyze([_trace()], "some prompt", None)
+    proposals, _, _ = sa.analyze([_trace()], "some prompt", None)
     assert proposals == []
 
 
@@ -337,7 +337,7 @@ def test_staged_analyze_exception_returns_empty():
             raise AnalyzerError("LLM call failed")
 
     sa = StagedAnalyzer(FailingProvider())
-    proposals, _ = sa.analyze([_trace()], "prompt", None)
+    proposals, _, _ = sa.analyze([_trace()], "prompt", None)
     assert proposals == []
 
 
@@ -356,7 +356,7 @@ def test_staged_analyze_llm_provider_override():
         }),
     ])
     sa = StagedAnalyzer(provider_a)
-    proposals, _ = sa.analyze([_trace()], "classify by subject", None, llm_provider=provider_b)
+    proposals, _, _ = sa.analyze([_trace()], "classify by subject", None, llm_provider=provider_b)
     assert len(proposals) == 1
     assert provider_a.calls == []
     assert len(provider_b.calls) == 3
@@ -477,7 +477,16 @@ def test_analyze_batch_staged_success():
 def test_analyze_batch_staged_cost_ceiling_exceeded():
     """Staged cost exceeds ceiling."""
     cfg = Config(project=ProjectConfig(name="x"), analyzer=AnalyzerConfig(cost_ceiling_usd=0.0))
-    result = analyze_batch([_trace()], "prompt", None, MockProvider(""), config=cfg, staged=True)
+    # Responder that succeeds through all 3 stages with large response
+    def responder(prompt, system_prompt=""):
+        if "summarize" in prompt.lower():
+            return '[{"pattern":"p","description":"d","trace_ids":["t1"]}]'
+        if "Select exactly ONE section" in prompt:
+            return '{"section":"classify","rationale":"r"}'
+        if "Propose ONE minimal edit" in prompt:
+            return '{"section":"classify","old_text":"old","new_text":"new very long text ' + "x" * 5000 + '","hypothesis":"h","expected_improvement":"e"}'
+        return "[]"
+    result = analyze_batch([_trace()], "prompt", None, MockProvider(responses=responder), config=cfg, staged=True)
     assert result.cost_aborted is True
     assert result.failure_reason == "cost ceiling exceeded"
 
