@@ -9,7 +9,7 @@
 
 **A self-improving agent prompt optimizer.** Proposes edits to its own system prompt from execution feedback, A/B tests them against a held-out task set, and promotes only statistically-proven winners under deterministic guardrails.
 
-[Changelog](CHANGELOG.md) · [v0.3.0 Release Notes](#v030) · [v0.2.0 Release Notes](https://github.com/deghosal-2026/agent-self-edit/releases/tag/v0.2.0) · [v0.1.0 Field Test Report](docs/field-test/v0.1.0/final-field-test-report.md) · [v0.2.0 Field Test Report](docs/field-test/v0.2.0/FIELD_TEST_REPORT.md) · [v0.3.0 Field Test Report](docs/field-test/v0.3.0/FIELD_TEST_REPORT.md)
+[Changelog](CHANGELOG.md) · [v0.3.0 Release Notes](https://github.com/deghosal-2026/agent-self-edit/releases/tag/v0.3.0) · [v0.2.0 Release Notes](https://github.com/deghosal-2026/agent-self-edit/releases/tag/v0.2.0) · [v0.1.0 Field Test Report](docs/field-test/v0.1.0/final-field-test-report.md) · [v0.2.0 Field Test Report](docs/field-test/v0.2.0/FIELD_TEST_REPORT.md) · [v0.3.0 Field Test Report](docs/field-test/v0.3.0/FIELD_TEST_REPORT.md)
 
 ## Why
 
@@ -81,6 +81,30 @@ Six fail-fast checks before any edit is promoted:
 5. **Edit-distance limit** — max lines changed per cycle
 6. **Drift detection** — semantic similarity to original prompt
 7. **Oracle Drift Guard** — detects shared wrong success definition across optimizer/scorer/golden
+
+## v0.3.0 Release Notes
+
+The v0.3.0 release hardens the self-improvement loop with a hermetic non-LLM CI suite, Oracle Drift Guard, real-trace gold corpus, multi-domain Docker validation, and 94.86% coverage.
+
+### What shipped
+- **807 hermetic tests**, zero LLM calls — full regression suite
+- **Oracle Drift Guard** — detects shared wrong success definition across optimizer/scorer/golden
+- **Real-trace gold corpus** — 30 traces, 7 failure clusters, 7 ideal interventions
+- **5-domain validation** — classification, extraction, generation, mixed-domain, adversarial
+- **16/16 Docker tests** — multi-domain coverage in containerized runtime
+- **94.86% coverage** with `--cov-fail-under=91` enforced in CI
+- **Separated-role runner** — executor/analyzer/judge can be different models
+- **Materialize guard** — `materialize_candidate_prompt()` replaces raw `str.replace()`
+- **Adversarial robustness** — 8/8 bad edits blocked, 0 false negatives
+- **Ruff + mypy strict** — 0 errors
+
+### What we learned
+The framework is sound — 0% false positive rate across all versions, and the strongest analyzer (Mistral Small 24B) produced a directional positive signal (+0.0625 effect size). The bottleneck is now analyzer search quality and statistical power, not gate correctness. Next steps: improve proposal diversity and reduce confidence thresholds.
+
+### Known issues
+- No analyzer has yet produced a promotable edit locally
+- Statistical power limited by small A/B sample sizes
+- Separated-role runner produced zero proposals in first run
 
 ## Field Test Results
 
