@@ -63,11 +63,11 @@
 
 ### M13 Exit Gate
 
-- [ ] v0.3.0 released on PyPI (`pip install agent-self-edit==0.3.0`) — #309
+- [x] v0.3.0 released on PyPI (`pip install agent-self-edit==0.3.0`) — #309
 - [ ] Docker image built and published (`agent-self-edit:0.3.0`, GHCR on tag) — #310
 - [ ] README, release notes, CHANGELOG updated; claims tightened — #311
-- [ ] Coverage ≥ 91% enforced in CI — #312 (v0.2.0 accepted 81% at [#183](https://github.com/deghosal-2026/agent-self-edit/issues/183) — v0.3.0 must restore 91%)
-- [ ] Security audit clean; OpenSSF badge current; gitleaks 0 — #313
+- [ ] Coverage ≥ 91% enforced in CI — #312
+- [x] Security audit clean; OpenSSF badge current; gitleaks 0 — #313
 - [ ] GitHub release `v0.3.0` created; milestones M1–M13 closed — #314
 - [ ] Ruff clean: `ruff check .` → 0 errors
 - [ ] Mypy strict clean: `mypy --strict src/agent_self_edit` → 0 errors
