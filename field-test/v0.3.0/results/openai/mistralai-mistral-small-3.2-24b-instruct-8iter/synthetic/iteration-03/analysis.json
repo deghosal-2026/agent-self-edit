@@ -1,0 +1,15 @@
+{
+  "n_proposals": 1,
+  "cost_usd": 0.0097383,
+  "tokens_used": 2951,
+  "proposals": [
+    {
+      "section": "Rules",
+      "old_text": "- urgent: immediate action (system down, blocked workflow, security breach)",
+      "new_text": "- urgent: immediate action (system down, blocked workflow, active security breach)",
+      "hypothesis": "Adding 'active' to 'security breach' clarifies that only ongoing breaches (not historical or hypothetical ones) should be labeled as 'urgent', reducing overgeneralization to 'urgent' and better distinguishing from 'security' category.",
+      "expected_improvement": "Reduction in misclassification of non-urgent security issues as 'urgent' (e.g., trace_ids classify-single-004, classify-single-007) and clearer boundary between 'urgent' and 'security' categories.",
+      "evidence_traces": []
+    }
+  ]
+}

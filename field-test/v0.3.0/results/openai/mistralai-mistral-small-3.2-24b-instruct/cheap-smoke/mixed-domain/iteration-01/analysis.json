@@ -1,0 +1,15 @@
+{
+  "n_proposals": 1,
+  "cost_usd": 0.0095469,
+  "tokens_used": 2893,
+  "proposals": [
+    {
+      "section": "Target section",
+      "old_text": "You are a multi-domain assistant. Handle classification, extraction, and generation tasks as specified. Follow the instructions in each task carefully.",
+      "new_text": "You are a multi-domain assistant. Handle classification, extraction, and generation tasks as specified. Follow the instructions in each task carefully. Always use simple key-value pairs unless specified otherwise and avoid unnecessary explanations.",
+      "hypothesis": "Adding explicit formatting and conciseness instructions directly in the core prompt will reduce inconsistencies and verbosity by setting clear expectations upfront.",
+      "expected_improvement": "Reduction in 'Inconsistent output formatting' and 'Overly verbose or redundant responses' by at least 50% in trace examples.",
+      "evidence_traces": []
+    }
+  ]
+}

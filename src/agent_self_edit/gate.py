@@ -11,8 +11,20 @@ from typing import Any, Literal
 
 from .ab_test import ABResult
 from .config import Config
-from .guardrails import compute_drift_tfidf, compute_edit_distance, parse_frozen_sections
-from .types import CheckResult, EditProposal, GateResult, materialize_candidate_prompt, utc_now_iso
+from .guardrails import (
+    check_oracle_drift,
+    compute_drift_tfidf,
+    compute_edit_distance,
+    parse_frozen_sections,
+)
+from .types import (
+    CheckResult,
+    EditProposal,
+    GateResult,
+    Trace,
+    materialize_candidate_prompt,
+    utc_now_iso,
+)
 
 StdList = list
 
@@ -25,6 +37,7 @@ _CHECK_ORDER = [
     "frozen_sections",
     "edit_distance",
     "drift",
+    "oracle_drift",
 ]
 
 
@@ -161,7 +174,11 @@ def check_frozen_sections(
     for sec in sections:
         if sec.section_name is None:
             continue
-        if frozen_sections is not None and sec.section_name not in set(frozen_sections):
+        if (
+            frozen_sections is not None
+            and len(frozen_sections) > 0
+            and sec.section_name not in set(frozen_sections)
+        ):
             continue
         block = "\n".join(sec.lines) if sec.lines else ""
         if block and block not in proposed:
@@ -274,8 +291,10 @@ def _run_individual_checks(
     current_prompt: str,
     original_prompt: str,
     config: Config,
+    traces: list[Trace] | None = None,
 ) -> list[CheckResult]:
     checks: list[CheckResult] = []
+    frozen_cfg = getattr(config.gate, "frozen_sections", None)
     for name in _CHECK_ORDER:
         if name == "sample_floor":
             checks.append(check_sample_floor(ab_result, config))
@@ -284,11 +303,13 @@ def _run_individual_checks(
         elif name == "confidence":
             checks.append(check_confidence(ab_result, config))
         elif name == "frozen_sections":
-            checks.append(check_frozen_sections(edit, current_prompt))
+            checks.append(check_frozen_sections(edit, current_prompt, frozen_sections=frozen_cfg))
         elif name == "edit_distance":
             checks.append(check_edit_distance(edit, current_prompt, config))
         elif name == "drift":
             checks.append(check_drift(edit, current_prompt, original_prompt, config))
+        elif name == "oracle_drift":
+            checks.append(check_oracle_drift(traces or []))
     return checks
 
 
@@ -298,6 +319,7 @@ def check_all(
     current_prompt: str,
     original_prompt: str,
     config: Config,
+    traces: list[Trace] | None = None,
 ) -> GateResult:
     """Run the 6 checks in fail-fast order and classify promote/reject/near-miss."""
     if not current_prompt.strip() or not original_prompt.strip():
@@ -305,6 +327,7 @@ def check_all(
 
     checks: list[CheckResult] = []
     passed_count = 0
+    frozen_cfg = getattr(config.gate, "frozen_sections", None)
     for name in _CHECK_ORDER:
         if name == "sample_floor":
             result = check_sample_floor(ab_result, config)
@@ -313,11 +336,18 @@ def check_all(
         elif name == "confidence":
             result = check_confidence(ab_result, config)
         elif name == "frozen_sections":
-            result = check_frozen_sections(edit, current_prompt)
+            result = check_frozen_sections(edit, current_prompt, frozen_sections=frozen_cfg)
         elif name == "edit_distance":
             result = check_edit_distance(edit, current_prompt, config)
-        else:  # drift
+        elif name == "drift":
             result = check_drift(edit, current_prompt, original_prompt, config)
+        elif name == "oracle_drift":
+            result = check_oracle_drift(traces or [])
+        else:
+            result = CheckResult(
+                name=name, passed=True, value=0.0, threshold=0.0,
+                details=f"unknown check '{name}' — skipped",
+            )
 
         checks.append(result)
         if result.passed:
@@ -326,21 +356,30 @@ def check_all(
             break  # fail-fast
 
     total = len(_CHECK_ORDER)
+    checks_run = len(checks)
     near_miss_threshold = float(config.gate.near_miss_threshold)
 
     if passed_count == total:
         decision: Literal["promote", "reject", "near_miss"] = "promote"
         reason = "all checks passed"
     else:
-        ratio = passed_count / total
-        if ratio >= near_miss_threshold:
+        # near-miss ratio based on checks that actually ran (fix 211), not total possible.
+        # Require ratio >0 to prevent 0/6 being near-miss when threshold is 0 (fix 300).
+        ratio = passed_count / checks_run if checks_run else 0.0
+        failing_check = checks[-1].name if checks else "unknown"
+        if ratio > 0 and ratio >= near_miss_threshold:
             decision = "near_miss"
-            reason = f"{passed_count}/{total} checks passed; near-miss (>= {ratio:.0%})"
+            reason = (
+                f"{passed_count}/{checks_run} checks passed "
+                f"(failed at: {failing_check}); near-miss threshold met "
+                f"({ratio:.0%} >= {near_miss_threshold:.0%})"
+            )
         else:
             decision = "reject"
             reason = (
-                f"{passed_count}/{total} checks passed; "
-                f"below near-miss threshold ({near_miss_threshold:.0%})"
+                f"{passed_count}/{checks_run} checks passed "
+                f"(failed at: {failing_check}); below near-miss threshold "
+                f"({near_miss_threshold:.0%})"
             )
 
     return GateResult(
@@ -364,8 +403,9 @@ class PromotionGate:
         current_prompt: str,
         original_prompt: str,
         config: Config,
+        traces: list[Trace] | None = None,
     ) -> GateResult:
-        result = check_all(edit, ab_result, current_prompt, original_prompt, config)
+        result = check_all(edit, ab_result, current_prompt, original_prompt, config, traces=traces)
         if self.audit is not None:
             entry: dict[str, Any] = {
                 "timestamp": utc_now_iso(),
@@ -378,8 +418,9 @@ class PromotionGate:
                 ],
             }
             if edit is not None:
-                # Store the proposed new text so near-miss dedup (M7 #49) can
-                # compare future proposals against rejected/near-miss edits.
+                # Store both old and new text so near-miss dedup (M2 #258) can
+                # fully reconstruct proposals (previously old_text was always "").
+                entry["proposal_old_text"] = edit.old_text
                 entry["proposal_text"] = edit.new_text
                 entry["proposal_section"] = edit.section
             self.audit.log(entry)
@@ -400,6 +441,7 @@ class PromotionGate:
             ],
         }
         if edit is not None:
+            entry["proposal_old_text"] = edit.old_text
             entry["proposal_text"] = edit.new_text
             entry["proposal_section"] = edit.section
         self.audit.log(entry)
@@ -453,7 +495,7 @@ class GateAuditLog:
             proposals.append(
                 _EditProposal(
                     section=entry.get("proposal_section") or "",
-                    old_text="",
+                    old_text=entry.get("proposal_old_text") or "",
                     new_text=text,
                     hypothesis=entry.get("reason") or "",
                     expected_improvement="",

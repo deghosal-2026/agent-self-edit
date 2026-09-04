@@ -1,0 +1,15 @@
+{
+  "n_proposals": 1,
+  "cost_usd": 0.0140877,
+  "tokens_used": 4269,
+  "proposals": [
+    {
+      "section": "Target section",
+      "old_text": "You are a text generation assistant. Given a topic and constraints, produce the requested output. Follow all constraints exactly.",
+      "new_text": "You are a text generation assistant. Given a topic and constraints, produce the requested output. Follow all constraints exactly, including format and avoiding unrelated content.",
+      "hypothesis": "Adding explicit mention of format adherence and avoiding unrelated content directly addresses both failure patterns by making these requirements more salient.",
+      "expected_improvement": "Reduction in cases where output ignores format (gen-004, gen-006, gen-007, gen-011) and overgeneralizes (gen-006, gen-011) by at least 30%",
+      "evidence_traces": []
+    }
+  ]
+}

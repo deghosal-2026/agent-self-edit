@@ -55,8 +55,9 @@ def format_diff_inline(diff_result: "DiffResult", color: str = "never") -> str:
         lines.append(_color(f"- {line}", color, "red"))
     for line in diff_result.added:
         lines.append(_color(f"+ {line}", color, "green"))
-    for line in diff_result.modified:
-        lines.append(_color(f"? {line} (modified)", color, "yellow"))
+    for old, new in diff_result.modified:
+        lines.append(_color(f"- {old}", color, "red"))
+        lines.append(_color(f"+ {new}", color, "green"))
     return "\n".join(lines)
 
 
@@ -76,8 +77,8 @@ def format_diff_side_by_side(diff_result: "DiffResult", color: str = "never") ->
     Frozen lines are grayed. Falls back to inline-style when the diff is
     identical (nothing to compare).
     """
-    left = diff_result.removed + [f"? {m}" for m in diff_result.modified]
-    right = diff_result.added + [f"? {m}" for m in diff_result.modified]
+    left = diff_result.removed + [f"- {old}" for old, new in diff_result.modified]
+    right = diff_result.added + [f"+ {new}" for old, new in diff_result.modified]
 
     if not left and not right:
         if diff_result.frozen_unchanged_count:
@@ -185,13 +186,15 @@ def format_edit_summary(
     edit_id: str | int,
     gate_result: GateResult | None,
     ab_result: "ABResult | None",
+    diff_result: "DiffResult | None" = None,
 ) -> str:
     """Render a one-line edit summary (PRD M8.3).
 
-    ``Edit #{N} — {decision} — {±X.X%} accuracy (p<{val}, n={trials}) — {N} line(s)``
+    ``Edit #{N} — {decision} — {±X.X%} accuracy (p<{val}, n={trials}) — {N} line(s) changed``
+
+    When ``diff_result`` is provided the line count reflects the actual number
+    of changed lines; otherwise it is omitted.
     """
-    # Line count: derive from failed check count as a stand-in; caller may
-    # want the diff's changed-line count, but the signature has no diff here.
     if gate_result is None:
         return f"Edit #{edit_id} — (no gate result)"
 
@@ -212,9 +215,10 @@ def format_edit_summary(
         failed = [c.name for c in gate_result.checks if not c.passed]
         parts.append(f"— ({', '.join(failed) if failed else 'no failed checks'})")
 
-    n_checks = len(gate_result.checks)
-    suffix = "line" if n_checks == 1 else "lines"
-    parts.append(f"— {n_checks} {suffix}")
+    if diff_result is not None:
+        changed = len(diff_result.added) + len(diff_result.removed) + len(diff_result.modified)
+        suffix = "line" if changed == 1 else "lines"
+        parts.append(f"— {changed} {suffix} changed")
 
     return " ".join(parts)
 
@@ -237,7 +241,7 @@ def format_edit_density(registry: "Registry", window: int = 20) -> str:
         diff = meta.diff_from_previous
         if diff:
             total = int(diff.get("total", 0))
-            section = meta.hypothesis or "edits"
+            section = meta.changed_section or meta.hypothesis or "edits"
             per_section[section] = per_section.get(section, 0) + total
 
     if not per_section:

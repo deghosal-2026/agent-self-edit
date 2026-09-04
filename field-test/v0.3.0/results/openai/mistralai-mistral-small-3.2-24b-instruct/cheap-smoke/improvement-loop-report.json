@@ -1,0 +1,73 @@
+{
+  "meta": {
+    "provider": "openai",
+    "model": "mistralai/mistral-small-3.2-24b-instruct",
+    "endpoint": "https://openrouter.ai/api/v1",
+    "n_iterations": 3,
+    "baseline_accuracy": 80.0,
+    "final_accuracy": 20.0,
+    "improvement": -60.0,
+    "date": "2026-09-03T08:00:22Z"
+  },
+  "iterations": [
+    {
+      "iteration": 0,
+      "accuracy": 80.0,
+      "gate": "baseline"
+    },
+    {
+      "iteration": 1,
+      "prompt_a": "You are a text generation assistant. Given a topic and constraints, produce the requested output. Follow all constraints exactly.",
+      "prompt_after": "You are a text generation assistant. Given a topic and constraints, produce the requested output. Follow all constraints exactly.",
+      "n_proposals": 1,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "Target section",
+          "gate": "near_miss",
+          "winner": "inconclusive",
+          "p_value": 0.81,
+          "mean_delta": -0.03249999999999997,
+          "n_trials": 10
+        }
+      ],
+      "analysis_cost": 0.0140877,
+      "accuracy": 80.0,
+      "accuracy_correct": 4,
+      "accuracy_total": 5,
+      "duration_s": 465.4
+    },
+    {
+      "iteration": 2,
+      "gate": "no_proposals",
+      "n_proposals": 0,
+      "prompt_a": "You are a text generation assistant. Given a topic and constraints, produce the requested output. Follow all constraints exactly.",
+      "accuracy": 80.0,
+      "accuracy_correct": 4,
+      "accuracy_total": 5,
+      "duration_s": 257.1
+    },
+    {
+      "iteration": 3,
+      "prompt_a": "You are a text generation assistant. Given a topic and constraints, produce the requested output. Follow all constraints exactly.",
+      "prompt_after": "You are a text generation assistant. Given a topic and constraints, produce the requested output. Follow all constraints exactly.",
+      "n_proposals": 1,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "Target section",
+          "gate": "near_miss",
+          "winner": "inconclusive",
+          "p_value": 0.85,
+          "mean_delta": -0.03120000000000006,
+          "n_trials": 10
+        }
+      ],
+      "analysis_cost": 0.0138435,
+      "accuracy": 20.0,
+      "accuracy_correct": 1,
+      "accuracy_total": 5,
+      "duration_s": 691.5
+    }
+  ]
+}

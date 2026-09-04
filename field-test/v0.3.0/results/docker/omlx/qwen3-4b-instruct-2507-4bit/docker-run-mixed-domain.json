@@ -1,0 +1,286 @@
+{
+  "test": "docker-run-mixed-domain",
+  "date": "2026-09-03T05:47:29Z",
+  "image": "agent-self-edit:test",
+  "omlx_model": "Qwen3-4B-Instruct-2507-4bit",
+  "exit_code": 0,
+  "llm_calls_captured": 13,
+  "llm_traffic": [
+    {
+      "model": "Qwen3-4B-Instruct-2507-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "user",
+          "content": "You are analyzing execution traces where a prompt-based\nagent failed. Summarize the recurring failure patterns.\n\nFailed traces:\nTrace 1: task_id=t0, input=\"classify this ticket: 'Classify this ticket AND extract the affected service: The payment gateway is returning 502 errors for all enterprise customers. This started at 14:00 UTC.'\", output=\"other\", expected=\"classification: urgent, technical\naffected_service: payment gateway\", failure_reason=\"misclassified \u2014 expected classification: urgent, technical\naffected_service: payment gateway\"\nTrace 2: task_id=t1, input=\"classify this ticket: 'Classify this ticket AND generate a one-line summary for the dashboard: User reports their API key was leaked on GitHub. They need it revoked immediately.'\", output=\"other\", expected=\"classification: security, urgent\nsummary: API key leaked on GitHub, revocation requested\", failure_reason=\"misclassified \u2014 expected classification: security, urgent\nsummary: API key leaked on GitHub, revocation requested\"\nTrace 3: task_id=t2, input=\"classify this ticket: 'Extract the error code from this text AND classify the severity: Error E5001 occurred in the billing module. 3,400 customers affected. Estimated revenue impact: $12K/hour.'\", output=\"other\", expected=\"error_code: E5001\nseverity: urgent\", failure_reason=\"misclassified \u2014 expected error_code: E5001\nseverity: urgent\"\nTrace 4: task_id=t3, input=\"classify this ticket: 'Generate a customer-facing message about this outage AND extract the affected services: Database cluster db-prod-01 is down. API, dashboard, and webhooks are affected. ETA: 30 minutes.'\", output=\"other\", expected=\"message: We are experiencing a service disruption\naffected: API, dashboard, webhooks\", failure_reason=\"misclassified \u2014 expected message: We are experiencing a service disruption\naffected: API, dashboard, webhooks\"\nTrace 5: task_id=t4, input=\"classify this ticket: 'Classify this as urgent or non-urgent AND extract the SLA deadline: A security researcher found an XSS vulnerability in our login form. They reported it via our bug bounty program. Our SLA for critical findings is 4 hours.'\", output=\"other\", expected=\"classification: urgent\nsla: 4 hours\", failure_reason=\"misclassified \u2014 expected classification: urgent\nsla: 4 hours\"\nTrace 6: task_id=t5, input=\"classify this ticket: 'Extract all mentioned services AND generate a rollback plan summary: Deploy v3.2.1 introduced a regression in the auth-service and user-service. The search-service is unaffected. We need to roll back both affected services to v3.2.0.'\", output=\"other\", expected=\"services: auth-service, user-service\nrollback: auth-service to v3.2.0, user-service to v3.2.0\", failure_reason=\"misclassified \u2014 expected services: auth-service, user-service\nrollback: auth-service to v3.2.0, user-service to v3.2.0\"\nTrace 7: task_id=t6, input=\"classify this ticket: 'Classify the priority of this incident AND extract the customer impact metrics: CDN outage affecting 45% of traffic in EU region. Error rate: 100%. P95 latency: timeout. Started: 09:15 UTC.'\", output=\"other\", expected=\"priority: urgent\naffected_traffic: 45%\nregion: EU\nerror_rate: 100%\nstarted: 09:15 UTC\", failure_reason=\"misclassified \u2014 expected priority: urgent\naffected_traffic: 45%\nregion: EU\nerror_rate: 100%\nstarted: 09:15 UTC\"\nTrace 8: task_id=t7, input=\"classify this ticket: 'Generate a postmortem outline for this incident AND extract the root cause category: Memory leak in the image-resize worker caused OOM kills. The leak was introduced in commit abc123. Fix deployed in v2.4.2.'\", output=\"other\", expected=\"postmortem: outline\nroot_cause: memory leak\", failure_reason=\"misclassified \u2014 expected postmortem: outline\nroot_cause: memory leak\"\nTrace 9: task_id=t8, input=\"classify this ticket: 'Classify this as billing/technical/security AND extract the affected customer ID AND estimate severity: Customer AC-7890 reports their data export has been failing for 3 days. They have an enterprise contract with a 99.9% SLA. Export volume: 2TB.'\", output=\"other\", expected=\"classification: technical\ncustomer: AC-7890\nseverity: high\", failure_reason=\"misclassified \u2014 expected classification: technical\ncustomer: AC-7890\nseverity: high\"\nTrace 10: task_id=t9, input=\"classify this ticket: 'Extract all error codes from this log AND classify the overall system health: E4031 on auth-service (3 retries), E5002 on user-service (1 retry), E4031 on billing-service (5 retries). All services responding but with elevated error rates.'\", output=\"other\", expected=\"errors: E4031, E5002\nhealth: degraded\", failure_reason=\"misclassified \u2014 expected errors: E4031, E5002\nhealth: degraded\"\n\n\nIdentify the top 2-3 distinct failure patterns. For each pattern, describe:\n- What went wrong (1 sentence)\n- Which traces exhibit this pattern\n- What the prompt likely lacks or misdirects\n\nRespond as a JSON array of objects with keys: pattern, description, trace_ids."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "[\n  {\n    \"pattern\": \"Failure to extract specific requested entities (e.g., error codes, services, SLA, customer ID)\",\n    \"description\": \"The agent fails to extract concrete, explicitly requested information from the ticket text, instead defaulting to a generic 'other' output, likely due to misinterpretation of the prompt as a single classification task rather than a multi-objective extraction task.\",\n    \"trace_ids\": [\"t1\", \"t2\", \"t3\", \"t4\", \"t5\", \"t6\", \"t7\", \"t8\", \"t9\", \"t10\"]\n  },\n  {\n    \"pattern\": \"Misclassification of ticket priority or category despite clear indicators (e.g., security, urgent, technical)\",\n    \"description\": \"The agent incorrectly classifies tickets as 'other' when clear contextual cues (e.g., security breach, SLA, high impact) indicate urgent or specific categories like security, technical, or billing.\",\n    \"trace_ids\": [\"t1\", \"t2\", \"t4\", \"t5\", \"t8\", \"t9\"]\n  },\n  {\n    \"pattern\": \"Failure to parse compound instructions with multiple parallel tasks (AND-based requests)\",\n    \"description\": \"The prompt contains multiple parallel requests (e.g., classify AND extract), but the agent treats them as a single classification task, missing the need to decompose and fulfill each subtask independently.\",\n    \"trace_ids\": [\"t0\", \"t1\", \"t2\", \"t3\", \"t4\", \"t5\", \"t6\", \"t7\", \"t8\", \"t9\"]\n  }\n]",
+      "usage": {
+        "prompt_tokens": 1230,
+        "completion_tokens": 346,
+        "total_tokens": 1576
+      },
+      "latency_ms": 13496
+    },
+    {
+      "model": "Qwen3-4B-Instruct-2507-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "user",
+          "content": "You are choosing which part of a prompt to edit.\n\nCurrent prompt (frozen sections marked with [FROZEN]):\nYou are a helpful classification assistant.\n\nFailure patterns identified in the traces:\n[\n  {\n    \"pattern\": \"Failure to extract specific requested entities (e.g., error codes, services, SLA, customer ID)\",\n    \"description\": \"The agent fails to extract concrete, explicitly requested information from the ticket text, instead defaulting to a generic 'other' output, likely due to misinterpretation of the prompt as a single classification task rather than a multi-objective extraction task.\",\n    \"trace_ids\": [\n      \"t1\",\n      \"t2\",\n      \"t3\",\n      \"t4\",\n      \"t5\",\n      \"t6\",\n      \"t7\",\n      \"t8\",\n      \"t9\",\n      \"t10\"\n    ]\n  },\n  {\n    \"pattern\": \"Misclassification of ticket priority or category despite clear indicators (e.g., security, urgent, technical)\",\n    \"description\": \"The agent incorrectly classifies tickets as 'other' when clear contextual cues (e.g., security breach, SLA, high impact) indicate urgent or specific categories like security, technical, or billing.\",\n    \"trace_ids\": [\n      \"t1\",\n      \"t2\",\n      \"t4\",\n      \"t5\",\n      \"t8\",\n      \"t9\"\n    ]\n  },\n  {\n    \"pattern\": \"Failure to parse compound instructions with multiple parallel tasks (AND-based requests)\",\n    \"description\": \"The prompt contains multiple parallel requests (e.g., classify AND extract), but the agent treats them as a single classification task, missing the need to decompose and fulfill each subtask independently.\",\n    \"trace_ids\": [\n      \"t0\",\n      \"t1\",\n      \"t2\",\n      \"t3\",\n      \"t4\",\n      \"t5\",\n      \"t6\",\n      \"t7\",\n      \"t8\",\n      \"t9\"\n    ]\n  }\n]\n\n\nSelect exactly ONE section of the prompt to modify. Choose the section whose\nchange would address the most failure patterns with the smallest edit.\n\nDo NOT choose the same section and same edit intent if the previous proposal was rejected.\n\nRespond as JSON: {\"section\": \"...\", \"rationale\": \"...\"}"
+        }
+      ],
+      "temperature": 0.0,
+      "response": "{\"section\": \"Failure to extract specific requested entities (e.g., error codes, services, SLA, customer ID)\", \"rationale\": \"This failure pattern directly stems from the agent misinterpreting the prompt as a single classification task rather than a multi-objective extraction task. By explicitly rephrasing the instruction to include a clear, parallel directive such as 'Extract the following if present: error code, service name, SLA, customer ID, and ticket priority' immediately after the classification request, we force decomposition of the task. This minimal edit directly addresses the core issue in the failure pattern while being easily implementable and effective in guiding the agent to perform both classification and extraction independently, thereby resolving the root cause of the 'other' default output.\"}",
+      "usage": {
+        "prompt_tokens": 487,
+        "completion_tokens": 154,
+        "total_tokens": 641
+      },
+      "latency_ms": 6054
+    },
+    {
+      "model": "Qwen3-4B-Instruct-2507-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "user",
+          "content": "You are making a minimal edit to a prompt.\n\nCurrent prompt (exact text \u2014 copy old_text verbatim, raw \u2014 no [FROZEN]):\nYou are a helpful classification assistant.\n\nTarget section: Failure to extract specific requested entities (e.g., error codes, services, SLA, customer ID)\nRationale: This failure pattern directly stems from the agent misinterpreting the prompt as a single classification task rather than a multi-objective extraction task. By explicitly rephrasing the instruction to include a clear, parallel directive such as 'Extract the following if present: error code, service name, SLA, customer ID, and ticket priority' immediately after the classification request, we force decomposition of the task. This minimal edit directly addresses the core issue in the failure pattern while being easily implementable and effective in guiding the agent to perform both classification and extraction independently, thereby resolving the root cause of the 'other' default output.\n\nFailure patterns to address:\n[\n  {\n    \"pattern\": \"Failure to extract specific requested entities (e.g., error codes, services, SLA, customer ID)\",\n    \"description\": \"The agent fails to extract concrete, explicitly requested information from the ticket text, instead defaulting to a generic 'other' output, likely due to misinterpretation of the prompt as a single classification task rather than a multi-objective extraction task.\",\n    \"trace_ids\": [\n      \"t1\",\n      \"t2\",\n      \"t3\",\n      \"t4\",\n      \"t5\",\n      \"t6\",\n      \"t7\",\n      \"t8\",\n      \"t9\",\n      \"t10\"\n    ]\n  },\n  {\n    \"pattern\": \"Misclassification of ticket priority or category despite clear indicators (e.g., security, urgent, technical)\",\n    \"description\": \"The agent incorrectly classifies tickets as 'other' when clear contextual cues (e.g., security breach, SLA, high impact) indicate urgent or specific categories like security, technical, or billing.\",\n    \"trace_ids\": [\n      \"t1\",\n      \"t2\",\n      \"t4\",\n      \"t5\",\n      \"t8\",\n      \"t9\"\n    ]\n  },\n  {\n    \"pattern\": \"Failure to parse compound instructions with multiple parallel tasks (AND-based requests)\",\n    \"description\": \"The prompt contains multiple parallel requests (e.g., classify AND extract), but the agent treats them as a single classification task, missing the need to decompose and fulfill each subtask independently.\",\n    \"trace_ids\": [\n      \"t0\",\n      \"t1\",\n      \"t2\",\n      \"t3\",\n      \"t4\",\n      \"t5\",\n      \"t6\",\n      \"t7\",\n      \"t8\",\n      \"t9\"\n    ]\n  }\n]\n\n\nPropose ONE minimal edit:\n- old_text: copy the EXACT text from the current prompt above that you want to replace\n- new_text: replacement text (change the fewest characters possible)\n- hypothesis: why this specific change helps (1-2 sentences)\n- expected_improvement: measurable expectation\n\nSmall-edit rule:\n- Prefer changing 1 line only\n- Never change more than 2 lines unless absolutely necessary\n- Prefer adding one short clause over rewriting a whole block\n\nIMPORTANT: The old_text MUST be copied verbatim from the current prompt.\nDo not paraphrase or reformat it.\n\nIf previous feedback shows this exact edit family was rejected, produce a materially different edit.\n\nRespond as JSON: {\"section\": \"...\", \"old_text\": \"...\", \"new_text\": \"...\",\n\"hypothesis\": \"...\", \"expected_improvement\": \"...\"}"
+        }
+      ],
+      "temperature": 0.0,
+      "response": "{\n  \"section\": \"Failure to extract specific requested entities (e.g., error codes, services, SLA, customer ID)\",\n  \"old_text\": \"You are a helpful classification assistant.\",\n  \"new_text\": \"You are a helpful classification assistant. Extract the following if present: error code, service name, SLA, customer ID, and ticket priority.\",\n  \"hypothesis\": \"By adding a clear, parallel extraction directive immediately after the classification instruction, the agent is forced to decompose the task and explicitly search for each requested entity, directly addressing the failure to extract concrete information due to misinterpretation of the prompt as a single classification task.\",\n  \"expected_improvement\": \"At least 80% of tickets with explicit entity requests will now include the correct extracted values (e.g., error code, SLA) instead of defaulting to 'other', as measured by trace ID validation in the next 100 tickets.\"\n}",
+      "usage": {
+        "prompt_tokens": 757,
+        "completion_tokens": 196,
+        "total_tokens": 953
+      },
+      "latency_ms": 6946
+    },
+    {
+      "model": "Qwen3-4B-Instruct-2507-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful classification assistant."
+        },
+        {
+          "role": "user",
+          "content": "Classify this ticket AND extract the affected service: The payment gateway is returning 502 errors for all enterprise customers. This started at 14:00 UTC."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "**Classification:** Incident  \n**Affected Service:** Payment Gateway\n\n**Explanation:**  \nThe ticket describes a service outage (502 Bad Gateway errors) affecting enterprise customers, which began at a specific time (14:00 UTC). This indicates a production issue impacting a core service \u2014 the payment gateway \u2014 and requires immediate attention for resolution. The nature of the error (502) typically points to a backend service failure or misconfiguration, making it an incident that needs urgent investigation and remediation.",
+      "usage": {
+        "prompt_tokens": 56,
+        "completion_tokens": 102,
+        "total_tokens": 158
+      },
+      "latency_ms": 4383
+    },
+    {
+      "model": "Qwen3-4B-Instruct-2507-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful classification assistant. Extract the following if present: error code, service name, SLA, customer ID, and ticket priority."
+        },
+        {
+          "role": "user",
+          "content": "Classify this ticket AND extract the affected service: The payment gateway is returning 502 errors for all enterprise customers. This started at 14:00 UTC."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "Classification: Service Outage  \nAffected Service: Payment Gateway  \n\nExtracted Information:  \n- Error Code: 502 (Bad Gateway)  \n- Service Name: Payment Gateway  \n- SLA: Not specified in ticket details  \n- Customer ID: Not provided  \n- Ticket Priority: High (due to widespread impact on enterprise customers and service unavailability during business hours)  \n\nNote: The ticket indicates a production-level service disruption affecting enterprise customers, which typically triggers a high-priority response.",
+      "usage": {
+        "prompt_tokens": 78,
+        "completion_tokens": 99,
+        "total_tokens": 177
+      },
+      "latency_ms": 4061
+    },
+    {
+      "model": "Qwen3-4B-Instruct-2507-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful classification assistant."
+        },
+        {
+          "role": "user",
+          "content": "Classify this ticket AND generate a one-line summary for the dashboard: User reports their API key was leaked on GitHub. They need it revoked immediately."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "**Classification:** Security Incident  \n**Dashboard Summary:** User reports API key leakage on GitHub and requests immediate revocation.",
+      "usage": {
+        "prompt_tokens": 50,
+        "completion_tokens": 23,
+        "total_tokens": 73
+      },
+      "latency_ms": 1115
+    },
+    {
+      "model": "Qwen3-4B-Instruct-2507-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful classification assistant. Extract the following if present: error code, service name, SLA, customer ID, and ticket priority."
+        },
+        {
+          "role": "user",
+          "content": "Classify this ticket AND generate a one-line summary for the dashboard: User reports their API key was leaked on GitHub. They need it revoked immediately."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "**Classification:**  \n- **Service Name:** API Security / Identity Management  \n- **Error Code:** (Not applicable \u2013 no specific error provided)  \n- **SLA:** Critical (immediate response required for API key exposure)  \n- **Customer ID:** (Not provided)  \n- **Ticket Priority:** High (immediate action required to prevent unauthorized access)  \n\n**One-line dashboard summary:**  \n\"User reports API key exposure on GitHub \u2013 requires immediate revocation and security investigation.\"",
+      "usage": {
+        "prompt_tokens": 72,
+        "completion_tokens": 98,
+        "total_tokens": 170
+      },
+      "latency_ms": 4051
+    },
+    {
+      "model": "Qwen3-4B-Instruct-2507-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful classification assistant."
+        },
+        {
+          "role": "user",
+          "content": "Extract the error code from this text AND classify the severity: Error E5001 occurred in the billing module. 3,400 customers affected. Estimated revenue impact: $12K/hour."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "Error Code: E5001  \nSeverity: High\n\nRationale:  \n- The error code is explicitly stated as \"Error E5001\".  \n- The severity is classified as High due to the impact on 3,400 customers and an estimated revenue loss of $12,000 per hour, indicating significant operational and financial consequences.",
+      "usage": {
+        "prompt_tokens": 64,
+        "completion_tokens": 76,
+        "total_tokens": 140
+      },
+      "latency_ms": 3509
+    },
+    {
+      "model": "Qwen3-4B-Instruct-2507-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful classification assistant. Extract the following if present: error code, service name, SLA, customer ID, and ticket priority."
+        },
+        {
+          "role": "user",
+          "content": "Extract the error code from this text AND classify the severity: Error E5001 occurred in the billing module. 3,400 customers affected. Estimated revenue impact: $12K/hour."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "- Error code: E5001  \n- Severity classification: High  \n\nRationale:  \n- The text explicitly states \"Error E5001\", so the error code is extracted as E5001.  \n- The severity is determined by context: 3,400 customers affected and a revenue impact of $12K/hour indicates a significant operational and financial impact, which aligns with a high-severity issue.  \n- No service name, SLA, customer ID, or ticket priority is mentioned in the provided text.",
+      "usage": {
+        "prompt_tokens": 86,
+        "completion_tokens": 114,
+        "total_tokens": 200
+      },
+      "latency_ms": 4987
+    },
+    {
+      "model": "Qwen3-4B-Instruct-2507-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful classification assistant."
+        },
+        {
+          "role": "user",
+          "content": "Generate a customer-facing message about this outage AND extract the affected services: Database cluster db-prod-01 is down. API, dashboard, and webhooks are affected. ETA: 30 minutes."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "**Customer Notification: Temporary Service Outage**\n\nWe're currently experiencing a temporary outage affecting some of our core services. This issue is being addressed by our engineering team, and we're working to restore full functionality as quickly as possible.\n\n**Affected Services:**  \n- API  \n- Dashboard  \n- Webhooks  \n\n**Outage Status:**  \nThe database cluster `db-prod-01` is currently unavailable, which is impacting the above services.\n\n**Estimated Time to Restore (ETA):**  \nApproximately 30 minutes.\n\nWe apologize for the inconvenience and appreciate your patience as we work to resolve this issue. Updates will be provided as more information becomes available.\n\nThank you for your understanding and continued support.  \n\n*This is a temporary disruption. No data loss has occurred, and all operations are being restored safely.*",
+      "usage": {
+        "prompt_tokens": 62,
+        "completion_tokens": 164,
+        "total_tokens": 226
+      },
+      "latency_ms": 6804
+    },
+    {
+      "model": "Qwen3-4B-Instruct-2507-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful classification assistant. Extract the following if present: error code, service name, SLA, customer ID, and ticket priority."
+        },
+        {
+          "role": "user",
+          "content": "Generate a customer-facing message about this outage AND extract the affected services: Database cluster db-prod-01 is down. API, dashboard, and webhooks are affected. ETA: 30 minutes."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "**Customer-Facing Message:**\n\nWe're currently experiencing an outage affecting our database services, which is impacting the availability of the API, dashboard, and webhooks. This issue is being addressed urgently, and we expect full service restoration within the next 30 minutes.\n\nWe apologize for the inconvenience and appreciate your patience as our engineering team works to resolve this as quickly as possible.\n\n---\n\n**Extracted Information:**\n\n- **Error Code:** Not specified  \n- **Service Name:** API, Dashboard, Webhooks  \n- **SLA:** Not specified  \n- **Customer ID:** Not specified  \n- **Ticket Priority:** High (implied by urgent ETA and impact on core services)  \n\n**Affected Services:**  \n- API  \n- Dashboard  \n- Webhooks",
+      "usage": {
+        "prompt_tokens": 84,
+        "completion_tokens": 152,
+        "total_tokens": 236
+      },
+      "latency_ms": 5188
+    },
+    {
+      "model": "Qwen3-4B-Instruct-2507-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful classification assistant."
+        },
+        {
+          "role": "user",
+          "content": "Classify this as urgent or non-urgent AND extract the SLA deadline: A security researcher found an XSS vulnerability in our login form. They reported it via our bug bounty program. Our SLA for critical findings is 4 hours."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "Classification: Urgent\n\nSLA Deadline: 4 hours",
+      "usage": {
+        "prompt_tokens": 68,
+        "completion_tokens": 12,
+        "total_tokens": 80
+      },
+      "latency_ms": 776
+    },
+    {
+      "model": "Qwen3-4B-Instruct-2507-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful classification assistant. Extract the following if present: error code, service name, SLA, customer ID, and ticket priority."
+        },
+        {
+          "role": "user",
+          "content": "Classify this as urgent or non-urgent AND extract the SLA deadline: A security researcher found an XSS vulnerability in our login form. They reported it via our bug bounty program. Our SLA for critical findings is 4 hours."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "Classification: Urgent\n\nSLA Deadline: 4 hours\n\nExplanation:  \n- The issue is an XSS vulnerability in a login form, which is a critical security flaw that can lead to unauthorized access.  \n- The report was made through a bug bounty program, and the SLA for critical findings is explicitly stated as 4 hours.  \n- Therefore, the ticket is classified as urgent, and the SLA deadline is 4 hours.  \n\nExtracted:  \n- Service name: (not specified in input)  \n- Error code: (not applicable)  \n- Customer ID: (not provided)  \n- Ticket priority: Urgent  \n- SLA: 4 hours",
+      "usage": {
+        "prompt_tokens": 90,
+        "completion_tokens": 137,
+        "total_tokens": 227
+      },
+      "latency_ms": 4720
+    }
+  ],
+  "stdout": "Processing 10 traces (10 failed)\nAnalysis complete: 1 proposals, cost=$0.0109\n  A/B test: inconclusive (p=1.0000, n=5)\n  Gate: reject\nLoop stopped.\n",
+  "stderr": ""
+}

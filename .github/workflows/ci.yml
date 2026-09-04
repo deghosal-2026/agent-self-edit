@@ -20,8 +20,7 @@ jobs:
       - run: pip install -e ".[dev]"
       - run: ruff check .
       - run: mypy --strict src/agent_self_edit/
-      # TODO: restore --cov-fail-under=92 when coverage gap is closed (tracking #183)
-      - run: pytest --ignore=tests/test_docker.py --cov=agent_self_edit --cov-report=term-missing --cov-fail-under=81
+      - run: pytest --ignore=tests/test_docker.py --cov=agent_self_edit --cov-report=term-missing --cov-fail-under=91
 
   docker:
     needs: test

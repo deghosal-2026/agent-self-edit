@@ -10,12 +10,16 @@ gracefully to plain file-based storage.
 from __future__ import annotations
 
 import difflib
+import errno
 import hashlib
 import json
 import logging
+import os
 import shutil
 import subprocess
 import threading
+import time
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -54,7 +58,7 @@ class DiffResult:
 
     added: list[str] = field(default_factory=list)
     removed: list[str] = field(default_factory=list)
-    modified: list[str] = field(default_factory=list)
+    modified: list[tuple[str, str]] = field(default_factory=list)
     unchanged_count: int = 0
     frozen_unchanged_count: int = 0
 
@@ -76,20 +80,12 @@ class Meta:
     token_cost: float | None = None
     rollback_reason: str | None = None
     rollback_target: int | None = None
+    changed_section: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        return {
-            "version": self.version,
-            "timestamp": self.timestamp,
-            "sha256_hash": self.sha256_hash,
-            "commit_sha": self.commit_sha,
-            "hypothesis": self.hypothesis,
-            "ab_results": self.ab_results,
-            "gate_result": self.gate_result,
-            "token_cost": self.token_cost,
-            "rollback_reason": self.rollback_reason,
-            "rollback_target": self.rollback_target,
-        }
+        import dataclasses
+
+        return {f.name: getattr(self, f.name) for f in dataclasses.fields(self)}
 
 
 def _sha256(text: str) -> str:
@@ -109,6 +105,7 @@ def _build_meta(
     token_cost: float | None = None,
     rollback_reason: str | None = None,
     rollback_target: int | None = None,
+    changed_section: str | None = None,
 ) -> Meta:
     return Meta(
         version=version,
@@ -124,6 +121,7 @@ def _build_meta(
         token_cost=token_cost,
         rollback_reason=rollback_reason,
         rollback_target=rollback_target,
+        changed_section=changed_section,
     )
 
 
@@ -142,6 +140,10 @@ class Registry:
         self._git_enabled = git_backed and _inside_git_repo(self._path)
         self._lock = threading.Lock()
         self._current = self._resolve_current()
+        self._cached_prompt: str | None = None
+        self._cached_version: int | None = None
+        self._lock_path = self._path / ".registry.lock"
+        self._fcntl_available = not os.name == "nt"
         if self._git_enabled:
             logger.info(
                 "Registry: git-backed at %s (current version %d)",
@@ -157,6 +159,32 @@ class Registry:
     @property
     def git_backed(self) -> bool:
         return self._git_enabled
+
+    @contextmanager
+    def _file_lock(self) -> Any:
+        """Acquire exclusive flock for cross-process safety; non-blocking with retry."""
+        if not self._fcntl_available:
+            yield
+            return
+        import fcntl
+
+        for attempt in range(3):
+            try:
+                fd = os.open(str(self._lock_path), os.O_CREAT | os.O_RDWR)
+                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                try:
+                    yield
+                finally:
+                    fcntl.flock(fd, fcntl.LOCK_UN)
+                    os.close(fd)
+                return
+            except OSError as e:
+                if e.errno in (errno.EACCES, errno.EAGAIN):
+                    if attempt < 2:
+                        time.sleep(0.5)
+                        continue
+                    raise RegistryError("registry locked by another process") from e
+                raise
 
     def _ensure_git_repo(self) -> None:
         if self._git_enabled:
@@ -200,8 +228,8 @@ class Registry:
             )
             return commit_result.stdout.strip()
         except (subprocess.SubprocessError, OSError) as e:
-            logger.warning(
-                "Registry: git commit failed for v%d, continuing file-only: %s",
+            logger.error(
+                "Registry: git commit failed for v%d: %s",
                 version,
                 e,
             )
@@ -215,7 +243,11 @@ class Registry:
     def current_prompt(self) -> str:
         if self._current == 0:
             return ""
+        if self._cached_prompt is not None and self._cached_version == self._current:
+            return self._cached_prompt
         prompt_data, _ = self._read(self._current)
+        self._cached_prompt = prompt_data
+        self._cached_version = self._current
         return prompt_data
 
     def _resolve_current(self) -> int:
@@ -241,7 +273,10 @@ class Registry:
         prompt_text = md_path.read_text(encoding="utf-8")
         if meta_path.exists():
             meta_data = json.loads(meta_path.read_text(encoding="utf-8"))
-            meta = Meta(**meta_data)
+            # Forward-compat: ignore unknown fields from newer versions (fix 291/215)
+            known = set(Meta.__dataclass_fields__.keys())
+            filtered = {k: v for k, v in meta_data.items() if k in known}
+            meta = Meta(**filtered)
         else:
             meta = Meta(
                 version=version,
@@ -252,7 +287,10 @@ class Registry:
 
     def _write(self, version: int, prompt_text: str, meta: Meta) -> None:
         md_path, meta_path = self._version_path(version)
-        md_path.write_text(prompt_text, encoding="utf-8")
+        # Atomic write via temp files (fix 222 corruption window)
+        md_tmp = md_path.with_suffix(".tmp.md")
+        meta_tmp = meta_path.with_suffix(".tmp.json")
+        md_tmp.write_text(prompt_text, encoding="utf-8")
         meta_dict = {
             "version": meta.version,
             "timestamp": meta.timestamp,
@@ -269,69 +307,96 @@ class Registry:
             "token_cost",
             "rollback_reason",
             "rollback_target",
+            "changed_section",
         ):
             val = getattr(meta, key, None)
             if val is not None:
                 meta_dict[key] = val
-        meta_path.write_text(
+        meta_tmp.write_text(
             json.dumps(meta_dict, indent=2, sort_keys=True), encoding="utf-8"
         )
+        md_tmp.replace(md_path)
+        meta_tmp.replace(meta_path)
 
     def create(
         self, prompt_text: str, **metadata: Any
     ) -> int:
         """Create a new prompt version (optionally git-committed). Returns the version number."""
         with self._lock:
-            self._ensure_git_repo()
-            version = self._current + 1
-            diff = self._compute_diff(self._current, prompt_text)
-            meta = _build_meta(
-                version,
-                prompt_text,
-                diff_from_previous=(
-                    {
-                        "lines_added": len(diff.added),
-                        "lines_removed": len(diff.removed),
-                        "lines_modified": len(diff.modified),
-                        "total": len(diff.added)
-                        + len(diff.removed)
-                        + len(diff.modified),
-                    }
-                    if diff is not None
-                    else None
-                ),
-                hypothesis=metadata.get("hypothesis"),
-                ab_results=metadata.get("ab_results"),
-                gate_result=metadata.get("gate_result"),
-                trigger_trace_ids=metadata.get("trigger_trace_ids"),
-                model_version=metadata.get("model_version"),
-                token_cost=metadata.get("token_cost"),
-                rollback_reason=metadata.get("rollback_reason"),
-                rollback_target=metadata.get("rollback_target"),
-            )
-            self._write(version, prompt_text, meta)
-            if self._git_enabled:
-                commit_sha = self._git_commit(version)
-                if commit_sha:
-                    meta = Meta(
-                        version=meta.version,
-                        timestamp=meta.timestamp,
-                        sha256_hash=meta.sha256_hash,
-                        commit_sha=commit_sha,
-                        diff_from_previous=meta.diff_from_previous,
-                        hypothesis=meta.hypothesis,
-                        ab_results=meta.ab_results,
-                        gate_result=meta.gate_result,
-                        trigger_trace_ids=meta.trigger_trace_ids,
-                        model_version=meta.model_version,
-                        token_cost=meta.token_cost,
-                        rollback_reason=meta.rollback_reason,
-                        rollback_target=meta.rollback_target,
-                    )
-                    self._write(version, prompt_text, meta)
-            self._current = version
-            logger.info("Registry: created version %d (git=%s)", version, self._git_enabled)
-            return version
+            with self._file_lock():
+                self._ensure_git_repo()
+                version = self._current + 1
+                diff = self._compute_diff(self._current, prompt_text)
+                meta_tmp = _build_meta(
+                    version,
+                    prompt_text,
+                    commit_sha=None,
+                    diff_from_previous=(
+                        {
+                            "lines_added": len(diff.added),
+                            "lines_removed": len(diff.removed),
+                            "lines_modified": len(diff.modified),
+                            "total": len(diff.added)
+                            + len(diff.removed)
+                            + len(diff.modified),
+                        }
+                        if diff is not None
+                        else None
+                    ),
+                    hypothesis=metadata.get("hypothesis"),
+                    ab_results=metadata.get("ab_results"),
+                    gate_result=metadata.get("gate_result"),
+                    trigger_trace_ids=metadata.get("trigger_trace_ids"),
+                    model_version=metadata.get("model_version"),
+                    token_cost=metadata.get("token_cost"),
+                    rollback_reason=metadata.get("rollback_reason"),
+                    rollback_target=metadata.get("rollback_target"),
+                    changed_section=metadata.get("changed_section"),
+                )
+                self._write(version, prompt_text, meta_tmp)
+                commit_sha: str | None = None
+                if self._git_enabled:
+                    try:
+                        commit_sha = self._git_commit(version)
+                    except Exception as e:
+                        md_path, meta_path = self._version_path(version)
+                        if md_path.exists():
+                            md_path.unlink(missing_ok=True)
+                        if meta_path.exists():
+                            meta_path.unlink(missing_ok=True)
+                        raise RegistryError(f"git commit failed for v{version}: {e}") from e
+                    if commit_sha:
+                        meta = _build_meta(
+                            version,
+                            prompt_text,
+                            commit_sha=commit_sha,
+                            diff_from_previous=meta_tmp.diff_from_previous,
+                            hypothesis=meta_tmp.hypothesis,
+                            ab_results=meta_tmp.ab_results,
+                            gate_result=meta_tmp.gate_result,
+                            trigger_trace_ids=meta_tmp.trigger_trace_ids,
+                            model_version=meta_tmp.model_version,
+                            token_cost=meta_tmp.token_cost,
+                            rollback_reason=meta_tmp.rollback_reason,
+                            rollback_target=meta_tmp.rollback_target,
+                            changed_section=meta_tmp.changed_section,
+                        )
+                        self._write(version, prompt_text, meta)
+                        self._cached_prompt = prompt_text
+                        self._cached_version = version
+                        self._current = version
+                        logger.info(
+                            "Registry: created version %d (git=%s, sha=%s)",
+                            version,
+                            self._git_enabled,
+                            commit_sha,
+                        )
+                        return version
+                self._cached_prompt = prompt_text
+                self._cached_version = version
+                self._current = version
+                logger.info("Registry: created version %d (git=%s)", version, self._git_enabled)
+                return version
 
     def get(self, version: int) -> tuple[str, Meta]:
         if version <= 0 or version > self._current:
@@ -356,13 +421,19 @@ class Registry:
         sm = difflib.SequenceMatcher(None, old_lines, new_lines)
         added: list[str] = []
         removed: list[str] = []
-        modified: list[str] = []
+        modified: list[tuple[str, str]] = []
         unchanged = 0
         for tag, i1, i2, j1, j2 in sm.get_opcodes():
             if tag == "equal":
                 unchanged += i2 - i1
             elif tag == "replace":
-                modified.extend(old_lines[i1:i2])
+                old_chunk = old_lines[i1:i2]
+                new_chunk = new_lines[j1:j2]
+                # Pad shorter side with empty strings so zip works
+                max_len = max(len(old_chunk), len(new_chunk))
+                old_padded = old_chunk + [""] * (max_len - len(old_chunk))
+                new_padded = new_chunk + [""] * (max_len - len(new_chunk))
+                modified.extend(zip(old_padded, new_padded))
             elif tag == "delete":
                 removed.extend(old_lines[i1:i2])
             elif tag == "insert":
@@ -379,12 +450,9 @@ class Registry:
             raise RegistryError(
                 f"version {version} not in range [1, {self._current}]"
             )
-        text, _ = self._read(version)
-        return self.create(
-            text,
-            rollback_reason=reason,
-            rollback_target=version,
-        )
+        with self._lock:
+            text, _ = self._read(version)
+        return self.create(text, rollback_reason=reason, rollback_target=version)
 
     def lineage(
         self, from_version: int | None = None

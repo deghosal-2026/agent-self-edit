@@ -1,0 +1,52 @@
+{
+  "accuracy": 0.0,
+  "correct": 0,
+  "total": 5,
+  "results": [
+    {
+      "task_id": "mixed-001",
+      "input": "Classify this ticket AND extract the affected service: 'The payment gateway is returning 502 errors for all enterprise customers. This started at 14:00 UTC.'",
+      "expected": "classification: urgent, technical\naffected_service: payment gateway",
+      "actual": "**Classification:**\n- Category: Technical Issue\n- Sub-category: Service Outage\n- Severity: High\n\n**Extracted Affected Service:**\n- Payment Gateway",
+      "passed": false,
+      "score": 0.0,
+      "error": null
+    },
+    {
+      "task_id": "mixed-010",
+      "input": "Extract all error codes from this log AND classify the overall system health: 'E4031 on auth-service (3 retries), E5002 on user-service (1 retry), E4031 on billing-service (5 retries). All services responding but with elevated error rates.'",
+      "expected": "errors: E4031, E5002\nhealth: degraded",
+      "actual": "**Extracted Error Codes:**\n- E4031\n- E5002\n\n**System Health Classification:**\n- The overall system health is classified as \"Degraded Performance\". While all services are responding, the elevated error rates and the presence of error codes indicate that the system is not functioning optimally.",
+      "passed": false,
+      "score": 0.0,
+      "error": null
+    },
+    {
+      "task_id": "mixed-025",
+      "input": "Classify this as capacity planning or incident response AND extract the resource metrics: 'The database is running at 85% disk usage. At current growth rates, we will run out of space in 14 days. The table with the fastest growth is audit_logs.'",
+      "expected": "type: capacity planning\ndisk_usage: 85%\ntime_remaining: 14 days\nfastest_growth: audit_logs",
+      "actual": "**Classification:** Capacity Planning\n\n**Extracted Resource Metrics:**\n- Disk Usage: 85%\n- Time until full: 14 days\n- Fastest growing table: audit_logs",
+      "passed": false,
+      "score": 0.0,
+      "error": null
+    },
+    {
+      "task_id": "mixed-050",
+      "input": "Extract the performance metrics AND generate an optimization plan: 'Current metrics: p95 latency 800ms, p99 2400ms, throughput 1200 req/s. Target: p95 < 200ms. Bottleneck: N+1 queries in the order service ORM layer.'",
+      "expected": "current_p95: 800ms\ncurrent_p99: 2400ms\nplan: add query batching, implement read replicas, enable connection pooling",
+      "actual": "**Extracted Performance Metrics:**\n- Current p95 latency: 800ms\n- Current p99 latency: 2400ms\n- Current throughput: 1200 requests per second\n- Target p95 latency: < 200ms\n- Identified bottleneck: N+1 queries in the order service ORM layer\n\n**Optimization Plan:**\n\n1. **Query Optimization:**\n   - **Identify N+1 Queries:** Use tools like SQL query logs, ORM-specific query analyzers, or database performance insights to identify all N+1 query instances in the order service.\n   - **Implement Eager Loading:** Replace N+1 queries with eager loading (e.g., `includes` in ActiveRecord, `select_related` or `prefetch_related` in Django ORM) to load the necessary associated data in a single query.\n   - **Denormalize Data:** Consider denormalizing data to reduce the number of joins and queries, if appropriate for your use case.\n\n2. **Database Optimization:**\n   - **Indexing:** Ensure proper indexing on frequently queried columns to speed up data retrieval.\n   - **Query Optimization:** Review and optimize slow queries, considering query restructuring, adding missing indexes, or using database-specific optimizations.\n   - **Database Configuration:** Tune database configuration parameters for better performance, such as increasing the connection pool size or adjusting memory allocation.\n\n3. **Caching:**\n   - **Implement Caching:** Introduce caching for frequently accessed data to reduce database load. Consider using tools like Redis, Memcached, or your preferred caching solution.\n   - **Cache Invalidation:** Implement a proper cache invalidation strategy to ensure data consistency.\n\n4. **Asynchronous Processing:**\n   - **Offload Tasks:** Identify and offload time-consuming tasks from the main request-response cycle using background jobs or message queues (e.g., Sidekiq, Resque, Celery, or RabbitMQ).\n\n5. **Monitoring and Iteration:**\n   - **Monitor Performance:** Continuously monitor performance metrics to identify further optimization opportunities and track progress.\n   - **Iterate:** Based on monitoring results, iterate on optimizations, and address any new bottlenecks that may arise.\n\n6. **Load Testing:**\n   - **Conduct Load Tests:** After implementing optimizations, conduct load tests to validate improvements and identify any remaining issues.\n\nBy following this optimization plan, you should see improvements in your p95 latency and overall system performance. Regularly review and update the plan as needed to address new challenges and bottlenecks.",
+      "passed": false,
+      "score": 0.0,
+      "error": null
+    },
+    {
+      "task_id": "mixed-075",
+      "input": "Classify the technical debt item AND generate a paydown plan: 'Debt item: Legacy billing module uses deprecated payment SDK. 12K LOC. No tests. Blocks new feature development. Options: rewrite ($400K, 6 months) or wrapper ($100K, 2 months).'",
+      "expected": "classification: technical\ndebt: legacy billing SDK, 12K LOC, no tests\nplan: wrapper approach $100K/2 months, then gradual rewrite",
+      "actual": "**Classification:**\n\n1. **Type of Technical Debt:** Architectural/Design Debt\n2. **Severity:** High (Blocks new feature development, no tests)\n3. **Size:** Large (12,000 lines of code)\n4. **Age:** Legacy (Deprecated SDK)\n\n**Paydown Plan:**\n\n**Option 1: Rewrite**\n\n1. **Assessment (1 week):**\n   - Confirm the scope of the rewrite.\n   - Identify dependencies and integrations.\n   - Finalize the new payment SDK to be used.\n\n2. **Planning (1 week):**\n   - Break down the rewrite into smaller tasks.\n   - Create a detailed project plan with milestones.\n   - Allocate resources (developers, testers, etc.).\n\n3. **Development (5 months):**\n   - Implement the new billing module in iterations.\n   - Ensure proper error handling and logging.\n   - Maintain backward compatibility during the transition.\n\n4. **Testing (1 month):**\n   - Write unit, integration, and end-to-end tests.\n   - Perform thorough regression testing.\n   - Conduct user acceptance testing (UAT).\n\n5. **Deployment (1 week):**\n   - Deploy the new billing module to production.\n   - Monitor for any issues post-deployment.\n\n6. **Retirement (1 week):**\n   - Retire the old billing module.\n   - Update any relevant documentation.\n\n**Option 2: Wrapper**\n\n1. **Assessment (1 week):**\n   - Confirm the scope of the wrapper.\n   - Identify the necessary adapters and interfaces.\n   - Finalize the new payment SDK to be used.\n\n2. **Planning (1 week):**\n   - Break down the wrapper development into smaller tasks.\n   - Create a detailed project plan with milestones.\n   - Allocate resources (developers, testers, etc.).\n\n3. **Development (1.5 months):**\n   - Implement the wrapper and necessary adapters.\n   - Ensure proper error handling and logging.\n   - Maintain backward compatibility.\n\n4. **Testing (0.5 month):**\n   - Write unit, integration, and end-to-end tests.\n   - Perform thorough regression testing.\n   - Conduct user acceptance testing (UAT).\n\n5. **Deployment (1 week):**\n   - Deploy the wrapper to production.\n   - Monitor for any issues post-deployment.\n\n6. **Retirement (1 week):**\n   - Retire the old billing module.\n   - Update any relevant documentation.\n\n**Recommendation:**\n\nGiven that the rewrite option blocks new feature development and has a higher cost and longer timeline, it might be more beneficial to choose the wrapper option. This allows new feature development to continue while still addressing the technical debt. However, the rewrite option should be considered for the long term to avoid further technical debt accumulation.",
+      "passed": false,
+      "score": 0.0,
+      "error": null
+    }
+  ]
+}

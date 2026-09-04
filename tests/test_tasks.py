@@ -47,8 +47,11 @@ def test_load_json():
 
 def test_empty_task_set():
     path = _write_yaml([])
-    ts = load_task_set(path)
-    assert len(ts) == 0
+    try:
+        load_task_set(path)
+        assert False, "expected TaskSetError for empty task set"
+    except TaskSetError as e:
+        assert "empty" in str(e).lower()
 
 
 def test_missing_file():

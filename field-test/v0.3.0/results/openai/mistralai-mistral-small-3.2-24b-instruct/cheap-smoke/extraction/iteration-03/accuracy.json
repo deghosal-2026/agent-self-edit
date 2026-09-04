@@ -1,0 +1,52 @@
+{
+  "accuracy": 20.0,
+  "correct": 1,
+  "total": 5,
+  "results": [
+    {
+      "task_id": "extract-001",
+      "input": "My name is Alice Johnson and my email is alice@example.com.",
+      "expected": "name: Alice Johnson\nemail: alice@example.com",
+      "actual": "name: Alice Johnson\nemail: alice@example.com",
+      "passed": true,
+      "score": 1.0,
+      "error": null
+    },
+    {
+      "task_id": "extract-005",
+      "input": "The build failed with error code E4032 on branch feature/new-auth.",
+      "expected": "error: E4032\nbranch: feature/new-auth",
+      "actual": "error code: E4032\nbranch: feature/new-auth",
+      "passed": false,
+      "score": 0.5,
+      "error": null
+    },
+    {
+      "task_id": "extract-010",
+      "input": "The server srv-db-01 has 240GB of 500GB used on the data volume. The backup volume set is 120GB.",
+      "expected": "server: srv-db-01\nvolume: data\nused: 240GB\ntotal: 500GB\nbackup: 120GB",
+      "actual": "server: srv-db-01\nused_data_volume: 240GB\ntotal_data_volume: 500GB\nbackup_volume_set: 120GB",
+      "passed": false,
+      "score": 0.2,
+      "error": null
+    },
+    {
+      "task_id": "extract-015",
+      "input": "The vulnerability was reported by an external researcher on 2025-03-01 via HackerOne. The VDP offers rewards up to $5000 for criticals.",
+      "expected": "researcher: external\nreported_date: 2025-03-01\nsource: HackerOne\nmax_reward: $5000",
+      "actual": "date: 2025-03-01\nplatform: HackerOne\nreward: up to $5000\nseverity: critical",
+      "passed": false,
+      "score": 0.0,
+      "error": null
+    },
+    {
+      "task_id": "extract-020",
+      "input": "The server is running Ubuntu 22.04 with kernel 6.2.0 and nginx 1.24. The application stack is Python 3.11 with FastAPI and PostgreSQL 15.",
+      "expected": "os: Ubuntu 22.04\nkernel: 6.2.0\nwebserver: nginx 1.24\nruntime: Python 3.11\nframework: FastAPI\ndatabase: PostgreSQL 15",
+      "actual": "os: Ubuntu 22.04\nkernel: 6.2.0\nweb_server: nginx 1.24\napplication_language: Python 3.11\napplication_framework: FastAPI\ndatabase: PostgreSQL 15",
+      "passed": false,
+      "score": 0.6666666666666666,
+      "error": null
+    }
+  ]
+}

@@ -77,7 +77,7 @@ Respond as JSON: {{"section": "...", "rationale": "..."}}"""
 
 STAGE3_SYNTHESIZE_PROMPT = """You are making a minimal edit to a prompt.
 
-Current prompt (exact text — copy old_text from here character-for-character):
+Current prompt (exact text — copy old_text verbatim, raw — no [FROZEN]):
 {current_prompt_raw}
 
 Target section: {target_section}
@@ -199,10 +199,13 @@ def build_stage3_prompt(
 
 def _extract_json(response: str) -> list[dict[str, Any]] | dict[str, Any]:
     text = response.strip()
-    if text.startswith("```"):
-        lines = text.splitlines()
-        lines = [line for line in lines if not line.strip().startswith("```")]
-        text = "\n".join(lines)
+    # Only strip outermost fences, not inner backtick lines containing code (fix 224)
+    lines = text.splitlines()
+    if lines and lines[0].strip().startswith("```"):
+        lines = lines[1:]
+    if lines and lines[-1].strip() == "```":
+        lines = lines[:-1]
+    text = "\n".join(lines)
     try:
         data: Any = json.loads(text)
     except json.JSONDecodeError as e:
@@ -253,6 +256,7 @@ def validate_proposal(
     proposal: EditProposal,
     current_prompt: str,
     frozen_sections: list[str] | None,
+    config: Config | None = None,
 ) -> list[str]:
     errors: list[str] = []
     if not proposal.section:
@@ -267,12 +271,15 @@ def validate_proposal(
     if proposal.section in frozen:
         errors.append(f"section '{proposal.section}' is frozen and cannot be modified")
 
-    old_lines = [line for line in proposal.old_text.splitlines() if line.strip()]
-    new_lines = [line for line in proposal.new_text.splitlines() if line.strip()]
+    # Count all lines including blank (fix 243) and use configurable limit (fix 287)
+    old_lines = proposal.old_text.splitlines()
+    new_lines = proposal.new_text.splitlines()
     changed_span = max(len(old_lines), len(new_lines))
-    if changed_span > 2:
+    max_lines = config.analyzer.max_edit_lines if config else 10
+    if changed_span > max_lines:
         errors.append(
-            f"edit span too large ({changed_span} lines); proposals must target at most 2 lines"
+            f"edit span too large ({changed_span} lines); "
+            f"max is {max_lines} lines"
         )
     return errors
 
@@ -319,11 +326,13 @@ class StagedAnalyzer:
 
     def __init__(self, llm: LLMProvider) -> None:
         self.llm = llm
+        self._stage_tokens: list[int] = []
 
     def stage1_summarize(self, traces: list[Trace], rejection_context: str = "") -> str:
         """Return a JSON string of failure patterns."""
         prompt = build_stage1_prompt(traces, rejection_context=rejection_context)
         response = _llm_call(self.llm, prompt)
+        self._stage_tokens.append(estimate_tokens(prompt) + estimate_tokens(response))
         data = _extract_json(response)
         if isinstance(data, list):
             return json.dumps(data, indent=2)
@@ -337,6 +346,7 @@ class StagedAnalyzer:
             current_prompt, failure_patterns, rejection_context=rejection_context
         )
         response = _llm_call(self.llm, prompt)
+        self._stage_tokens.append(estimate_tokens(prompt) + estimate_tokens(response))
         data = _extract_json(response)
         if isinstance(data, dict):
             return data.get("section", ""), data.get("rationale", "")
@@ -359,6 +369,7 @@ class StagedAnalyzer:
             rejection_context=rejection_context,
         )
         response = _llm_call(self.llm, prompt)
+        self._stage_tokens.append(estimate_tokens(prompt) + estimate_tokens(response))
         data = _extract_json(response)
         if isinstance(data, dict):
             return _build_proposal(data)
@@ -369,17 +380,18 @@ class StagedAnalyzer:
         proposal: EditProposal,
         current_prompt: str,
         frozen_sections: list[str] | None,
+        config: Config | None = None,
     ) -> tuple[list[str], EditProposal]:
         """Deterministic validation before A/B.
 
         Returns (errors, corrected_proposal). If fuzzy matching fixes
         old_text, the corrected proposal is returned with an empty error list.
         """
-        errors = validate_proposal(proposal, current_prompt, frozen_sections)
+        errors = validate_proposal(proposal, current_prompt, frozen_sections, config)
         if errors and "old_text not found in current prompt" in errors:
             corrected = self._fuzzy_fix_old_text(proposal, current_prompt)
             if corrected is not None:
-                errors = validate_proposal(corrected, current_prompt, frozen_sections)
+                errors = validate_proposal(corrected, current_prompt, frozen_sections, config)
                 if not errors:
                     logger.info(
                         "Stage 4 fuzzy match: old_text corrected successfully"
@@ -429,15 +441,20 @@ class StagedAnalyzer:
                     best_ratio = ratio
                     best_match = candidate
 
-        # Strategy 3: try the old_text as a substring of the prompt
-        # (handles whitespace normalization)
-        normalized_old = " ".join(old_text.split())
-        normalized_prompt = " ".join(current_prompt.split())
-        if normalized_old in normalized_prompt:
-            # Find the actual substring in the original prompt
-            # by matching on normalized whitespace
-            best_ratio = 1.0
-            best_match = old_text  # already a match after normalization
+        # Strategy 3: whitespace-normalized substring search (fix 279/207)
+        # Extract actual substring from original prompt with flexible whitespace
+        import re
+
+        parts = old_text.split()
+        if parts:
+            pattern = r"\s+".join(re.escape(p) for p in parts)
+            try:
+                m = re.search(pattern, current_prompt)
+                if m:
+                    best_ratio = 1.0
+                    best_match = m.group(0)
+            except re.error:
+                pass
 
         if best_ratio > 0.80 and best_match:
             return EditProposal(
@@ -456,20 +473,25 @@ class StagedAnalyzer:
         traces: list[Trace],
         current_prompt: str,
         frozen_sections: list[str] | None,
-        llm_provider: LLMProvider,
+        llm_provider: LLMProvider | None = None,
         rejection_context: str = "",
-    ) -> list[EditProposal]:
-        """Run the full staged pipeline."""
+    ) -> tuple[list[EditProposal], str | None, int]:
+        """Run the full staged pipeline. Returns (proposals, failure_reason, total_tokens)."""
+        self._stage_tokens = []
         if not traces:
-            return []
+            return [], None, 0
 
+        effective_llm = llm_provider if llm_provider is not None else self.llm
+        orig_llm = self.llm
+        if effective_llm is not self.llm:
+            self.llm = effective_llm
         try:
             patterns = self.stage1_summarize(traces, rejection_context=rejection_context)
             section, rationale = self.stage2_select(
                 current_prompt, patterns, rejection_context=rejection_context
             )
             if not section:
-                return []
+                return [], None, sum(self._stage_tokens)
             proposal = self.stage3_synthesize(
                 current_prompt,
                 section,
@@ -478,15 +500,15 @@ class StagedAnalyzer:
                 rejection_context=rejection_context,
             )
             if proposal is None:
-                return []
+                return [], None, sum(self._stage_tokens)
             errors, proposal = self.stage4_validate(proposal, current_prompt, frozen_sections)
             if errors:
-                logger.warning("Stage 4 validation failed: %s", errors)
-                return []
-            return [proposal]
-        except AnalyzerError:
-            logger.warning("Staged analyzer failed; falling through to empty proposals")
-            return []
+                return [], f"validation failed: {errors}", sum(self._stage_tokens)
+            return [proposal], None, sum(self._stage_tokens)
+        except AnalyzerError as e:
+            return [], f"staged analyzer error: {e}", sum(self._stage_tokens)
+        finally:
+            self.llm = orig_llm
 
 
 # ---------------------------------------------------------------------------
@@ -548,6 +570,48 @@ def analyze_batch(
     if not failed:
         return AnalysisResult()
 
+    if staged:
+        # Staged path: early branch, no single-pass prompt (fix 285)
+        sa = StagedAnalyzer(llm_provider)
+        proposals, stage_reason, staged_tokens = sa.analyze(
+            failed,
+            current_prompt,
+            frozen_sections,
+            llm_provider,
+            rejection_context=rejection_context,
+        )
+        total_tokens = staged_tokens
+        total_cost = estimate_cost(total_tokens)
+        ceiling = config.analyzer.cost_ceiling_usd if config else 0.50
+        if total_cost > ceiling:
+            logger.warning(
+                "Analyzer: staged cost %.4f exceeds ceiling %.4f — partial",
+                total_cost,
+                ceiling,
+            )
+            return AnalysisResult(
+                proposals=[],
+                tokens_used=total_tokens,
+                cost_usd=total_cost,
+                cost_aborted=True,
+                failure_reason="cost ceiling exceeded",
+            )
+        if not proposals:
+            return AnalysisResult(
+                proposals=[],
+                tokens_used=total_tokens,
+                cost_usd=total_cost,
+                failure_reason=stage_reason or "staged analyzer produced no proposals",
+            )
+        validated = deduplicate_proposals(proposals, near_misses or [])
+        cost_aborted = total_cost > ceiling
+        return AnalysisResult(
+            proposals=validated,
+            tokens_used=total_tokens,
+            cost_usd=total_cost,
+            cost_aborted=cost_aborted,
+        )
+
     ceiling = config.analyzer.cost_ceiling_usd if config else 0.50
     prompt_text = build_analyzer_prompt(
         current_prompt, failed, max_proposals, rejection_context=rejection_context,
@@ -565,34 +629,15 @@ def analyze_batch(
             failure_reason="cost ceiling exceeded",
         )
 
-    if staged:
-        sa = StagedAnalyzer(llm_provider)
-        proposals = sa.analyze(
-            failed,
-            current_prompt,
-            frozen_sections,
-            llm_provider,
-            rejection_context=rejection_context,
-        )
-        total_tokens = prompt_tokens  # approximate
-        total_cost = estimate_cost(total_tokens)
-        if not proposals:
-            return AnalysisResult(
-                proposals=[],
-                tokens_used=total_tokens,
-                cost_usd=total_cost,
-                failure_reason="staged analyzer produced no proposals",
-            )
-    else:
-        response, proposals = _analyze_with_response(
-            failed, current_prompt, frozen_sections, llm_provider,
-        )
-        total_tokens = prompt_tokens + estimate_tokens(response)
-        total_cost = estimate_cost(total_tokens)
-        proposals = [
-            p for p in proposals[:max_proposals]
-            if not validate_proposal(p, current_prompt, frozen_sections)
-        ]
+    response, proposals = _analyze_with_response(
+        failed, current_prompt, frozen_sections, llm_provider,
+    )
+    total_tokens = prompt_tokens + estimate_tokens(response)
+    total_cost = estimate_cost(total_tokens)
+    proposals = [
+        p for p in proposals[:max_proposals]
+        if not validate_proposal(p, current_prompt, frozen_sections, config)
+    ]
 
     validated = deduplicate_proposals(proposals, near_misses or [])
     cost_aborted = total_cost > ceiling

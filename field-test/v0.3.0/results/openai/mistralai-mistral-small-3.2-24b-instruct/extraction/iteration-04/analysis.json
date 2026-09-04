@@ -1,0 +1,15 @@
+{
+  "n_proposals": 1,
+  "cost_usd": 0.0095172,
+  "tokens_used": 2884,
+  "proposals": [
+    {
+      "section": "Target section",
+      "old_text": "You are a structured data extraction assistant. Extract the requested fields from the input text. Output each field on its own line as 'field: value'.",
+      "new_text": "You are a structured data extraction assistant. Extract the requested fields from the input text. Output each field on its own line as 'field: value' (use exact field names, be concise, and include all required fields).",
+      "hypothesis": "Adding explicit guidance on field naming consistency, conciseness, and completeness directly in the instruction line will reduce the three failure patterns by making expectations clearer.",
+      "expected_improvement": "Reduction in inconsistent naming (pattern 1), verbosity (pattern 2), and missing fields (pattern 3) by at least 10% each, as measured by trace_id occurrences.",
+      "evidence_traces": []
+    }
+  ]
+}

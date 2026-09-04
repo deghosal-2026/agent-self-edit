@@ -17,7 +17,7 @@ StdList = list
 
 logger = logging.getLogger("agent_self_edit.trace")
 
-_SCHEMA_VERSION = 1
+_SCHEMA_VERSION = 2
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS traces (
@@ -31,7 +31,8 @@ CREATE TABLE IF NOT EXISTS traces (
     failure_reason  TEXT,
     timestamp       TEXT    NOT NULL,
     prompt_version  INTEGER,
-    processed       INTEGER NOT NULL DEFAULT 0
+    processed       INTEGER NOT NULL DEFAULT 0,
+    metadata        TEXT    DEFAULT '{}'
 );
 CREATE INDEX IF NOT EXISTS idx_traces_task_id            ON traces(task_id);
 CREATE INDEX IF NOT EXISTS idx_traces_prompt_version     ON traces(prompt_version);
@@ -40,7 +41,9 @@ CREATE INDEX IF NOT EXISTS idx_traces_timestamp          ON traces(timestamp);
 CREATE INDEX IF NOT EXISTS idx_traces_processed          ON traces(processed);
 """
 
-_MIGRATIONS: dict[int, str] = {}
+_MIGRATIONS: dict[int, str] = {
+    2: "ALTER TABLE traces ADD COLUMN metadata TEXT DEFAULT '{}';",
+}
 
 
 @dataclass
@@ -56,24 +59,51 @@ class TraceStore:
     def __post_init__(self) -> None:
         db_path = Path(self.path)
         db_path.parent.mkdir(parents=True, exist_ok=True)
+        # Persistent WAL connection (fix 301/245) — single connection per instance
+        self._db = sqlite3.connect(self.path, check_same_thread=False, timeout=30)
+        self._db.row_factory = sqlite3.Row
+        self._db.execute("PRAGMA journal_mode=WAL")
+        self._db.execute("PRAGMA foreign_keys=ON")
         self._initialize()
+        self._batch_counter = self.count(success=None)
 
     def _connect(self) -> sqlite3.Connection:
-        conn = sqlite3.connect(self.path, timeout=30)
+        # Return persistent connection if available, else create one (for tests that mock)
+        if self._db is not None:
+            return self._db
+        conn = sqlite3.connect(self.path, check_same_thread=False, timeout=30)
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA journal_mode=WAL")
         conn.execute("PRAGMA foreign_keys=ON")
         return conn
 
-    def _initialize(self) -> None:
-        conn = self._connect()
-        try:
-            conn.executescript(_SCHEMA)
-            self._apply_migrations(conn)
-            conn.commit()
-        finally:
+    def _is_persistent(self, conn: sqlite3.Connection) -> bool:
+        return conn is self._db
+
+    def _close_if_needed(self, conn: sqlite3.Connection) -> None:
+        if not self._is_persistent(conn):
             conn.close()
-        self._batch_counter = self.count(success=None)
+
+    def close(self) -> None:
+        if self._db is not None:
+            try:
+                self._db.close()
+            except Exception:
+                pass
+            self._db = None
+
+    def __del__(self) -> None:
+        try:
+            if self._db is not None:
+                self._db.close()
+        except Exception:
+            pass
+
+    def _initialize(self) -> None:
+        assert self._db is not None
+        self._db.executescript(_SCHEMA)
+        self._apply_migrations(self._db)
+        self._db.commit()
 
     def _apply_migrations(self, conn: sqlite3.Connection) -> None:
         cursor = conn.execute("PRAGMA user_version")
@@ -86,7 +116,12 @@ class TraceStore:
         for target in range(version + 1, _SCHEMA_VERSION + 1):
             statement = _MIGRATIONS.get(target)
             if statement:
-                conn.executescript(statement)
+                try:
+                    conn.executescript(statement)
+                except sqlite3.OperationalError as e:
+                    # Column may already exist if DB was created with new schema
+                    if "duplicate column" not in str(e).lower():
+                        raise
             conn.execute(f"PRAGMA user_version = {target}")
         conn.commit()
 
@@ -94,13 +129,14 @@ class TraceStore:
         """Persist a :class:`Trace`, returning its row id."""
         with self._write_lock:
             conn = self._connect()
+            is_persist = self._is_persistent(conn)
             try:
                 cursor = conn.execute(
                     """
                     INSERT INTO traces (
                         task_id, task_input, steps, final_output, expected_output,
-                        success, failure_reason, timestamp, prompt_version, processed
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+                        success, failure_reason, timestamp, prompt_version, processed, metadata
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
                     """,
                     (
                         trace.task_id,
@@ -112,6 +148,7 @@ class TraceStore:
                         trace.failure_reason,
                         trace.timestamp,
                         trace.prompt_version,
+                        json.dumps(trace.metadata or {}),
                     ),
                 )
                 conn.commit()
@@ -120,7 +157,8 @@ class TraceStore:
                     raise RuntimeError("Failed to retrieve inserted trace id")
                 return row_id
             finally:
-                conn.close()
+                if not is_persist:
+                    conn.close()
 
     def ingest(self, trace: dict[str, Any]) -> str:
         """Validate, store, and return the trace's task_id.
@@ -135,6 +173,7 @@ class TraceStore:
 
     def get(self, task_id: str) -> Trace | None:
         conn = self._connect()
+        is_persist = self._is_persistent(conn)
         try:
             cursor = conn.execute(
                 "SELECT * FROM traces WHERE task_id = ? ORDER BY id DESC LIMIT 1",
@@ -143,7 +182,8 @@ class TraceStore:
             row = cursor.fetchone()
             return self._row_to_trace(row) if row is not None else None
         finally:
-            conn.close()
+            if not is_persist:
+                conn.close()
 
     def list(
         self,
@@ -162,6 +202,7 @@ class TraceStore:
         where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
         params.append(limit)
         conn = self._connect()
+        is_persist = self._is_persistent(conn)
         try:
             cursor = conn.execute(
                 f"SELECT * FROM traces {where} ORDER BY id LIMIT ?",
@@ -169,16 +210,20 @@ class TraceStore:
             )
             return [self._row_to_trace(row) for row in cursor.fetchall()]
         finally:
-            conn.close()
+            if not is_persist:
+                conn.close()
 
     def count(self, success: bool | None = None) -> int:
         if success is None:
             conn = self._connect()
+            is_persist = self._is_persistent(conn)
             try:
                 return int(conn.execute("SELECT COUNT(*) FROM traces").fetchone()[0])
             finally:
-                conn.close()
+                if not is_persist:
+                    conn.close()
         conn = self._connect()
+        is_persist = self._is_persistent(conn)
         try:
             return int(
                 conn.execute(
@@ -187,10 +232,12 @@ class TraceStore:
                 ).fetchone()[0]
             )
         finally:
-            conn.close()
+            if not is_persist:
+                conn.close()
 
     def delete_before(self, timestamp: str) -> int:
         conn = self._connect()
+        is_persist = self._is_persistent(conn)
         try:
             cursor = conn.execute(
                 "DELETE FROM traces WHERE timestamp < ?", (timestamp,)
@@ -198,11 +245,23 @@ class TraceStore:
             conn.commit()
             return int(cursor.rowcount)
         finally:
-            conn.close()
+            if not is_persist:
+                conn.close()
 
     def _row_to_trace(self, row: sqlite3.Row) -> Trace:
         steps_raw = row["steps"]
         steps: list[dict[str, Any]] = json.loads(steps_raw) if steps_raw else []
+        # Handle metadata column that may not exist in old DBs
+        try:
+            meta_raw = row["metadata"]
+        except (IndexError, KeyError):
+            meta_raw = None
+        metadata: dict[str, Any] = {}
+        if meta_raw:
+            try:
+                metadata = json.loads(meta_raw)
+            except (json.JSONDecodeError, TypeError):
+                metadata = {}
         return Trace(
             task_id=row["task_id"],
             task_input=row["task_input"],
@@ -214,6 +273,7 @@ class TraceStore:
             timestamp=row["timestamp"],
             prompt_version=row["prompt_version"],
             row_id=row["id"],
+            metadata=metadata,
         )
 
     # ---- batching ----
@@ -223,6 +283,7 @@ class TraceStore:
 
     def count_pending(self) -> int:
         conn = self._connect()
+        is_persist = self._is_persistent(conn)
         try:
             return int(
                 conn.execute(
@@ -230,7 +291,8 @@ class TraceStore:
                 ).fetchone()[0]
             )
         finally:
-            conn.close()
+            if not is_persist:
+                conn.close()
 
     def get_batch(self, size: int) -> StdList[Trace]:
         """Atomically reserve and return a batch of pending traces.
@@ -240,6 +302,7 @@ class TraceStore:
         success or ``release_in_flight`` on failure.
         """
         conn = self._connect()
+        is_persist = self._is_persistent(conn)
         try:
             with self._write_lock:
                 rows = conn.execute(
@@ -263,7 +326,8 @@ class TraceStore:
                 traces = [self._row_to_trace(row) for row in rows]
                 return traces
         finally:
-            conn.close()
+            if not is_persist:
+                conn.close()
 
     def acknowledge_rows(self, traces: StdList[Trace]) -> None:
         """Mark rows as successfully processed (by immutable row id)."""
@@ -275,6 +339,7 @@ class TraceStore:
         placeholders = ",".join("?" for _ in row_ids)
         with self._write_lock:
             conn = self._connect()
+            is_persist = self._is_persistent(conn)
             try:
                 conn.execute(
                     f"UPDATE traces SET processed = 1 WHERE id IN ({placeholders})",
@@ -282,7 +347,8 @@ class TraceStore:
                 )
                 conn.commit()
             finally:
-                conn.close()
+                if not is_persist:
+                    conn.close()
 
     def release_in_flight(self, traces: StdList[Trace]) -> None:
         """Release in-flight rows back to pending (for retry after failure)."""
@@ -294,6 +360,7 @@ class TraceStore:
         placeholders = ",".join("?" for _ in row_ids)
         with self._write_lock:
             conn = self._connect()
+            is_persist = self._is_persistent(conn)
             try:
                 conn.execute(
                     f"UPDATE traces SET processed = 0 WHERE id IN ({placeholders})",
@@ -301,7 +368,8 @@ class TraceStore:
                 )
                 conn.commit()
             finally:
-                conn.close()
+                if not is_persist:
+                    conn.close()
 
     def acknowledge(self, task_ids: StdList[str]) -> None:
         """Legacy: acknowledge by task_id. Prefer ``acknowledge_rows``."""
@@ -310,6 +378,7 @@ class TraceStore:
         placeholders = ",".join("?" for _ in task_ids)
         with self._write_lock:
             conn = self._connect()
+            is_persist = self._is_persistent(conn)
             try:
                 conn.execute(
                     f"UPDATE traces SET processed = 1 WHERE task_id IN ({placeholders})",
@@ -317,7 +386,8 @@ class TraceStore:
                 )
                 conn.commit()
             finally:
-                conn.close()
+                if not is_persist:
+                    conn.close()
 
     def acknowledge_batch(self, traces: StdList[Trace]) -> None:
         """Mark rows as processed by their immutable ``id``, not ``task_id``.
@@ -333,6 +403,7 @@ class TraceStore:
         placeholders = ",".join("?" for _ in row_ids)
         with self._write_lock:
             conn = self._connect()
+            is_persist = self._is_persistent(conn)
             try:
                 conn.execute(
                     f"UPDATE traces SET processed = 1 WHERE id IN ({placeholders})",
@@ -340,12 +411,16 @@ class TraceStore:
                 )
                 conn.commit()
             finally:
-                conn.close()
+                if not is_persist:
+                    conn.close()
 
     # ---- cleanup ----
 
     def cleanup(self, retention_days: int = 90) -> int:
-        """Delete traces older than ``retention_days``; 0 deletes everything."""
+        """Delete traces older than ``retention_days``; 0 deletes everything.
+
+        Never deletes in-flight traces (processed = -1) (fix 214).
+        """
         if retention_days < 0:
             raise ValueError("retention_days must be >= 0")
         cutoff = (
@@ -355,6 +430,20 @@ class TraceStore:
             .isoformat(timespec="seconds")
             .replace("+00:00", "Z")
         )
-        deleted = self.delete_before(cutoff)
-        logger.info("Cleanup: deleted %d traces older than retention=%d", deleted, retention_days)
-        return deleted
+        # Use direct DELETE with processed != -1 to protect in-flight rows
+        conn = self._connect()
+        is_persist = self._is_persistent(conn)
+        try:
+            cursor = conn.execute(
+                "DELETE FROM traces WHERE timestamp < ? AND processed != -1",
+                (cutoff,),
+            )
+            conn.commit()
+            deleted = int(cursor.rowcount)
+            logger.info(
+                "Cleanup: deleted %d traces older than retention=%d", deleted, retention_days
+            )
+            return deleted
+        finally:
+            if not is_persist:
+                conn.close()

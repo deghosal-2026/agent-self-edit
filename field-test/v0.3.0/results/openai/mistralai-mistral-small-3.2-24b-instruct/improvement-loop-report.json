@@ -1,0 +1,129 @@
+{
+  "meta": {
+    "provider": "openai",
+    "model": "mistralai/mistral-small-3.2-24b-instruct",
+    "endpoint": "https://openrouter.ai/api/v1",
+    "n_iterations": 5,
+    "baseline_accuracy": 20.0,
+    "final_accuracy": 20.0,
+    "improvement": 0.0,
+    "date": "2026-09-03T07:13:39Z"
+  },
+  "iterations": [
+    {
+      "iteration": 0,
+      "accuracy": 20.0,
+      "gate": "baseline"
+    },
+    {
+      "iteration": 1,
+      "prompt_a": "You are a structured data extraction assistant. Extract the requested fields from the input text. Output each field on its own line as 'field: value'.",
+      "prompt_after": "You are a structured data extraction assistant. Extract the requested fields from the input text. Output each field on its own line as 'field: value'.",
+      "n_proposals": 1,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "Target section",
+          "gate": "near_miss",
+          "winner": "inconclusive",
+          "p_value": 0.64,
+          "mean_delta": -0.06666666666666665,
+          "n_trials": 25
+        }
+      ],
+      "analysis_cost": 0.0091212,
+      "accuracy": 20.0,
+      "accuracy_correct": 1,
+      "accuracy_total": 5,
+      "duration_s": 61.2
+    },
+    {
+      "iteration": 2,
+      "prompt_a": "You are a structured data extraction assistant. Extract the requested fields from the input text. Output each field on its own line as 'field: value'.",
+      "prompt_after": "You are a structured data extraction assistant. Extract the requested fields from the input text. Output each field on its own line as 'field: value'.",
+      "n_proposals": 1,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "Target section",
+          "gate": "near_miss",
+          "winner": "inconclusive",
+          "p_value": 0.59,
+          "mean_delta": -0.062000000000000055,
+          "n_trials": 25
+        }
+      ],
+      "analysis_cost": 0.009645899999999999,
+      "accuracy": 20.0,
+      "accuracy_correct": 1,
+      "accuracy_total": 5,
+      "duration_s": 56.5
+    },
+    {
+      "iteration": 3,
+      "prompt_a": "You are a structured data extraction assistant. Extract the requested fields from the input text. Output each field on its own line as 'field: value'.",
+      "prompt_after": "You are a structured data extraction assistant. Extract the requested fields from the input text. Output each field on its own line as 'field: value'.",
+      "n_proposals": 1,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "Target section",
+          "gate": "near_miss",
+          "winner": "inconclusive",
+          "p_value": 0.64,
+          "mean_delta": -0.0553333333333334,
+          "n_trials": 25
+        }
+      ],
+      "analysis_cost": 0.0098934,
+      "accuracy": 20.0,
+      "accuracy_correct": 1,
+      "accuracy_total": 5,
+      "duration_s": 74.3
+    },
+    {
+      "iteration": 4,
+      "prompt_a": "You are a structured data extraction assistant. Extract the requested fields from the input text. Output each field on its own line as 'field: value'.",
+      "prompt_after": "You are a structured data extraction assistant. Extract the requested fields from the input text. Output each field on its own line as 'field: value'.",
+      "n_proposals": 1,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "Target section",
+          "gate": "near_miss",
+          "winner": "inconclusive",
+          "p_value": 0.84,
+          "mean_delta": -0.02200000000000002,
+          "n_trials": 25
+        }
+      ],
+      "analysis_cost": 0.0095172,
+      "accuracy": 20.0,
+      "accuracy_correct": 1,
+      "accuracy_total": 5,
+      "duration_s": 68.5
+    },
+    {
+      "iteration": 5,
+      "prompt_a": "You are a structured data extraction assistant. Extract the requested fields from the input text. Output each field on its own line as 'field: value'.",
+      "prompt_after": "You are a structured data extraction assistant. Extract the requested fields from the input text. Output each field on its own line as 'field: value'.",
+      "n_proposals": 1,
+      "results": [
+        {
+          "proposal_index": 0,
+          "section": "Target section",
+          "gate": "near_miss",
+          "winner": "inconclusive",
+          "p_value": 0.64,
+          "mean_delta": -0.03999999999999998,
+          "n_trials": 25
+        }
+      ],
+      "analysis_cost": 0.0097317,
+      "accuracy": 20.0,
+      "accuracy_correct": 1,
+      "accuracy_total": 5,
+      "duration_s": 69.4
+    }
+  ]
+}

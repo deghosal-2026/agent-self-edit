@@ -1,0 +1,286 @@
+{
+  "test": "docker-materialize-guard",
+  "date": "2026-09-03T05:48:54Z",
+  "image": "agent-self-edit:test",
+  "omlx_model": "Qwen3-4B-Instruct-2507-4bit",
+  "exit_code": 0,
+  "llm_calls_captured": 13,
+  "llm_traffic": [
+    {
+      "model": "Qwen3-4B-Instruct-2507-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "user",
+          "content": "You are analyzing execution traces where a prompt-based\nagent failed. Summarize the recurring failure patterns.\n\nFailed traces:\nTrace 1: task_id=t0, input=\"classify this ticket: 'My billing page shows the wrong amount for my subscription.'\", output=\"other\", expected=\"technical\", failure_reason=\"misclassified \u2014 expected technical\"\nTrace 2: task_id=t1, input=\"classify this ticket: 'I was charged twice for the same plan.'\", output=\"other\", expected=\"billing\", failure_reason=\"misclassified \u2014 expected billing\"\nTrace 3: task_id=t2, input=\"classify this ticket: 'When will the new feature be available in production?'\", output=\"other\", expected=\"feature\", failure_reason=\"misclassified \u2014 expected feature\"\nTrace 4: task_id=t3, input=\"classify this ticket: 'Our deployment pipeline failed on the staging environment.'\", output=\"other\", expected=\"technical\", failure_reason=\"misclassified \u2014 expected technical\"\nTrace 5: task_id=t4, input=\"classify this ticket: 'Can you add SSO support for our enterprise account?'\", output=\"other\", expected=\"feature\", failure_reason=\"misclassified \u2014 expected feature\"\nTrace 6: task_id=t5, input=\"classify this ticket: 'I think my account was compromised \u2014 someone logged in from an unknown IP.'\", output=\"other\", expected=\"security\", failure_reason=\"misclassified \u2014 expected security\"\nTrace 7: task_id=t6, input=\"classify this ticket: 'The checkout button is grayed out and I can't complete my purchase.'\", output=\"other\", expected=\"technical\", failure_reason=\"misclassified \u2014 expected technical\"\nTrace 8: task_id=t7, input=\"classify this ticket: 'I need to downgrade my plan before the next billing cycle.'\", output=\"other\", expected=\"billing\", failure_reason=\"misclassified \u2014 expected billing\"\nTrace 9: task_id=t8, input=\"classify this ticket: 'The API returns a 500 error on the /v2/users endpoint.'\", output=\"other\", expected=\"technical\", failure_reason=\"misclassified \u2014 expected technical\"\nTrace 10: task_id=t9, input=\"classify this ticket: 'This is a critical security vulnerability that needs immediate attention.'\", output=\"other\", expected=\"urgent\", failure_reason=\"misclassified \u2014 expected urgent\"\n\n\nIdentify the top 2-3 distinct failure patterns. For each pattern, describe:\n- What went wrong (1 sentence)\n- Which traces exhibit this pattern\n- What the prompt likely lacks or misdirects\n\nRespond as a JSON array of objects with keys: pattern, description, trace_ids."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "[\n  {\n    \"pattern\": \"Failure to detect domain-specific keywords or context cues\",\n    \"description\": \"The agent fails to recognize key indicators in tickets (e.g., 'billing', 'security', 'feature', '500 error', 'compromised') that signal specific categories, instead defaulting to a generic 'other' label.\",\n    \"trace_ids\": [\"t0\", \"t1\", \"t2\", \"t3\", \"t4\", \"t5\", \"t6\", \"t7\", \"t8\", \"t9\"]\n  },\n  {\n    \"pattern\": \"Over-reliance on surface-level phrasing without semantic understanding\",\n    \"description\": \"The agent interprets tickets based only on literal wording without understanding the underlying intent or context, such as mistaking a feature request for a billing issue or misreading a security concern as a general technical issue.\",\n    \"trace_ids\": [\"t0\", \"t1\", \"t2\", \"t4\", \"t5\", \"t6\", \"t7\", \"t8\", \"t9\"]\n  },\n  {\n    \"pattern\": \"Failure to distinguish urgency from technical nature\",\n    \"description\": \"The agent conflates urgency (e.g., 'critical security vulnerability') with technical issues, failing to recognize that 'urgent' is a distinct category requiring separate handling.\",\n    \"trace_ids\": [\"t9\"]\n  }\n]",
+      "usage": {
+        "prompt_tokens": 554,
+        "completion_tokens": 293,
+        "total_tokens": 847
+      },
+      "latency_ms": 10132
+    },
+    {
+      "model": "Qwen3-4B-Instruct-2507-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "user",
+          "content": "You are choosing which part of a prompt to edit.\n\nCurrent prompt (frozen sections marked with [FROZEN]):\nYou are a helpful classification assistant.\n\nFailure patterns identified in the traces:\n[\n  {\n    \"pattern\": \"Failure to detect domain-specific keywords or context cues\",\n    \"description\": \"The agent fails to recognize key indicators in tickets (e.g., 'billing', 'security', 'feature', '500 error', 'compromised') that signal specific categories, instead defaulting to a generic 'other' label.\",\n    \"trace_ids\": [\n      \"t0\",\n      \"t1\",\n      \"t2\",\n      \"t3\",\n      \"t4\",\n      \"t5\",\n      \"t6\",\n      \"t7\",\n      \"t8\",\n      \"t9\"\n    ]\n  },\n  {\n    \"pattern\": \"Over-reliance on surface-level phrasing without semantic understanding\",\n    \"description\": \"The agent interprets tickets based only on literal wording without understanding the underlying intent or context, such as mistaking a feature request for a billing issue or misreading a security concern as a general technical issue.\",\n    \"trace_ids\": [\n      \"t0\",\n      \"t1\",\n      \"t2\",\n      \"t4\",\n      \"t5\",\n      \"t6\",\n      \"t7\",\n      \"t8\",\n      \"t9\"\n    ]\n  },\n  {\n    \"pattern\": \"Failure to distinguish urgency from technical nature\",\n    \"description\": \"The agent conflates urgency (e.g., 'critical security vulnerability') with technical issues, failing to recognize that 'urgent' is a distinct category requiring separate handling.\",\n    \"trace_ids\": [\n      \"t9\"\n    ]\n  }\n]\n\n\nSelect exactly ONE section of the prompt to modify. Choose the section whose\nchange would address the most failure patterns with the smallest edit.\n\nDo NOT choose the same section and same edit intent if the previous proposal was rejected.\n\nRespond as JSON: {\"section\": \"...\", \"rationale\": \"...\"}"
+        }
+      ],
+      "temperature": 0.0,
+      "response": "{\"section\": \"Failure to detect domain-specific keywords or context cues\", \"rationale\": \"This failure pattern affects multiple trace IDs and directly impacts classification accuracy across many tickets. By explicitly instructing the model to prioritize and recognize domain-specific keywords (e.g., 'billing', 'security', 'feature', '500 error', 'compromised') as signal indicators for specific categories, we address a core misclassification issue with minimal textual change. This edit directly targets the most widespread failure pattern while being simple and focused, improving both accuracy and robustness without overcomplicating the prompt.\"}",
+      "usage": {
+        "prompt_tokens": 428,
+        "completion_tokens": 121,
+        "total_tokens": 549
+      },
+      "latency_ms": 5276
+    },
+    {
+      "model": "Qwen3-4B-Instruct-2507-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "user",
+          "content": "You are making a minimal edit to a prompt.\n\nCurrent prompt (exact text \u2014 copy old_text verbatim, raw \u2014 no [FROZEN]):\nYou are a helpful classification assistant.\n\nTarget section: Failure to detect domain-specific keywords or context cues\nRationale: This failure pattern affects multiple trace IDs and directly impacts classification accuracy across many tickets. By explicitly instructing the model to prioritize and recognize domain-specific keywords (e.g., 'billing', 'security', 'feature', '500 error', 'compromised') as signal indicators for specific categories, we address a core misclassification issue with minimal textual change. This edit directly targets the most widespread failure pattern while being simple and focused, improving both accuracy and robustness without overcomplicating the prompt.\n\nFailure patterns to address:\n[\n  {\n    \"pattern\": \"Failure to detect domain-specific keywords or context cues\",\n    \"description\": \"The agent fails to recognize key indicators in tickets (e.g., 'billing', 'security', 'feature', '500 error', 'compromised') that signal specific categories, instead defaulting to a generic 'other' label.\",\n    \"trace_ids\": [\n      \"t0\",\n      \"t1\",\n      \"t2\",\n      \"t3\",\n      \"t4\",\n      \"t5\",\n      \"t6\",\n      \"t7\",\n      \"t8\",\n      \"t9\"\n    ]\n  },\n  {\n    \"pattern\": \"Over-reliance on surface-level phrasing without semantic understanding\",\n    \"description\": \"The agent interprets tickets based only on literal wording without understanding the underlying intent or context, such as mistaking a feature request for a billing issue or misreading a security concern as a general technical issue.\",\n    \"trace_ids\": [\n      \"t0\",\n      \"t1\",\n      \"t2\",\n      \"t4\",\n      \"t5\",\n      \"t6\",\n      \"t7\",\n      \"t8\",\n      \"t9\"\n    ]\n  },\n  {\n    \"pattern\": \"Failure to distinguish urgency from technical nature\",\n    \"description\": \"The agent conflates urgency (e.g., 'critical security vulnerability') with technical issues, failing to recognize that 'urgent' is a distinct category requiring separate handling.\",\n    \"trace_ids\": [\n      \"t9\"\n    ]\n  }\n]\n\n\nPropose ONE minimal edit:\n- old_text: copy the EXACT text from the current prompt above that you want to replace\n- new_text: replacement text (change the fewest characters possible)\n- hypothesis: why this specific change helps (1-2 sentences)\n- expected_improvement: measurable expectation\n\nSmall-edit rule:\n- Prefer changing 1 line only\n- Never change more than 2 lines unless absolutely necessary\n- Prefer adding one short clause over rewriting a whole block\n\nIMPORTANT: The old_text MUST be copied verbatim from the current prompt.\nDo not paraphrase or reformat it.\n\nIf previous feedback shows this exact edit family was rejected, produce a materially different edit.\n\nRespond as JSON: {\"section\": \"...\", \"old_text\": \"...\", \"new_text\": \"...\",\n\"hypothesis\": \"...\", \"expected_improvement\": \"...\"}"
+        }
+      ],
+      "temperature": 0.0,
+      "response": "{\n  \"section\": \"Failure to detect domain-specific keywords or context cues\",\n  \"old_text\": \"You are a helpful classification assistant.\",\n  \"new_text\": \"You are a helpful classification assistant that prioritizes recognizing domain-specific keywords like 'billing', 'security', 'feature', '500 error', and 'compromised'.\",\n  \"hypothesis\": \"By explicitly instructing the model to recognize key domain keywords, it directly addresses the failure to detect context cues, improving detection of signal indicators for specific categories.\",\n  \"expected_improvement\": \"Reduction in misclassification for trace IDs t0 to t9 by at least 25% in downstream evaluation metrics.\"\n}",
+      "usage": {
+        "prompt_tokens": 665,
+        "completion_tokens": 143,
+        "total_tokens": 808
+      },
+      "latency_ms": 5938
+    },
+    {
+      "model": "Qwen3-4B-Instruct-2507-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful classification assistant."
+        },
+        {
+          "role": "user",
+          "content": "My billing page shows the wrong amount for my subscription."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "I'm sorry to hear that you're experiencing this issue. A billing page showing the wrong subscription amount can be frustrating and may affect your trust in the service. Here\u2019s what you can do to resolve it:\n\n### 1. **Verify the Amount on Your Statement**\n- Check your recent billing statement (from your bank, credit card issuer, or payment processor).\n- Compare the actual charge amount with what\u2019s shown on your billing page.\n- Look for any additional fees, taxes, or currency conversion differences.\n\n### 2. **Log In to Your Account Dashboard**\n- Go to your account settings or subscription management section.\n- Confirm the current subscription plan, billing cycle, and total amount due.\n- Ensure the plan you're paying for matches your expectations.\n\n### 3. **Check for Price Changes or Promotions**\n- Was there a recent price change, discount, or promotional offer?\n- Some platforms adjust prices mid-cycle or apply prorated charges.\n\n### 4. **Contact Customer Support**\n- Reach out to the customer service or billing team of the service you're using (e.g., Stripe, Shopify, SaaS platform, etc.).\n- Provide:\n  - Your account details\n  - The date and amount shown on the billing page\n  - The actual amount charged on your statement\n  - Any screenshots or order confirmations\n\n### 5. **Check for Billing Errors or Caching**\n- Sometimes, billing pages cache data and don\u2019t update immediately.\n- Try refreshing the page or logging in from a different device or browser.\n\n### 6. **Review Subscription Settings**\n- Ensure you're not on a trial that's being extended or auto-renewing to a different plan.\n- Confirm if there are any hidden add-ons or features included.\n\n> \u26a0\ufe0f If the discrepancy is significant (e.g., overcharged by hundreds of dollars), you may also want to file a dispute with your card issuer or seek a refund.\n\nWould you like help drafting an email to customer support, or do you want to know if this might be due to a specific platform (like Stripe, PayPal, or a SaaS provider)? Let me know so I can assist further.",
+      "usage": {
+        "prompt_tokens": 31,
+        "completion_tokens": 443,
+        "total_tokens": 474
+      },
+      "latency_ms": 15360
+    },
+    {
+      "model": "Qwen3-4B-Instruct-2507-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful classification assistant that prioritizes recognizing domain-specific keywords like 'billing', 'security', 'feature', '500 error', and 'compromised'."
+        },
+        {
+          "role": "user",
+          "content": "My billing page shows the wrong amount for my subscription."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "This is a billing issue. Please contact support immediately to verify your subscription details and correct the incorrect amount displayed. Ensure you're using a secure connection and avoid sharing sensitive information. If you suspect a compromise, report it immediately.",
+      "usage": {
+        "prompt_tokens": 59,
+        "completion_tokens": 45,
+        "total_tokens": 104
+      },
+      "latency_ms": 1912
+    },
+    {
+      "model": "Qwen3-4B-Instruct-2507-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful classification assistant."
+        },
+        {
+          "role": "user",
+          "content": "I was charged twice for the same plan."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "I'm sorry to hear that you've been charged twice for the same plan. This is definitely not the intended experience, and I'm here to help you address it.\n\nHere\u2019s what you can do:\n\n1. **Contact Customer Support Immediately**: Reach out to the customer service team of the service provider (e.g., your internet, phone, or subscription provider) and explain that you were charged twice for the same plan. Provide:\n   - Your account number\n   - Dates of the charges\n   - Details of the plan and amount charged\n   - Any order or confirmation numbers\n\n2. **Request a Refund or Credit**: Ask for a full refund or credit for the duplicate charge. Most reputable companies have policies to resolve such issues promptly.\n\n3. **File a Complaint (if needed)**: If the issue isn't resolved, you may file a complaint with:\n   - Your state\u2019s attorney general (for consumer protection)\n   - The Better Business Bureau (BBB)\n   - Or a regulatory body like the FTC (in the U.S.)\n\n4. **Monitor Your Account**: Keep track of your account activity and ensure no further duplicate charges occur.\n\nWould you like help drafting a message to send to customer service, or do you want to know what to do next based on your specific service (e.g., mobile, internet, streaming)? Let me know!",
+      "usage": {
+        "prompt_tokens": 29,
+        "completion_tokens": 276,
+        "total_tokens": 305
+      },
+      "latency_ms": 8658
+    },
+    {
+      "model": "Qwen3-4B-Instruct-2507-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful classification assistant that prioritizes recognizing domain-specific keywords like 'billing', 'security', 'feature', '500 error', and 'compromised'."
+        },
+        {
+          "role": "user",
+          "content": "I was charged twice for the same plan."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "This issue appears to be related to **billing** and possibly a **feature** or **account error**. You may want to investigate whether there's a duplicate charge or a system error in your billing records.\n\nKey terms detected: **billing**, **charged twice**\n\nSuggested next steps:\n- Contact customer support to dispute the duplicate charge.\n- Check your billing history for duplicate entries.\n- Verify if the plan was auto-renewed or if there was a system error.\n\nIf you're concerned about **security** or suspect unauthorized activity, please report it immediately. Otherwise, this is likely a billing error that can be resolved through standard support channels.",
+      "usage": {
+        "prompt_tokens": 57,
+        "completion_tokens": 130,
+        "total_tokens": 187
+      },
+      "latency_ms": 4145
+    },
+    {
+      "model": "Qwen3-4B-Instruct-2507-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful classification assistant."
+        },
+        {
+          "role": "user",
+          "content": "When will the new feature be available in production?"
+        }
+      ],
+      "temperature": 0.0,
+      "response": "I'm sorry, but I don't have information about a specific new feature's release date. Could you please provide more context or details about the feature you're referring to? For example, which product or service are you asking about? This will help me give you a more accurate response.",
+      "usage": {
+        "prompt_tokens": 30,
+        "completion_tokens": 58,
+        "total_tokens": 88
+      },
+      "latency_ms": 1806
+    },
+    {
+      "model": "Qwen3-4B-Instruct-2507-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful classification assistant that prioritizes recognizing domain-specific keywords like 'billing', 'security', 'feature', '500 error', and 'compromised'."
+        },
+        {
+          "role": "user",
+          "content": "When will the new feature be available in production?"
+        }
+      ],
+      "temperature": 0.0,
+      "response": "The availability of the new feature in production depends on several factors, including testing completion, security validation, and approval from relevant stakeholders. If you're referring to a specific feature, please provide more details (e.g., feature name, product, or context) so I can give a more accurate response.\n\nHowever, based on your query, if there's a concern about **security**, **billing**, or a **compromised system**, please note that any new feature rollout should ensure:\n\n- No **security vulnerabilities** are present  \n- Proper **access controls** and **audit logs** are in place  \n- A **500 error** or other error codes are not indicating a system compromise  \n\nIf you're seeing unexpected behavior or errors, that may indicate a problem that needs immediate attention. For now, without specific details, I cannot confirm the exact date of availability.\n\nPlease clarify:  \n- What feature are you referring to?  \n- Is there a known issue (e.g., 500 error, security alert)?  \n- Are you in a production or development environment?\n\nThis will help determine if the feature is ready for rollout or if there's a need for remediation.",
+      "usage": {
+        "prompt_tokens": 58,
+        "completion_tokens": 239,
+        "total_tokens": 297
+      },
+      "latency_ms": 7412
+    },
+    {
+      "model": "Qwen3-4B-Instruct-2507-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful classification assistant."
+        },
+        {
+          "role": "user",
+          "content": "Our deployment pipeline failed on the staging environment."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "I'm sorry to hear that your deployment pipeline failed on the staging environment. To help you troubleshoot effectively, could you provide more details? For example:\n\n- What type of pipeline are you using (e.g., GitHub Actions, Jenkins, CircleCI, GitLab CI, etc.)?\n- What was the error message or failure indicator (e.g., build log, error code)?\n- Did the failure occur during a specific step (e.g., code checkout, testing, deployment)?\n- Are there any recent changes to code, configuration, or environment that might have triggered the issue?\n- Is this a known issue with your staging environment (e.g., network, permissions, database)?\n\nWith more context, I can offer more targeted guidance\u2014like checking logs, verifying environment variables, or diagnosing common staging environment issues (e.g., missing dependencies, permission issues, or misconfigured services). Let me know!",
+      "usage": {
+        "prompt_tokens": 29,
+        "completion_tokens": 182,
+        "total_tokens": 211
+      },
+      "latency_ms": 6287
+    },
+    {
+      "model": "Qwen3-4B-Instruct-2507-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful classification assistant that prioritizes recognizing domain-specific keywords like 'billing', 'security', 'feature', '500 error', and 'compromised'."
+        },
+        {
+          "role": "user",
+          "content": "Our deployment pipeline failed on the staging environment."
+        }
+      ],
+      "temperature": 0.0,
+      "response": "That's a common issue. Could you provide more details? For example:\n\n- Was there a specific error message (e.g., 500 error, timeout, or authentication failure)?\n- Did the failure occur during deployment, testing, or a configuration step?\n- Are you seeing any logs or error codes?\n- Is this related to billing, security, or a feature rollout?\n\nAlso, if you're seeing a **500 error** or suspect **security compromise**, that could point to misconfigurations, unauthorized access, or a vulnerability in your staging environment.\n\nLet me know what you see \u2014 I can help classify and prioritize the root cause.",
+      "usage": {
+        "prompt_tokens": 57,
+        "completion_tokens": 132,
+        "total_tokens": 189
+      },
+      "latency_ms": 3657
+    },
+    {
+      "model": "Qwen3-4B-Instruct-2507-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful classification assistant."
+        },
+        {
+          "role": "user",
+          "content": "Can you add SSO support for our enterprise account?"
+        }
+      ],
+      "temperature": 0.0,
+      "response": "I'm sorry, but I can't assist with that request.\n\nI'm an AI assistant and don't have the ability to configure or manage enterprise account settings, including Single Sign-On (SSO) integration. SSO setup typically requires administrative access to your organization's identity provider (like Okta, Azure AD, or Google Workspace) and your service's SSO configuration portal.\n\nTo add SSO support for your enterprise account, you should:\n\n1. Contact your service provider's support team (e.g., the support email or help center for your platform).\n2. Provide them with your organization's identity provider (IdP) details (e.g., SAML metadata, login URL).\n3. Request SSO setup or configuration assistance.\n\nIf you'd like, I can help you draft a message to send to your service provider's support team or guide you through the general SSO setup process. Let me know how I can assist further!",
+      "usage": {
+        "prompt_tokens": 31,
+        "completion_tokens": 189,
+        "total_tokens": 220
+      },
+      "latency_ms": 5342
+    },
+    {
+      "model": "Qwen3-4B-Instruct-2507-4bit",
+      "base_url": "http://host.docker.internal:8000/v1",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful classification assistant that prioritizes recognizing domain-specific keywords like 'billing', 'security', 'feature', '500 error', and 'compromised'."
+        },
+        {
+          "role": "user",
+          "content": "Can you add SSO support for our enterprise account?"
+        }
+      ],
+      "temperature": 0.0,
+      "response": "Certainly! To assist you with adding SSO (Single Sign-On) support for your enterprise account, I\u2019d need a bit more context \u2014 for example:\n\n- What identity provider (IdP) are you using? (e.g., Okta, Azure AD, Google Workspace, Ping Identity)\n- Are you using a platform like Salesforce, Microsoft 365, Zendesk, or another service?\n- Do you have an existing SSO configuration or setup in place?\n\nHowever, based on your request and the keywords in your message \u2014 **SSO**, **enterprise account**, **security**, **feature** \u2014 this is a domain-specific request related to authentication and access control.\n\n\ud83d\udd0d **Key indicators in your query:**\n- \"SSO support\" \u2192 implies identity management and access control\n- \"enterprise account\" \u2192 suggests a large-scale, secure environment\n- Likely involves **security**, **access control**, and **feature enablement**\n\n\u2705 **Next steps for you:**\n1. Contact your platform\u2019s support team or admin portal to request SSO integration.\n2. Provide your IdP details (e.g., SAML metadata, domain, etc.) if needed.\n3. Ensure your organization has the necessary permissions (e.g., admin access, SSO enabled in the system).\n\n\u26a0\ufe0f If you're seeing a **500 error** or suspect your account is **compromised**, please let me know \u2014 that would trigger a different response focused on security and access recovery.\n\nLet me know which platform or service you're using, and I can guide you through the SSO setup process.",
+      "usage": {
+        "prompt_tokens": 59,
+        "completion_tokens": 323,
+        "total_tokens": 382
+      },
+      "latency_ms": 8411
+    }
+  ],
+  "stdout": "Analyzing 10 failed traces (of 10 in batch)\nProposed 1 edits (cost=$0.0078)\n  - [Failure to detect domain-specific keywords or context cues] By explicitly instructing the model to recognize key domain keywords, it directly addresses the failure to detect context cues, improving detection of signal indicators for specific categories.\n  A/B: tie (p=1.0000, n=5)\n  Gate: reject\n",
+  "stderr": ""
+}

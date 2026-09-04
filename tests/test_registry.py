@@ -151,6 +151,41 @@ def test_rollback_to_current(reg):
     assert reg.current_prompt == "text"
 
 
+def test_rollback_preserves_lineage_after_real_promotion(reg):
+    """Rollback to a real promoted version preserves full lineage."""
+    reg.create("You are a classifier.")
+    reg.create(
+        "You are a better classifier.",
+        hypothesis="improved classification",
+        ab_results={"effect_size": 0.15, "p_value": 0.03},
+        gate_result={"decision": "promote", "reason": "all checks passed"},
+        trigger_trace_ids=["t1", "t2"],
+        model_version="gpt-4",
+        token_cost=0.05,
+        changed_section="role",
+    )
+    assert reg.current_version == 2
+    assert reg.current_prompt == "You are a better classifier."
+
+    v3 = reg.rollback(1, "reverting to original classifier")
+    assert v3 == 3
+    assert reg.current_prompt == "You are a classifier."
+    assert reg.current_version == 3
+
+    _, meta = reg.get(3)
+    assert meta.rollback_reason == "reverting to original classifier"
+    assert meta.rollback_target == 1
+    assert meta.version == 3
+
+    lineage = reg.lineage()
+    assert len(lineage) == 3
+    assert [m.version for m in lineage] == [1, 2, 3]
+    assert lineage[0].rollback_target is None
+    assert lineage[1].hypothesis == "improved classification"
+    assert lineage[2].rollback_target == 1
+    assert lineage[2].rollback_reason == "reverting to original classifier"
+
+
 def test_lineage_all(reg):
     reg.create("a")
     reg.create("b")

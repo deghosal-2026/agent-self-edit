@@ -56,6 +56,10 @@ def propose(config_path: str, dry_run: bool) -> None:
     store = TraceStore(config.project.trace_path, batch_size=config.tasks.batch_size)
     registry = Registry(config.project.registry_path)
 
+    if not store.batch_ready():
+        click.echo(f"Batch not ready: {store.count_pending()} / {config.tasks.batch_size} traces")
+        return
+
     batch = store.get_batch(min(config.tasks.batch_size, store.count_pending()))
     if not batch:
         click.echo("No pending traces to analyze.")
@@ -70,10 +74,18 @@ def propose(config_path: str, dry_run: bool) -> None:
         return
 
     analyzer_llm = _build_llm_for_role(config, config.analyzer_role)
+    from ..gate import GateAuditLog
+
+    audit_path = config.project.registry_path + "/audit.jsonl"
+    try:
+        near_misses = GateAuditLog(audit_path).near_misses(limit=20)
+    except Exception:
+        near_misses = []
     result = analyze_batch(
         failed, registry.current_prompt, None, analyzer_llm,
         max_proposals=config.analyzer.max_proposals_per_batch,
         config=config,
+        near_misses=near_misses,
     )
 
     click.echo(f"Proposed {len(result.proposals)} edits (cost=${result.cost_usd:.4f})")
@@ -85,7 +97,7 @@ def propose(config_path: str, dry_run: bool) -> None:
         return
 
     from ..ab_test import run_ab_test
-    from ..gate import PromotionGate, check_all
+    from ..gate import PromotionGate
     from ..scorers import resolve_scorer
     from ..tasks import load_task_set
 
@@ -93,16 +105,31 @@ def propose(config_path: str, dry_run: bool) -> None:
     if task_set is None:
         click.echo("No task set configured — skipping A/B test.", err=True)
         return
+
+    rejection_context_lines: list[str] = []
+
+    # Drift must be measured against original v1, not current (fix 276/206)
+    try:
+        original_prompt = (
+            registry.get(1)[0]
+            if registry.current_version >= 1
+            else registry.current_prompt
+        )
+    except Exception:
+        original_prompt = registry.current_prompt
+
     executor_llm = _build_llm_for_role(config, config.executor_role)
     judge_llm = _build_llm_for_role(config, config.judge_role)
     scorer = resolve_scorer(task_set, judge_llm=judge_llm)
 
-    rejection_context_lines: list[str] = []
-
     for proposal in result.proposals:
-        candidate_prompt = registry.current_prompt.replace(
-            proposal.old_text, proposal.new_text
-        )
+        from ..types import materialize_candidate_prompt
+
+        try:
+            candidate_prompt = materialize_candidate_prompt(registry.current_prompt, proposal)
+        except ValueError as e:
+            click.echo(f"  Skipping proposal: {e}", err=True)
+            continue
         ab_result = run_ab_test(
             registry.current_prompt, candidate_prompt, task_set, executor_llm, scorer, config
         )
@@ -111,8 +138,8 @@ def propose(config_path: str, dry_run: bool) -> None:
         )
 
         gate = PromotionGate(audit_path=config.project.registry_path + "/audit.jsonl")
-        gate_result = check_all(
-            proposal, ab_result, registry.current_prompt, registry.current_prompt, config
+        gate_result = gate.check(
+            proposal, ab_result, registry.current_prompt, original_prompt, config, traces=batch,
         )
         click.echo(f"  Gate: {gate_result.decision}")
 
@@ -126,6 +153,7 @@ def propose(config_path: str, dry_run: bool) -> None:
             registry.create(
                 candidate_prompt,
                 hypothesis=proposal.hypothesis,
+                changed_section=proposal.section,
                 ab_results={
                     "winner": ab_result.winner,
                     "mean_delta": ab_result.mean_delta,
@@ -136,7 +164,5 @@ def propose(config_path: str, dry_run: bool) -> None:
                 gate_result={"decision": gate_result.decision, "reason": gate_result.reason},
             )
             click.echo(f"  Promoted to version {registry.current_version}")
-
-        gate.log_result(gate_result, edit=proposal)
 
     store.acknowledge_rows(batch)

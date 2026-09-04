@@ -1,0 +1,15 @@
+{
+  "n_proposals": 1,
+  "cost_usd": 0.0075306,
+  "tokens_used": 2282,
+  "proposals": [
+    {
+      "section": "Target section",
+      "old_text": "Output each field on its own line as 'field: value'.",
+      "new_text": "Output each field on its own line as 'field: value' (use lowercase, no spaces in field names).",
+      "hypothesis": "This explicitly addresses inconsistent field naming by enforcing lowercase and no spaces, which are common issues in the failure patterns.",
+      "expected_improvement": "Reduction in 'inconsistent field naming' failures by 30-50% based on trace IDs extract-004, extract-005, and extract-007.",
+      "evidence_traces": []
+    }
+  ]
+}

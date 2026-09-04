@@ -1,0 +1,12 @@
+[
+  {
+    "task_id": "gold-005",
+    "cluster": "QUALITY_DEGRADATION",
+    "intervention": "PROMPT_SELF_CORRECT",
+    "section": "failure to detect or prevent output loops",
+    "hypothesis": "Adding a single, concise instruction to detect and prevent output repetition directly addresses the failure pattern of cycling or repeating responses, forcing the model to check for output diversity and halt when duplication is detected.",
+    "old_text": "You are a helpful classification assistant. Classify the input into one of: urge",
+    "new_text": "You are a helpful classification assistant. Classify the input into one of: urge",
+    "cost": 0.0057981
+  }
+]

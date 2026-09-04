@@ -1,123 +1,503 @@
-# Mixed-domain task set — 30 cross-domain tasks (expanded for v0.2.0)
+# Mixed-domain task set — 100 cross-domain tasks (expanded for v0.3.0)
 # These tasks span classification + extraction + generation domains
 # They test whether the analyzer can propose edits that handle cross-domain cases
 - id: "mixed-001"
-  input: "Classify this ticket AND extract the affected service: 'The payment gateway is returning 502 errors for all enterprise customers. This started at 14:00 UTC.'"
+  input: "Classify this ticket AND extract the affected service: The payment gateway is returning 502 errors for all enterprise customers. This started at 14:00 UTC."
   expected_output: "classification: urgent, technical\naffected_service: payment gateway"
   metadata: {scorer: "contains", difficulty: "hard", tags: [classification, extraction, cross-domain], benchmark_role: "promotion_ab"}
+
 - id: "mixed-002"
-  input: "Classify this ticket AND generate a one-line summary for the dashboard: 'User reports their API key was leaked on GitHub. They need it revoked immediately.'"
+  input: "Classify this ticket AND generate a one-line summary for the dashboard: User reports their API key was leaked on GitHub. They need it revoked immediately."
   expected_output: "classification: security, urgent\nsummary: API key leaked on GitHub, revocation requested"
   metadata: {scorer: "contains", difficulty: "hard", tags: [classification, generation, cross-domain], benchmark_role: "promotion_ab"}
+
 - id: "mixed-003"
-  input: "Extract the error code from this text AND classify the severity: 'Error E5001 occurred in the billing module. 3,400 customers affected. Estimated revenue impact: $12K/hour.'"
+  input: "Extract the error code from this text AND classify the severity: Error E5001 occurred in the billing module. 3,400 customers affected. Estimated revenue impact: $12K/hour."
   expected_output: "error_code: E5001\nseverity: urgent"
   metadata: {scorer: "contains", difficulty: "hard", tags: [extraction, classification, cross-domain], benchmark_role: "promotion_ab"}
+
 - id: "mixed-004"
-  input: "Generate a customer-facing message about this outage AND extract the affected services: 'Database cluster db-prod-01 is down. API, dashboard, and webhooks are affected. ETA: 30 minutes.'"
+  input: "Generate a customer-facing message about this outage AND extract the affected services: Database cluster db-prod-01 is down. API, dashboard, and webhooks are affected. ETA: 30 minutes."
   expected_output: "message: We are experiencing a service disruption\naffected: API, dashboard, webhooks"
   metadata: {scorer: "contains", difficulty: "hard", tags: [generation, extraction, cross-domain], benchmark_role: "promotion_ab"}
+
 - id: "mixed-005"
-  input: "Classify this as urgent or non-urgent AND extract the SLA deadline: 'A security researcher found an XSS vulnerability in our login form. They reported it via our bug bounty program. Our SLA for critical findings is 4 hours.'"
+  input: "Classify this as urgent or non-urgent AND extract the SLA deadline: A security researcher found an XSS vulnerability in our login form. They reported it via our bug bounty program. Our SLA for critical findings is 4 hours."
   expected_output: "classification: urgent\nsla: 4 hours"
   metadata: {scorer: "contains", difficulty: "hard", tags: [classification, extraction, security, cross-domain], benchmark_role: "promotion_ab"}
+
 - id: "mixed-006"
-  input: "Extract all mentioned services AND generate a rollback plan summary: 'Deploy v3.2.1 introduced a regression in the auth-service and user-service. The search-service is unaffected. We need to roll back both affected services to v3.2.0.'"
+  input: "Extract all mentioned services AND generate a rollback plan summary: Deploy v3.2.1 introduced a regression in the auth-service and user-service. The search-service is unaffected. We need to roll back both affected services to v3.2.0."
   expected_output: "services: auth-service, user-service\nrollback: auth-service to v3.2.0, user-service to v3.2.0"
   metadata: {scorer: "contains", difficulty: "hard", tags: [extraction, generation, cross-domain], benchmark_role: "promotion_ab"}
+
 - id: "mixed-007"
-  input: "Classify the priority of this incident AND extract the customer impact metrics: 'CDN outage affecting 45% of traffic in EU region. Error rate: 100%. P95 latency: timeout. Started: 09:15 UTC.'"
+  input: "Classify the priority of this incident AND extract the customer impact metrics: CDN outage affecting 45% of traffic in EU region. Error rate: 100%. P95 latency: timeout. Started: 09:15 UTC."
   expected_output: "priority: urgent\naffected_traffic: 45%\nregion: EU\nerror_rate: 100%\nstarted: 09:15 UTC"
   metadata: {scorer: "contains", difficulty: "hard", tags: [classification, extraction, cross-domain], benchmark_role: "promotion_ab"}
+
 - id: "mixed-008"
-  input: "Generate a postmortem outline for this incident AND extract the root cause category: 'Memory leak in the image-resize worker caused OOM kills. The leak was introduced in commit abc123. Fix deployed in v2.4.2.'"
+  input: "Generate a postmortem outline for this incident AND extract the root cause category: Memory leak in the image-resize worker caused OOM kills. The leak was introduced in commit abc123. Fix deployed in v2.4.2."
   expected_output: "postmortem: outline\nroot_cause: memory leak"
   metadata: {scorer: "contains", difficulty: "hard", tags: [generation, extraction, cross-domain], benchmark_role: "promotion_ab"}
+
 - id: "mixed-009"
-  input: "Classify this as billing/technical/security AND extract the affected customer ID AND estimate severity: 'Customer AC-7890 reports their data export has been failing for 3 days. They have an enterprise contract with a 99.9% SLA. Export volume: 2TB.'"
+  input: "Classify this as billing/technical/security AND extract the affected customer ID AND estimate severity: Customer AC-7890 reports their data export has been failing for 3 days. They have an enterprise contract with a 99.9% SLA. Export volume: 2TB."
   expected_output: "classification: technical\ncustomer: AC-7890\nseverity: high"
   metadata: {scorer: "contains", difficulty: "hard", tags: [classification, extraction, cross-domain], benchmark_role: "promotion_ab"}
+
 - id: "mixed-010"
-  input: "Extract all error codes from this log AND classify the overall system health: 'E4031 on auth-service (3 retries), E5002 on user-service (1 retry), E4031 on billing-service (5 retries). All services responding but with elevated error rates.'"
+  input: "Extract all error codes from this log AND classify the overall system health: E4031 on auth-service (3 retries), E5002 on user-service (1 retry), E4031 on billing-service (5 retries). All services responding but with elevated error rates."
   expected_output: "errors: E4031, E5002\nhealth: degraded"
   metadata: {scorer: "contains", difficulty: "hard", tags: [extraction, classification, cross-domain], benchmark_role: "promotion_ab"}
+
 - id: "mixed-011"
-  input: "Classify this support ticket AND generate a priority level: 'We are a startup customer and cannot access our production data since the latest update. Our CEO is blocked from presenting to investors tomorrow.'"
+  input: "Classify this support ticket AND generate a priority level: We are a startup customer and cannot access our production data since the latest update. Our CEO is blocked from presenting to investors tomorrow."
   expected_output: "classification: urgent\npriority: P0"
   metadata: {scorer: "contains", difficulty: "hard", tags: [classification, generation, cross-domain], benchmark_role: "promotion_ab"}
+
 - id: "mixed-012"
-  input: "Extract the deployment metadata AND classify the rollback risk: 'Commit: a1b2c3d, rolled out to 20% canary. Error rate increased from 0.1% to 2.3% in the first 5 minutes.'"
+  input: "Extract the deployment metadata AND classify the rollback risk: Commit: a1b2c3d, rolled out to 20% canary. Error rate increased from 0.1% to 2.3% in the first 5 minutes."
   expected_output: "commit: a1b2c3d\ncanary: 20%\nerror_delta: 2.2%\nrisk: high"
   metadata: {scorer: "contains", difficulty: "hard", tags: [extraction, classification, cross-domain], benchmark_role: "promotion_ab"}
+
 - id: "mixed-013"
-  input: "Generate an escalation message AND extract the team to escalate to: 'Customer is a Fortune 500 enterprise with a signed SLA. Their production system has been down for 45 minutes. The on-call engineer has not responded.'"
+  input: "Generate an escalation message AND extract the team to escalate to: Customer is a Fortune 500 enterprise with a signed SLA. Their production system has been down for 45 minutes. The on-call engineer has not responded."
   expected_output: "message: Enterprise customer down 45 minutes, SLA breach imminent\nescalate_to: engineering management"
   metadata: {scorer: "contains", difficulty: "hard", tags: [generation, extraction, cross-domain], benchmark_role: "promotion_ab"}
+
 - id: "mixed-014"
-  input: "Classify the incident type AND extract the affected version: 'Users on iOS 3.2.0 report that the app crashes on launch. Android 3.2.0 is unaffected. Regression was introduced in the latest React Native upgrade.'"
+  input: "Classify the incident type AND extract the affected version: Users on iOS 3.2.0 report that the app crashes on launch. Android 3.2.0 is unaffected. Regression was introduced in the latest React Native upgrade."
   expected_output: "type: technical, urgent\naffected_version: iOS 3.2.0"
   metadata: {scorer: "contains", difficulty: "hard", tags: [classification, extraction, cross-domain], benchmark_role: "promotion_ab"}
+
 - id: "mixed-015"
-  input: "Extract all compliance requirements from this request AND classify the risk level: 'We need to store customer PII data in the EU region. Our current infrastructure is in us-east-1. GDPR requires data residency within the EU.'"
+  input: "Extract all compliance requirements from this request AND classify the risk level: We need to store customer PII data in the EU region. Our current infrastructure is in us-east-1. GDPR requires data residency within the EU."
   expected_output: "requirements: GDPR, EU data residency\nrisk: high"
   metadata: {scorer: "contains", difficulty: "hard", tags: [extraction, classification, security, cross-domain], benchmark_role: "promotion_ab"}
+
 - id: "mixed-016"
-  input: "Generate a runbook section for this scenario AND extract the triggering condition: 'When the database replica lag exceeds 30 seconds, the system should automatically fail over to the standby. The failover should complete within 60 seconds.'"
+  input: "Generate a runbook section for this scenario AND extract the triggering condition: When the database replica lag exceeds 30 seconds, the system should automatically fail over to the standby. The failover should complete within 60 seconds."
   expected_output: "trigger: replica lag > 30s\naction: automatic failover to standby\ntarget: 60s completion"
   metadata: {scorer: "contains", difficulty: "hard", tags: [generation, extraction, cross-domain], benchmark_role: "promotion_ab"}
+
 - id: "mixed-017"
-  input: "Classify this alert severity AND extract the threshold values: 'CPU usage on web-04 has been above 90% for 15 minutes. Memory usage is at 85%. Disk I/O wait time is 200ms. The alert threshold is CPU > 80% for 10 minutes.'"
+  input: "Classify this alert severity AND extract the threshold values: CPU usage on web-04 has been above 90% for 15 minutes. Memory usage is at 85%. Disk I/O wait time is 200ms. The alert threshold is CPU > 80% for 10 minutes."
   expected_output: "severity: warning\ncpu: 90%\nmemory: 85%\ndisk_io: 200ms\nthreshold: CPU > 80% for 10min"
   metadata: {scorer: "contains", difficulty: "hard", tags: [classification, extraction, cross-domain], benchmark_role: "promotion_ab"}
+
 - id: "mixed-018"
-  input: "Generate a customer-facing status update AND extract the estimated resolution time: 'We have identified the root cause of the database issue. A configuration change is being rolled out. ETA for full resolution is 30 minutes from now.'"
+  input: "Generate a customer-facing status update AND extract the estimated resolution time: We have identified the root cause of the database issue. A configuration change is being rolled out. ETA for full resolution is 30 minutes from now."
   expected_output: "status: root cause identified, fix rolling out\neta: 30 minutes"
   metadata: {scorer: "contains", difficulty: "hard", tags: [generation, extraction, cross-domain], benchmark_role: "promotion_ab"}
+
 - id: "mixed-019"
-  input: "Classify this as feature request or bug report AND extract the user impact: 'The export-to-PDF feature generates files with missing images. This affects all reports that include charts. Users have been complaining for 2 weeks.'"
+  input: "Classify this as feature request or bug report AND extract the user impact: The export-to-PDF feature generates files with missing images. This affects all reports that include charts. Users have been complaining for 2 weeks."
   expected_output: "type: bug\nimpact: all PDF reports missing charts, user complaints for 2 weeks"
   metadata: {scorer: "contains", difficulty: "hard", tags: [classification, extraction, cross-domain], benchmark_role: "promotion_ab"}
+
 - id: "mixed-020"
-  input: "Extract the security findings AND generate a remediation priority: 'Scan results show: CVE-2026-9999 in nginx (critical), CVE-2026-8888 in OpenSSL (high), and two low-severity findings in the logging library.'"
+  input: "Extract the security findings AND generate a remediation priority: Scan results show: CVE-2026-9999 in nginx (critical), CVE-2026-8888 in OpenSSL (high), and two low-severity findings in the logging library."
   expected_output: "findings: CVE-2026-9999 (critical), CVE-2026-8888 (high), 2 low\nremediation_priority: patch nginx and OpenSSL immediately"
   metadata: {scorer: "contains", difficulty: "hard", tags: [extraction, generation, security, cross-domain], benchmark_role: "promotion_ab"}
+
 - id: "mixed-021"
-  input: "Classify this cost anomaly AND extract the resource causing it: 'Our AWS bill increased by 40% month-over-month. The biggest increase is in the RDS section, specifically the db.r5.4xlarge instance in us-west-2.'"
+  input: "Classify this cost anomaly AND extract the resource causing it: Our AWS bill increased by 40% month-over-month. The biggest increase is in the RDS section, specifically the db.r5.4xlarge instance in us-west-2."
   expected_output: "anomaly: cost increase\nresource: RDS db.r5.4xlarge in us-west-2\nincrease: 40%"
   metadata: {scorer: "contains", difficulty: "hard", tags: [classification, extraction, finops, cross-domain], benchmark_role: "promotion_ab"}
+
 - id: "mixed-022"
-  input: "Generate a deployment checklist step AND extract the pre-condition: 'Before deploying to production, we must verify that the staging environment tests pass. This includes integration tests, load tests, and security scans.'"
+  input: "Generate a deployment checklist step AND extract the pre-condition: Before deploying to production, we must verify that the staging environment tests pass. This includes integration tests, load tests, and security scans."
   expected_output: "pre_condition: staging tests pass\nchecks: integration, load, security scans"
   metadata: {scorer: "contains", difficulty: "hard", tags: [generation, extraction, cross-domain], benchmark_role: "promotion_ab"}
+
 - id: "mixed-023"
-  input: "Classify the outage scope AND extract the affected regions: 'Our CDN provider is experiencing a global outage. All regions are affected: us-east, us-west, eu-west, eu-central, ap-southeast, ap-northeast. No ETA available.'"
+  input: "Classify the outage scope AND extract the affected regions: Our CDN provider is experiencing a global outage. All regions are affected: us-east, us-west, eu-west, eu-central, ap-southeast, ap-northeast. No ETA available."
   expected_output: "scope: global\naffected_regions: us-east, us-west, eu-west, eu-central, ap-southeast, ap-northeast"
   metadata: {scorer: "contains", difficulty: "hard", tags: [classification, extraction, cross-domain], benchmark_role: "promotion_ab"}
+
 - id: "mixed-024"
-  input: "Extract the performance baseline AND generate a recommendation: 'Current p99 latency is 500ms. Our target is 200ms. The bottleneck is in the database query layer. Each query takes 150ms on average.'"
+  input: "Extract the performance baseline AND generate a recommendation: Current p99 latency is 500ms. Our target is 200ms. The bottleneck is in the database query layer. Each query takes 150ms on average."
   expected_output: "current: 500ms\ntarget: 200ms\nbottleneck: database query layer (150ms/query)\nrecommendation: optimize database queries or add caching"
   metadata: {scorer: "contains", difficulty: "hard", tags: [extraction, generation, cross-domain], benchmark_role: "promotion_ab"}
+
 - id: "mixed-025"
-  input: "Classify this as capacity planning or incident response AND extract the resource metrics: 'The database is running at 85% disk usage. At current growth rates, we will run out of space in 14 days. The table with the fastest growth is audit_logs.'"
+  input: "Classify this as capacity planning or incident response AND extract the resource metrics: The database is running at 85% disk usage. At current growth rates, we will run out of space in 14 days. The table with the fastest growth is audit_logs."
   expected_output: "type: capacity planning\ndisk_usage: 85%\ntime_remaining: 14 days\nfastest_growth: audit_logs"
   metadata: {scorer: "contains", difficulty: "hard", tags: [classification, extraction, cross-domain], benchmark_role: "promotion_ab"}
+
 - id: "mixed-026"
-  input: "Generate a test case description AND extract the expected behavior: 'When a user enters an invalid coupon code during checkout, the system should show an error message but not clear the entire shopping cart. The user should be able to try a different code.'"
+  input: "Generate a test case description AND extract the expected behavior: When a user enters an invalid coupon code during checkout, the system should show an error message but not clear the entire shopping cart. The user should be able to try a different code."
   expected_output: "test: invalid coupon code\nexpected: show error, keep cart intact, allow retry"
   metadata: {scorer: "contains", difficulty: "hard", tags: [generation, extraction, cross-domain], benchmark_role: "promotion_ab"}
+
 - id: "mixed-027"
-  input: "Classify this as a data privacy issue AND extract the sensitive data types: 'Our logs contain user email addresses, IP addresses, and session tokens in plain text. The security team requires this to be redacted before logs are stored in the central logging system.'"
+  input: "Classify this as a data privacy issue AND extract the sensitive data types: Our logs contain user email addresses, IP addresses, and session tokens in plain text. The security team requires this to be redacted before logs are stored in the central logging system."
   expected_output: "issue: data privacy\nsensitive_data: email addresses, IP addresses, session tokens"
   metadata: {scorer: "contains", difficulty: "hard", tags: [classification, extraction, security, cross-domain], benchmark_role: "promotion_ab"}
+
 - id: "mixed-028"
-  input: "Extract all API endpoints mentioned AND classify the change type: 'The /api/v1/users endpoint is being deprecated in favor of /api/v2/users. The /api/v1/auth endpoint will remain as-is. The /api/v2/notifications endpoint is new.'"
+  input: "Extract all API endpoints mentioned AND classify the change type: The /api/v1/users endpoint is being deprecated in favor of /api/v2/users. The /api/v1/auth endpoint will remain as-is. The /api/v2/notifications endpoint is new."
   expected_output: "deprecated: /api/v1/users\nnew: /api/v2/users, /api/v2/notifications\nunchanged: /api/v1/auth\nchange_type: breaking change for /api/v1/users"
   metadata: {scorer: "contains", difficulty: "hard", tags: [extraction, classification, cross-domain], benchmark_role: "promotion_ab"}
+
 - id: "mixed-029"
-  input: "Generate a rollback announcement AND extract the rollback reason: 'We are rolling back the deployment of v2.5.0 because it introduced a memory leak in the background worker. The leak causes OOM kills after approximately 4 hours of runtime.'"
+  input: "Generate a rollback announcement AND extract the rollback reason: We are rolling back the deployment of v2.5.0 because it introduced a memory leak in the background worker. The leak causes OOM kills after approximately 4 hours of runtime."
   expected_output: "announcement: rolling back v2.5.0\nreason: memory leak in background worker causing OOM after 4 hours"
   metadata: {scorer: "contains", difficulty: "hard", tags: [generation, extraction, cross-domain], benchmark_role: "promotion_ab"}
+
 - id: "mixed-030"
-  input: "Classify this as a monitoring gap AND extract the missing metrics: 'We did not detect the database slowdown until customers reported it. We have no monitoring for query latency, connection pool usage, or replication lag on the read replicas.'"
+  input: "Classify this as a monitoring gap AND extract the missing metrics: We did not detect the database slowdown until customers reported it. We have no monitoring for query latency, connection pool usage, or replication lag on the read replicas."
   expected_output: "issue: monitoring gap\nmissing_metrics: query latency, connection pool usage, replication lag"
   metadata: {scorer: "contains", difficulty: "hard", tags: [classification, extraction, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-031"
+  input: "Classify this compliance report AND extract the regulation code: Our organization must comply with the new data sovereignty law requiring all financial records to be stored within national borders. The audit found 12 instances of cross-border data transfer violations."
+  expected_output: "classification: security\nregulation_code: DS-2026\nviolations: 12"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [compliance, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-032"
+  input: "Extract all affected regions AND classify the outage severity: The multi-cloud deployment experienced cascading failures across us-east-1, eu-west-2, and ap-south-1. Recovery time objective: 4 hours. Impact: 60% of transaction volume."
+  expected_output: "regions: us-east-1, eu-west-2, ap-south-1\nseverity: critical\nimpact_pct: 60%"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [infra, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-033"
+  input: "Classify this vendor risk AND extract the contract expiration: Our primary SaaS vendor, CloudSync Inc., has announced end-of-life for their API v2 platform. The enterprise contract expires 2026-12-31 with a $450K annual commitment."
+  expected_output: "risk: vendor lock-in\ncontract_expiry: 2026-12-31\nannual_commitment: $450K"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [vendor, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-034"
+  input: "Extract all cost centers AND classify the budget anomaly: Marketing spent $120K on cloud resources in Q3 against a $75K budget. Engineering exceeded by $30K. Finance flagged the combined overrun as a Tier-1 variance."
+  expected_output: "marketing_overrun: $45K\nengineering_overrun: $30K\ntotal_overrun: $75K\nclassification: finops"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [cost, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-035"
+  input: "Classify the data quality issue AND extract the affected pipeline: The ETL pipeline processing customer analytics failed at the transformation stage. 2.3 million records have null values in the email field. Pipeline: cust-analytics-v4."
+  expected_output: "pipeline: cust-analytics-v4\nrecords_affected: 2.3M\nissue_type: null values\nclassification: technical"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [data, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-036"
+  input: "Extract all SLA violations AND classify the severity trend: Q3 SLA report: 14 missed p99 targets on payment service, 8 on auth service, 3 on notification service. Trend: worsening month-over-month since June."
+  expected_output: "payment_misses: 14\nauth_misses: 8\nnotification_misses: 3\ntrend: worsening\nclassification: urgent"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [sla, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-037"
+  input: "Classify this security incident AND extract the CVSS score: A privilege escalation vulnerability was discovered in the Kubernetes admission controller. CVSS v3.1 score: 9.8. Affected clusters: prod-us, staging-eu."
+  expected_output: "classification: security\ncvss: 9.8\naffected_clusters: prod-us, staging-eu"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [security, k8s, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-038"
+  input: "Extract all deployment versions AND classify the rollback necessity: Versions deployed: v3.1.0 to canary (5%), v3.1.1 to 25%, v3.0.9 still on production. Error rate on v3.1.1 is 4.2x baseline. Rollback recommended."
+  expected_output: "versions: v3.1.0, v3.1.1, v3.0.9\nrollback_needed: yes\nclassification: technical"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [deployment, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-039"
+  input: "Classify the network issue AND extract all affected endpoints: DNS resolution failures detected for api.internal, db.internal, and cache.internal. Latency spikes: 2000ms p99 on us-east-1. Root cause: BGP hijack."
+  expected_output: "classification: security\nendpoints: api.internal, db.internal, cache.internal\nlatency_p99: 2000ms"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [network, security, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-040"
+  input: "Extract all compliance gaps AND classify the regulatory risk: SOC 2 audit found 7 control failures: access logging disabled, encryption at rest not enforced, 5 missing review signatures. Regulatory body: SEC."
+  expected_output: "control_failures: 7\nsec_1: access logging disabled\nsec_2: encryption at rest\nregulatory_body: SEC\nclassification: security"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [compliance, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-041"
+  input: "Classify the incident type AND extract all impacted services: A memory leak in the recommendation engine caused OOM kills on ml-svc-01, ml-svc-02, and ml-svc-03. The search service is unaffected. Customer impact: 15% of recommendations broken."
+  expected_output: "classification: technical\nimpacted: ml-svc-01, ml-svc-02, ml-svc-03\ncustomer_impact: 15%"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [ml, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-042"
+  input: "Extract all change requests AND classify the risk level: Pending changes: migrate database to Aurora (high risk), update API gateway (medium risk), switch CDN provider (low risk). Change advisory board meets 2026-10-15."
+  expected_output: "changes: Aurora migration, API gateway update, CDN switch\nrisk_high: Aurora\ncab_date: 2026-10-15\nclassification: change"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [change, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-043"
+  input: "Classify the resource constraint AND extract the bottleneck component: Kafka consumer group analytics-pipeline is 30 seconds behind. Partition count: 24. Consumer instances: 3. Memory usage at 92%. Root cause: serializer overhead."
+  expected_output: "classification: capacity\nlag_seconds: 30\npartitions: 24\nbottleneck: serializer overhead"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [streaming, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-044"
+  input: "Extract all license expirations AND classify the legal risk: Enterprise Java license expires 2026-11-30. Oracle database license renews 2027-01-15. Redis enterprise license already expired 2026-08-01. Legal review pending."
+  expected_output: "java_expiry: 2026-11-30\noracle_renewal: 2027-01-15\nredis_expired: 2026-08-01\nclassification: legal"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [license, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-045"
+  input: "Classify the customer escalation AND extract all escalation tiers: Enterprise customer FinServ Global filed a P1 ticket. Their trading platform is down. Escalation tiers: L2 support, engineering on-call, VP customer success. SLA: 15 minutes."
+  expected_output: "classification: urgent\ncustomer: FinServ Global\ntiers: L2, engineering, VP CS\nsla_minutes: 15"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [escalation, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-046"
+  input: "Extract all error codes from the log AND generate a diagnostic summary: Error log: E4032 (auth-service, 5 retries), E5003 (payment-service, 12 retries), E4031 (billing-service, 3 retries). All errors started at 2026-09-15T08:00Z after the config deployment."
+  expected_output: "errors: E4032, E5003, E4031\nsummary: config deployment caused cascading payment failures"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [diagnostics, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-047"
+  input: "Extract the performance metrics AND generate an optimization plan: Current metrics: p95 latency 800ms, p99 2400ms, throughput 1200 req/s. Target: p95 < 200ms. Bottleneck: N+1 queries in the order service ORM layer."
+  expected_output: "current_p95: 800ms\ncurrent_p99: 2400ms\nplan: add query batching, implement read replicas, enable connection pooling"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [performance, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-048"
+  input: "Extract all affected customers AND generate a communication draft: Affected accounts: AC-1001 through AC-1050 (50 enterprise accounts). Issue: data export failed for all accounts created before 2026-01-01. Fix ETA: 4 hours."
+  expected_output: "accounts: AC-1001 through AC-1050\ncount: 50\ncommunication: we are fixing an export issue affecting accounts created before 2026-01-01"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [customer-comm, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-049"
+  input: "Extract the incident timeline AND generate a postmortem outline: Timeline: 08:00 deployment, 08:15 first error reports, 08:30 page triggered, 08:45 rollback initiated, 09:10 service restored, 09:30 postmortem scheduled."
+  expected_output: "timeline: deploy 08:00, errors 08:15, page 08:30, rollback 08:45, restored 09:10\npostmortem_sections: timeline, root cause, remediation, prevention"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [postmortem, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-050"
+  input: "Extract all feature flags AND generate a rollback recommendation: Flags: new-checkout-ui (enabled 25%), payment-optimizer (enabled 100%), search-relevance-v3 (enabled 50%). Error rate increase correlates with payment-optimizer."
+  expected_output: "flags: new-checkout-ui, payment-optimizer, search-relevance-v3\nrecommendation: immediately disable payment-optimizer"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [feature-flags, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-051"
+  input: "Extract the compliance requirements AND generate an implementation plan: Requirements: GDPR data minimization, right-to-delete within 30 days, data portability in JSON format, DPIA completed. Current gaps: no delete endpoint, no export API."
+  expected_output: "requirements: GDPR, right-to-delete, portability\nplan: build /delete endpoint, add /export JSON, complete DPIA"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [gdpr, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-052"
+  input: "Extract all service dependencies AND generate a resilience plan: Dependencies: order-service -> payment, inventory, notification; payment -> gateway, fraud-check; notification -> email, sms, push. Single points of failure: gateway, fraud-check."
+  expected_output: "dependencies: order->payment/inventory/notification, payment->gateway/fraud\nplan: add circuit breaker on gateway, cache fraud-check results"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [resilience, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-053"
+  input: "Extract the release notes AND generate a migration guide: Release v4.2.0 changes: REST API v3 replaces v2 (deprecated), new GraphQL endpoint, PostgreSQL 16 migration, Redis 7 upgrade. Breaking change: auth token format."
+  expected_output: "changes: REST v3, GraphQL, PG16, Redis 7\nguide: update auth tokens, migrate queries to v3, test with staging PG16"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [release, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-054"
+  input: "Extract all monitoring gaps AND generate an observability plan: Gaps: no alerting on queue depth, missing p99 latency dashboards for payment service, no anomaly detection on error rates. Current tools: Datadog, PagerDuty."
+  expected_output: "gaps: queue depth alerts, payment p99 dashboards, error anomaly detection\nplan: add queue depth alerts to Datadog, build payment p99 dashboards"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [observability, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-055"
+  input: "Extract the security findings AND generate a remediation timeline: Findings: 3 critical CVEs in legacy auth library, 2 high-severity misconfigs in S3 buckets, 5 medium findings in logging. Budget: $50K for remediation."
+  expected_output: "critical: 3 CVEs in auth library\nhigh: 2 S3 misconfigs\nmedium: 5 logging\nremediation: critical within 24h, high within 1 week, medium within 1 month"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [security-remediation, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-056"
+  input: "Extract all customer feedback themes AND generate a product roadmap: Feedback themes: slow checkout (42%), missing mobile support (28%), limited integrations (19%), UI confusing (11%). Top request: mobile app and Shopify integration."
+  expected_output: "themes: checkout speed 42%, mobile 28%, integrations 19%, UI 11%\nroadmap: mobile app Q1, Shopify integration Q2, checkout optimization Q1"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [product, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-057"
+  input: "Extract the infrastructure costs AND generate a cost optimization plan: Monthly spend: compute $45K, storage $12K, data transfer $8K, support $15K. Idle resources: 3 unused t3.2xlarge instances, 2 over-provisioned RDS instances."
+  expected_output: "compute: $45K\nstorage: $12K\ntransfer: $8K\nsupport: $15K\nplan: terminate idle instances, downsize RDS, reserve instances for steady-state"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [cost-opt, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-058"
+  input: "Extract all test results AND generate a quality report: Test results: unit 94% (down from 97%), integration 12/15 passing, e2e 3/8 passing. Flaky tests: 7. Coverage gap: payment module at 62%."
+  expected_output: "unit: 94%\nintegration: 12/15\ne2e: 3/8\nflaky: 7\ncoverage_gap: payment 62%\nreport: prioritize payment module tests, fix flaky tests"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [quality, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-059"
+  input: "Extract the migration status AND generate a cutover plan: Migration progress: 60% data copied, schema diff: 3 new columns, 2 renamed. Old system: Oracle 12c. New system: PostgreSQL 16. Risk: data type mismatches on date fields."
+  expected_output: "progress: 60%\nschema_changes: 3 new, 2 renamed\nold: Oracle 12c\nnew: PG16\nrisk: date type mismatches\ncutover: weekend window, dual-write 48h"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [migration, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-060"
+  input: "Extract all integration errors AND generate a troubleshooting guide: Errors from integrations: Salesforce API timeout (3 occurrences), Slack webhook 410 (stale channel), Zendesk 429 (rate limit), Jira 500 (server error)."
+  expected_output: "errors: Salesforce timeout, Slack 410, Zendesk 429, Jira 500\nguide: refresh Slack channel, add rate limit backoff for Zendesk, retry Salesforce with exponential backoff"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [integration, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-061"
+  input: "Classify this strategic request AND generate an executive summary: Request: Enter the APAC market by acquiring a local payments processor. Target: PayTech Asia, valuation $200M. Strategic rationale: 40M untapped users, regulatory sandbox available."
+  expected_output: "classification: feature\nsummary: acquire PayTech Asia ($200M) to enter APAC, 40M users, regulatory sandbox ready"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [strategy, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-062"
+  input: "Classify the organizational change AND generate a stakeholder communication: Change: Restructuring engineering org into 3 guilds: platform, product, data. Reporting lines change effective 2026-10-01. Affected: 45 engineers across 8 teams."
+  expected_output: "classification: change\ncommunication: org restructure into platform, product, data guilds effective 2026-10-01, 45 engineers across 8 teams affected"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [org, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-063"
+  input: "Classify the policy update AND generate a change notification: Policy update: Remote work policy revised to require 3 days/week in-office for all ICs starting 2026-11-01. Exceptions: engineering leads, field staff. Approved by CEO."
+  expected_output: "classification: policy\nnotification: new remote work policy requires 3 days/week in-office starting 2026-11-01, exceptions for eng leads and field staff"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [hr, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-064"
+  input: "Classify the marketing campaign AND generate a launch plan: Campaign: Product launch for AI-powered analytics suite. Target: enterprise customers. Channels: webinars, LinkedIn, PR. Budget: $150K. Launch date: 2026-11-15."
+  expected_output: "classification: feature\nlaunch_plan: webinars + LinkedIn + PR, $150K budget, target enterprise, launch 2026-11-15"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [marketing, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-065"
+  input: "Classify the research finding AND generate a technical recommendation: Finding: Benchmarking shows GPT-4 outperforms Claude 3.5 on classification tasks by 12% but costs 3x more. Claude 3.5 excels at extraction. Recommendation: hybrid approach."
+  expected_output: "classification: research\nrecommendation: use GPT-4 for classification, Claude 3.5 for extraction; hybrid pipeline to optimize cost-performance"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [research, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-066"
+  input: "Classify the competitive threat AND generate a response strategy: Threat: Competitor launched automated code review with 95% accuracy at half our price. Our differentiator: domain-specific optimizations and enterprise support. Response needed within 2 weeks."
+  expected_output: "classification: competitive\nstrategy: accelerate domain-specific features, highlight enterprise support, consider pricing tier adjustment"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [competitive, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-067"
+  input: "Classify the talent acquisition need AND generate a hiring plan: Need: 3 senior ML engineers, 2 DevOps architects, 1 security lead. Current pipeline: 45 applicants, 8 technical interviews scheduled. Time-to-hire target: 45 days."
+  expected_output: "classification: organizational\nhiring_plan: 3 ML engineers, 2 DevOps architects, 1 security lead; 8 interviews scheduled, 45-day target"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [hiring, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-068"
+  input: "Classify the legal matter AND generate a risk assessment: Matter: Class action lawsuit filed alleging data breach negligence. Plaintiff alleges failure to encrypt PII. Status: motion to dismiss pending. Potential exposure: $50M-$200M."
+  expected_output: "classification: legal\nrisk_assessment: class action re data breach, motion to dismiss pending, exposure $50M-$200M"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [legal, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-069"
+  input: "Classify the infrastructure decision AND generate an architecture proposal: Decision: Migrate from monolith to microservices. Options: Kubernetes + Istio (high complexity, proven) vs Serverless (low complexity, vendor lock-in). Business deadline: 2027-Q1."
+  expected_output: "classification: technical\nproposal: evaluate Kubernetes+Istio for control vs Serverless for speed; recommend K8s for enterprise compliance"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [architecture, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-070"
+  input: "Classify the budget allocation AND generate a justification memo: Allocation request: $2M for cloud infrastructure upgrade. Justification: current costs growing 40% YoY, projected $8M annual spend by 2027. Upgrade would reduce to $5M with reserved instances."
+  expected_output: "classification: finops\njustification: $2M upgrade reduces projected $8M annual spend to $5M, 40% YoY growth justifies investment"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [budget, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-071"
+  input: "Classify the partnership proposal AND generate a due diligence checklist: Proposal: Strategic partnership with HealthTech Inc. for AI diagnostics. Their revenue: $30M ARR. Users: 500 hospitals. Due diligence needed: IP ownership, compliance, revenue share."
+  expected_output: "classification: feature\ndue_diligence: IP ownership, HIPAA compliance, revenue share model, 500 hospital references"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [partnership, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-072"
+  input: "Classify the process improvement AND generate an implementation roadmap: Improvement: Automate the incident response playbook. Current: manual Slack alerts, 45-min response time. Target: automated runbooks, 5-min response. Scope: P1 and P2 incidents."
+  expected_output: "classification: process\nroadmap: automate Slack alerts -> runbook templates -> auto-remediation, target 5-min response for P1/P2"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [process, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-073"
+  input: "Classify the technical debt item AND generate a paydown plan: Debt item: Legacy billing module uses deprecated payment SDK. 12K LOC. No tests. Blocks new feature development. Options: rewrite ($400K, 6 months) or wrapper ($100K, 2 months)."
+  expected_output: "classification: technical\ndebt: legacy billing SDK, 12K LOC, no tests\nplan: wrapper approach $100K/2 months, then gradual rewrite"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [debt, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-074"
+  input: "Classify the customer success initiative AND generate a QBR deck outline: Initiative: Quarterly business review for top 20 customers. Goal: reduce churn from 8% to 5%. Metrics: NPS, adoption rate, support tickets. Deck sections: health score, wins, roadmap."
+  expected_output: "classification: customer\nqbr_deck: health score, wins, roadmap for top 20 customers; goal reduce churn 8% to 5%"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [customer-success, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-075"
+  input: "Classify the data strategy decision AND generate an architecture blueprint: Decision: Centralize data warehouse from 3 regional instances to single global platform. Options: Snowflake (managed, expensive) vs BigQuery (serverless, query-based). Data volume: 500TB."
+  expected_output: "classification: data\nblueprint: evaluate Snowflake vs BigQuery for 500TB centralized warehouse; consider query cost vs management overhead"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [data-strategy, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-076"
+  input: "Generate a runbook for this scenario AND extract the recovery steps: Scenario: Database primary fails in multi-AZ deployment. Current state: replica lag 2 seconds, automatic failover not triggered. Manual intervention required. Estimated recovery: 15 minutes."
+  expected_output: "runbook: verify replica lag, promote replica manually, update DNS, validate reads\nsteps: check lag, promote replica, update CNAME, validate"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [dr, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-077"
+  input: "Generate a customer-facing status page update AND extract the impact metrics: Situation: Payment processing degraded since 14:00 UTC. Transactions failing: 5% (up from 0.1%). Affected: credit card and ACH. PayPal unaffected. Fix ETA: 2 hours."
+  expected_output: "update: payment processing degraded, 5% failure rate, ETA 2 hours\nmetrics: 5% failure, credit card and ACH affected, PayPal OK"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [status, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-078"
+  input: "Generate a security advisory AND extract the affected versions: Advisory: Critical RCE vulnerability in popular logging library. Versions affected: 2.1.0 through 3.4.2. Patched version: 3.4.3. CVE: CVE-2026-7777. Exploit public: no."
+  expected_output: "advisory: critical RCE in logging library, CVE-2026-7777, patched 3.4.3\naffected: 2.1.0 through 3.4.2, exploit not public"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [security-advisory, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-079"
+  input: "Generate a deployment health check report AND extract the validation results: Deployment: v5.0.0 rolled out to 100% over 30 minutes. Health check: 200 OK on 99.8% of pods, p99 latency 120ms (target <200ms), error rate 0.01%. Validation: PASS."
+  expected_output: "report: v5.0.0 deployed to 100%, health 200 OK 99.8%, p99 120ms, error 0.01%\nresults: PASS on all health checks"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [deployment-health, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-080"
+  input: "Generate a data classification guide AND extract the classification rules: Guide: Classify all data as public, internal, confidential, or restricted. Examples: product docs = public, internal docs = internal, customer PII = confidential, financial records = restricted."
+  expected_output: "guide: 4-tier classification: public, internal, confidential, restricted\nrules: product docs=public, internal docs=internal, PII=confidential, financial=restricted"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [classification-guide, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-081"
+  input: "Generate a CI/CD pipeline optimization proposal AND extract the bottleneck stages: Pipeline: build (5 min), test (12 min), security scan (8 min), deploy (3 min). Total: 28 min. Bottleneck: security scan and test parallelization. Proposal: parallelize tests, cache security scan results."
+  expected_output: "proposal: parallelize test and security scan, cache scan results\nbottlenecks: test 12 min, security scan 8 min"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [cicd, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-082"
+  input: "Generate a capacity forecast report AND extract the scaling triggers: Forecast: Current capacity 10K req/s. Growth rate: 15% monthly. Expected to hit limit by 2027-Q2. Scaling triggers: CPU > 80%, memory > 75%, request queue > 1000. Auto-scale at 75% CPU."
+  expected_output: "forecast: 10K req/s, 15% monthly growth, limit by 2027-Q2\ntriggers: CPU > 80%, memory > 75%, queue > 1000"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [capacity, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-083"
+  input: "Generate a vendor evaluation scorecard AND extract the evaluation criteria: Evaluation: Comparing 3 observability vendors: Datadog, New Relic, Grafana Cloud. Criteria: cost, feature coverage, integration ecosystem, support SLAs. Weight: cost 30%, features 40%, ecosystem 20%, support 10%."
+  expected_output: "scorecard: cost 30%, features 40%, ecosystem 20%, support 10%\ncriteria: cost, feature coverage, integration ecosystem, support SLAs"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [vendor-eval, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-084"
+  input: "Generate an incident severity classification guide AND extract the classification criteria: Guide: P1 = customer-facing outage, revenue impact > $100K/hr. P2 = degradation, impact < $100K/hr. P3 = minor issue, no revenue impact. P4 = enhancement request. Response times: P1 15 min, P2 1 hour."
+  expected_output: "guide: P1=outage >$100K/hr, P2=degradation <$100K/hr, P3=minor, P4=enhancement\ncriteria: revenue impact and customer-facing status"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [severity-guide, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-085"
+  input: "Generate a data retention policy AND extract the retention periods: Policy: Transaction logs retained 7 years (compliance), application logs 90 days, audit logs 3 years, debug logs 7 days. Storage cost: $2K/month. Archive to cold storage after 90 days."
+  expected_output: "policy: transaction 7yr, app logs 90d, audit 3yr, debug 7d\nretention: 7yr/90d/3yr/7d by data type"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [retention, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-086"
+  input: "Generate a chaos engineering experiment plan AND extract the blast radius limits: Plan: Chaos experiment on payment service. Inject: latency (500ms), CPU stress (90%), dependency failure (database). Blast radius: canary group only (5% traffic). Auto-abort: error rate > 1%."
+  expected_output: "plan: latency, CPU stress, dependency failure experiments on payment service\nblast_radius: canary 5%, auto-abort on error rate > 1%"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [chaos, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-087"
+  input: "Generate a technical writing style guide AND extract the style rules: Guide: Use active voice, second person, present tense. Keep sentences under 20 words. Define jargon on first use. Examples: 'Click Save' not 'The Save button should be clicked'."
+  expected_output: "guide: active voice, second person, present tense, sentences < 20 words, define jargon\nrules: active voice, 2nd person, < 20 words"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [writing, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-088"
+  input: "Generate a disaster recovery test plan AND extract the test scenarios: Plan: DR test for primary region failure. Scenarios: AZ failure (10 min RTO), region failure (30 min RTO), global catastrophe (4 hour RTO). Frequency: quarterly. Recent test pass rate: 80%."
+  expected_output: "plan: AZ failure 10min RTO, region failure 30min RTO, global 4hr RTO\nscenarios: AZ, region, global\nfrequency: quarterly, pass rate 80%"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [dr-test, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-089"
+  input: "Generate a platform onboarding guide AND extract the setup steps: Guide: New team onboarding for analytics platform. Steps: create workspace, configure data source, set up dashboard, invite team members, configure alerts. Average setup time: 2 hours."
+  expected_output: "guide: workspace creation, data source config, dashboard setup, team invite, alerts config\nsteps: 5 steps, avg 2 hours setup"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [onboarding, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-090"
+  input: "Generate a feature adoption metrics report AND extract the adoption rates: Report: Feature A adopted by 45% of users, Feature B by 23%, Feature C by 67%. Goal: 80% adoption for all GA features. Drop-off: 30% at onboarding step 3. Recommendation: simplify step 3."
+  expected_output: "features: A 45%, B 23%, C 67%\ngoal: 80% for GA features\nrecommendation: simplify onboarding step 3 (30% drop-off)"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [adoption, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-091"
+  input: "Classify this request AND extract the business context AND generate a proposal: Request: Build a real-time fraud detection system. Business context: $2M annual fraud losses, 500K transactions/day. Current detection: rule-based, 60% accuracy. Proposed: ML model, 95% accuracy, $800K budget."
+  expected_output: "classification: feature\ncontext: $2M fraud losses, 500K tx/day\nproposal: ML fraud detection, 95% accuracy, $800K budget, replace rule-based system"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [fraud, ml, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-092"
+  input: "Extract all system metrics AND classify the health status AND generate an alert: Metrics: CPU 92%, memory 88%, disk 95%, network latency 450ms. Services: 12/15 healthy. Health status: critical. Generate alert for on-call: system degradation requiring immediate investigation."
+  expected_output: "metrics: CPU 92%, memory 88%, disk 95%, latency 450ms\nhealth: critical\nalert: on-call page for immediate investigation"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [alerting, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-093"
+  input: "Classify the customer segment AND extract the account tier AND generate a retention offer: Segment: enterprise accounts with >$100K ARR. Tier: Platinum. Accounts at risk: 8 (churn probability > 70%). Offer: 20% discount on annual plan + dedicated support. Budget for offers: $50K."
+  expected_output: "classification: retention\nsegment: enterprise >$100K ARR\ntier: Platinum\noffer: 20% discount + dedicated support, $50K budget"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [retention, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-094"
+  input: "Extract all audit findings AND classify the compliance gap AND generate a remediation plan: Audit: 15 findings across access control (6), encryption (4), logging (3), training (2). Gap: SOX Section 404. Remediation: access control fixes in 30 days, encryption in 60 days, logging in 45 days, training in 90 days."
+  expected_output: "findings: 15 total (access 6, encryption 4, logging 3, training 2)\ngap: SOX Section 404\nplan: access 30d, encryption 60d, logging 45d, training 90d"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [audit, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-095"
+  input: "Classify the deployment strategy AND extract the rollout phases AND generate a risk mitigation: Strategy: Blue-green deployment for v5.0. Phases: canary 5% (day 1), ramp to 25% (day 2), 50% (day 3), 100% (day 4). Risks: data migration, backward compatibility. Mitigation: shadow reads, feature flags."
+  expected_output: "classification: deployment\nphases: 5%->25%->50%->100% over 4 days\nmitigation: shadow reads, feature flags, backward compat checks"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [deployment, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-096"
+  input: "Extract all user stories AND classify the epic AND generate a sprint plan: Stories: 12 total. Epic: Platform Performance. Stories: 4 DB optimization, 3 cache layer, 2 CDN, 3 query optimization. Sprint capacity: 20 points. Estimation: 18 points needed. Sprint: 2 weeks."
+  expected_output: "stories: 12 (4 DB, 3 cache, 2 CDN, 3 query)\nepic: Platform Performance\nsprint: 2 weeks, 18/20 points, all performance related"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [agile, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-097"
+  input: "Classify the data privacy request AND extract the user data AND generate a deletion report: Request: User exercising right-to-be-forgotten. User ID: UID-88432. Data to delete: profile, purchase history, preferences. Exempt: transaction records (legal retention 7 years). Report: generate deletion confirmation."
+  expected_output: "classification: privacy\nuser: UID-88432\ndelete: profile, purchase history, preferences\nexempt: transaction records (7yr legal retention)\nreport: deletion confirmation generated"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [gdpr, privacy, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-098"
+  input: "Generate an architecture decision record AND extract the decision context AND classify the decision type: Context: Choosing between Kafka and Pulsar for event streaming. Decision: Kafka. Rationale: ecosystem maturity, team expertise, operational tooling. Type: technology choice. Alternatives considered: Pulsar, RabbitMQ."
+  expected_output: "decision: Kafka for event streaming\ncontext: ecosystem, expertise, tooling\ntype: technology choice\nalternatives: Pulsar, RabbitMQ"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [adr, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-099"
+  input: "Extract all performance benchmarks AND classify the regression AND generate a performance alert: Benchmarks: p99 latency regression detected on search service. Before: 200ms. After: 850ms. Regression: 4.25x. Classification: performance regression. Alert: search service p99 exceeds 500ms threshold."
+  expected_output: "benchmarks: p99 200ms -> 850ms on search service\nregression: 4.25x\nclassification: performance regression\nalert: search p99 exceeds 500ms threshold"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [performance-reg, cross-domain], benchmark_role: "promotion_ab"}
+
+- id: "mixed-100"
+  input: "Classify the business continuity risk AND extract the RTO/RPO AND generate a BCP update: Risk: Single-region deployment for critical payments. RTO: 4 hours. RPO: 1 hour. Impact: $500K/hr during outage. BCP update needed: multi-region failover, $200K investment. Approval: CFO required."
+  expected_output: "classification: continuity\nrisk: single-region payments\nrto: 4 hours, rpo: 1 hour\nimpact: $500K/hr\nupdate: multi-region failover, $200K, CFO approval"
+  metadata: {scorer: "contains", difficulty: "hard", tags: [bcp, cross-domain], benchmark_role: "promotion_ab"}
+

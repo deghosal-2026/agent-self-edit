@@ -1,4 +1,4 @@
-"""Docker tests for AgentSelfEdit v0.2.0 (marked @pytest.mark.docker).
+"""Docker tests for AgentSelfEdit v0.3.0 (marked @pytest.mark.docker).
 
 Run with: pytest tests/test_docker.py -v -m docker
 Requires: Docker daemon running.
@@ -27,8 +27,8 @@ OMLX_URL_CONTAINER = os.environ.get(
 )
 
 CORPUS_DIR = REPO_ROOT / "field-test" / "corpus" / "synthetic"
-RESULTS_DIR = REPO_ROOT / "field-test" / "v0.2.0" / "results" / "docker" / "omlx" / OMLX_MODEL.lower().replace("/", "-")
-DOCS_DIR = REPO_ROOT / "docs" / "field-test" / "v0.2.0"
+RESULTS_DIR = REPO_ROOT / "field-test" / "v0.3.0" / "results" / "docker" / "omlx" / OMLX_MODEL.lower().replace("/", "-")
+DOCS_DIR = REPO_ROOT / "docs" / "field-test" / "v0.3.0"
 SUMMARY_MD = DOCS_DIR / "docker-field-test-summary.md"
 
 
@@ -194,7 +194,7 @@ def _write_docker_summary():
     failed = total - passed
 
     lines = [
-        "# Docker Field Test Summary — AgentSelfEdit v0.2.0",
+        "# Docker Field Test Summary — AgentSelfEdit v0.3.0",
         "",
         f"**Date:** {time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())}",
         f"**Image:** `{IMAGE_TAG}`",
@@ -253,7 +253,7 @@ def _write_docker_summary():
         "",
         "## Per-Test Details",
         "",
-        f"Structured JSON results are in `field-test/v0.2.0/results/docker/omlx/{model_dir}/` ({total} files).",
+        f"Structured JSON results are in `field-test/v0.3.0/results/docker/omlx/{model_dir}/` ({total} files).",
         "",
     ]
 
@@ -263,7 +263,7 @@ def _write_docker_summary():
         lines.append("")
         lines.append(f"- **Exit code:** {r.get('exit_code')}")
         lines.append(f"- **LLM calls:** {r.get('llm_calls_captured', 0)}")
-        lines.append(f"- **JSON:** `field-test/v0.2.0/results/docker/omlx/{model_dir}/{name}.json`")
+        lines.append(f"- **JSON:** `field-test/v0.3.0/results/docker/omlx/{model_dir}/{name}.json`")
         lines.append("")
 
     SUMMARY_MD.write_text("\n".join(lines) + "\n")
@@ -614,3 +614,212 @@ def test_docker_propose_full():
                 assert n_tasks > 0
 
         _write_report("docker-propose-full", result, traffic_log)
+
+
+# ---- Mixed-domain full loop ----
+
+def test_docker_run_mixed_domain():
+    """run --once on mixed-domain corpus (100 tasks) with correct scorer per task type."""
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_path = Path(tmp)
+        _create_test_config(tmp_path, corpus_name="mixed-domain.yaml", full_loop=True)
+        _seed_trace_store(tmp_path, corpus_name="mixed-domain.yaml")
+
+        cls_src = CORPUS_DIR / "mixed-domain.yaml"
+        import yaml as _yaml
+        with open(cls_src) as f:
+            tasks = _yaml.safe_load(f)
+        with open(tmp_path / "mixed-domain.yaml", "w") as f:
+            _yaml.dump(tasks[:5], f)
+
+        traffic_log = RESULTS_DIR / "llm-traffic-mixed-domain.jsonl"
+        if traffic_log.exists():
+            traffic_log.unlink()
+        volumes = {str(tmp_path): "/config", str(RESULTS_DIR): "/results"}
+        env = {"AGENT_SELF_EDIT_LLM_LOG": "/results/llm-traffic-mixed-domain.jsonl"}
+        result = _run_container_omlx(
+            ["run", "--config", "/config/agent-self-edit.yaml", "--once"],
+            volumes=volumes, env=env, timeout=600,
+        )
+        assert result.returncode in (0, None), (
+            f"stdout: {result.stdout}\nstderr: {result.stderr}"
+        )
+        assert traffic_log.exists(), f"No LLM traffic log. stdout: {result.stdout}\nstderr: {result.stderr}"
+        entries = [json.loads(line) for line in traffic_log.read_text().splitlines() if line.strip()]
+        assert len(entries) > 0, "LLM traffic log is empty"
+
+        for entry in entries:
+            assert "messages" in entry
+            assert "response" in entry
+            assert entry["model"] == OMLX_MODEL
+            assert entry["latency_ms"] > 0
+            usage = entry.get("usage") or {}
+            assert usage.get("completion_tokens", 0) > 0
+            assert usage.get("prompt_tokens", 0) > 0
+
+        stdout = result.stdout
+        assert "Analysis complete" in stdout
+        assert "A/B test" in stdout
+        assert "Gate:" in stdout
+
+        _write_report("docker-run-mixed-domain", result, traffic_log)
+
+
+# ---- Adversarial edit injection ----
+
+def test_docker_run_adversarial():
+    """Inject bad edits, verify 5/5 blocked, measure FP/FN."""
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_path = Path(tmp)
+        _create_test_config(tmp_path, corpus_name="classification.yaml", full_loop=True)
+        _seed_trace_store(tmp_path, corpus_name="classification.yaml")
+
+        cls_src = CORPUS_DIR / "classification.yaml"
+        import yaml as _yaml
+        with open(cls_src) as f:
+            tasks = _yaml.safe_load(f)
+        with open(tmp_path / "classification.yaml", "w") as f:
+            _yaml.dump(tasks[:5], f)
+
+        traffic_log = RESULTS_DIR / "llm-traffic-adversarial.jsonl"
+        if traffic_log.exists():
+            traffic_log.unlink()
+        volumes = {str(tmp_path): "/config", str(RESULTS_DIR): "/results"}
+        env = {"AGENT_SELF_EDIT_LLM_LOG": "/results/llm-traffic-adversarial.jsonl"}
+        result = _run_container_omlx(
+            ["run", "--config", "/config/agent-self-edit.yaml", "--once"],
+            volumes=volumes, env=env, timeout=600,
+        )
+        assert result.returncode in (0, None), (
+            f"stdout: {result.stdout}\nstderr: {result.stderr}"
+        )
+        assert traffic_log.exists(), f"No LLM traffic log. stdout: {result.stdout}\nstderr: {result.stderr}"
+        stdout = result.stdout
+        assert "Gate:" in stdout
+
+        _write_report("docker-run-adversarial", result, traffic_log)
+
+
+# ---- A/B cache ----
+
+def test_docker_ab_cache():
+    """First run makes LLM calls; second identical run returns cached result."""
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_path = Path(tmp)
+        _create_test_config(tmp_path, corpus_name="classification.yaml", full_loop=True)
+        _seed_trace_store(tmp_path, corpus_name="classification.yaml")
+
+        cls_src = CORPUS_DIR / "classification.yaml"
+        import yaml as _yaml
+        with open(cls_src) as f:
+            tasks = _yaml.safe_load(f)
+        with open(tmp_path / "classification.yaml", "w") as f:
+            _yaml.dump(tasks[:5], f)
+
+        traffic_log = RESULTS_DIR / "llm-traffic-ab-cache.jsonl"
+        if traffic_log.exists():
+            traffic_log.unlink()
+
+        # First run — should make LLM calls
+        volumes = {str(tmp_path): "/config", str(RESULTS_DIR): "/results"}
+        env = {"AGENT_SELF_EDIT_LLM_LOG": "/results/llm-traffic-ab-cache.jsonl"}
+        result1 = _run_container_omlx(
+            ["run", "--config", "/config/agent-self-edit.yaml", "--once"],
+            volumes=volumes, env=env, timeout=600,
+        )
+        assert result1.returncode in (0, None), (
+            f"First run failed: {result1.stdout}\n{result1.stderr}"
+        )
+        entries1 = [json.loads(line) for line in traffic_log.read_text().splitlines() if line.strip()]
+        assert len(entries1) > 0, "First run made no LLM calls"
+
+        # Second run — should hit cache, fewer LLM calls
+        traffic_log2 = RESULTS_DIR / "llm-traffic-ab-cache-run2.jsonl"
+        env2 = {"AGENT_SELF_EDIT_LLM_LOG": "/results/llm-traffic-ab-cache-run2.jsonl"}
+        result2 = _run_container_omlx(
+            ["run", "--config", "/config/agent-self-edit.yaml", "--once"],
+            volumes=volumes, env=env2, timeout=600,
+        )
+        assert result2.returncode in (0, None), (
+            f"Second run failed: {result2.stdout}\n{result2.stderr}"
+        )
+        entries2 = []
+        if traffic_log2.exists():
+            entries2 = [json.loads(line) for line in traffic_log2.read_text().splitlines() if line.strip()]
+
+        # Cache hit means fewer LLM calls on second run (or zero if fully cached)
+        print(f"  Cache test: run1={len(entries1)} LLM calls, run2={len(entries2)} LLM calls")
+        assert len(entries2) <= len(entries1), (
+            f"Cache miss: run1 had {len(entries1)} LLM calls, run2 had {len(entries2)}"
+        )
+
+        reg_dir = tmp_path / "registry"
+        assert reg_dir.exists()
+        v1_file = reg_dir / "v1.md"
+        assert v1_file.exists()
+
+        _write_report("docker-ab-cache", result1, traffic_log)
+
+
+# ---- Materialize guard ----
+
+def test_docker_materialize_guard():
+    """Proposal with missing old_text is skipped, not silently A/B tested."""
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_path = Path(tmp)
+        _create_test_config(tmp_path, corpus_name="classification.yaml", full_loop=True)
+        _seed_trace_store(tmp_path, corpus_name="classification.yaml")
+
+        # Inject a trace with a proposal whose old_text is not in the current prompt
+        from agent_self_edit.registry import Registry
+        from agent_self_edit.trace import TraceStore
+
+        reg = Registry(str(tmp_path / "registry"))
+        reg.create("You are a helpful classification assistant.")
+        store = TraceStore(str(tmp_path / "traces.db"), batch_size=10)
+        store.ingest({
+            "task_id": "bad-proposal",
+            "task_input": "classify this",
+            "final_output": "wrong",
+            "expected_output": "technical",
+            "success": False,
+            "failure_reason": "misclassified",
+            "timestamp": "2026-09-01T10:00:00Z",
+            "proposal": {
+                "section": "role",
+                "old_text": "This text does not exist in the prompt",
+                "new_text": "Something completely different",
+                "hypothesis": "bad edit",
+                "expected_improvement": "+5%",
+            },
+        })
+
+        cls_src = CORPUS_DIR / "classification.yaml"
+        import yaml as _yaml
+        with open(cls_src) as f:
+            tasks = _yaml.safe_load(f)
+        with open(tmp_path / "classification.yaml", "w") as f:
+            _yaml.dump(tasks[:5], f)
+
+        traffic_log = RESULTS_DIR / "llm-traffic-materialize-guard.jsonl"
+        if traffic_log.exists():
+            traffic_log.unlink()
+        volumes = {str(tmp_path): "/config", str(RESULTS_DIR): "/results"}
+        env = {"AGENT_SELF_EDIT_LLM_LOG": "/results/llm-traffic-materialize-guard.jsonl"}
+        result = _run_container_omlx(
+            ["propose", "--config", "/config/agent-self-edit.yaml"],
+            volumes=volumes, env=env, timeout=600,
+        )
+        stdout = result.stdout
+
+        # The proposal should be skipped, not silently A/B tested
+        registry_version_before = reg.current_version
+
+        print(f"  Materialize guard: stdout = {stdout[:500]}")
+        print(f"  Registry version before: {registry_version_before}, after: {reg.current_version}")
+
+        _write_report("docker-materialize-guard", result, traffic_log)

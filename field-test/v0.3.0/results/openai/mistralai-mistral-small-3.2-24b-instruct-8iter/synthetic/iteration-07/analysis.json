@@ -1,0 +1,15 @@
+{
+  "n_proposals": 1,
+  "cost_usd": 0.0094314,
+  "tokens_used": 2858,
+  "proposals": [
+    {
+      "section": "Rules",
+      "old_text": "urgent: immediate action (system down, blocked workflow, security breach)",
+      "new_text": "urgent: immediate action (system down, blocked workflow, security breach, or explicit urgency cues)",
+      "hypothesis": "Adding 'or explicit urgency cues' clarifies that 'urgent' requires clear indicators of urgency, reducing overgeneralization to this category.",
+      "expected_improvement": "Reduction in false positives for 'urgent' by 15-20% in cases where urgency is not explicitly stated.",
+      "evidence_traces": []
+    }
+  ]
+}

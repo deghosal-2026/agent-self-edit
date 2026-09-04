@@ -1,0 +1,102 @@
+[
+  {
+    "task_id": "gen-001",
+    "input": "Topic: outage postmortem. Constraints: 3 paragraphs, root cause section, action items.",
+    "expected": "Postmortem for the 2026-08-30 outage",
+    "llm_output": "**Outage Postmortem: Service Disruption on 10/15/2023**\n\nOn October 15, 2023, our users experienced an unexpected service outage that lasted approximately 2 hours and 45 minutes. The disruption began at 14:30 UTC and was fully resolved by 17:15 UTC. We understand the impact this outage had on our users' experience and we sincerely apologize for the inconvenience caused. During this period, users were unable to access our platform, leading to disruptions in their workflows. We have conducted a thorough investigation to understand the cause of this outage and have implemented measures to prevent similar incidents in the future.\n\n**Root Cause**\n\nThe root cause of the outage was a cascading failure triggered by a database query that went unoptimized in our recent deployment. This query caused a significant increase in database load, leading to a chain reaction that overwhelmed our database servers. The database servers eventually became unresponsive, causing our application servers to fail as they were unable to retrieve the necessary data. Our monitoring systems alerted the on-call team, but the initial response was delayed due to the complexity of the issue. Once the team identified the problematic query, they optimized it and restarted the affected services, restoring full functionality to the platform.\n\n**Action Items**\n\nTo prevent similar outages in the future, we have identified the following action items:\n\n1. **Improve Database Query Monitoring**: Implement more granular monitoring for database queries to detect and alert on potentially problematic queries before they cause significant issues.\n2. **Enhance Deployment Processes**: Strengthen our deployment processes to include more rigorous testing for database queries and their impact on system performance.\n3. **Update Incident Response Procedures**: Revise our incident response procedures to ensure faster and more effective resolution of complex issues.\n4. **Increase Database Redundancy**: Evaluate and implement additional database redundancy to improve system resilience and reduce the impact of similar incidents.\n\nWe are committed to providing a reliable and seamless experience for our users. We will continue to monitor our systems closely and make necessary improvements to prevent future disruptions. We appreciate your understanding and continued support.",
+    "score": 0.858,
+    "latency_ms": 5958.299874997465,
+    "tokens": 641,
+    "error": null
+  },
+  {
+    "task_id": "gen-002",
+    "input": "Topic: release notes for v2.1.0. Constraints: bullet points, list 3 new features, 2 bug fixes.",
+    "expected": "Release v2.1.0",
+    "llm_output": "**Release Notes for v2.1.0**\n\n**New Features:**\n- Added dark mode for improved user experience during low-light conditions\n- Implemented two-factor authentication for enhanced account security\n- Introduced keyboard shortcuts for faster navigation and improved productivity\n\n**Bug Fixes:**\n- Fixed an issue where the application would crash when opening certain file types\n- Resolved a problem with the login page not responding to touch on mobile devices",
+    "score": 0.64,
+    "latency_ms": 2097.3041670004022,
+    "tokens": 168,
+    "error": null
+  },
+  {
+    "task_id": "gen-003",
+    "input": "Topic: security advisory. Constraints: professional tone, list affected versions, mitigation steps.",
+    "expected": "Security Advisory: CVE-2026-12345",
+    "llm_output": "**Security Advisory: Critical Vulnerability in OpenSSL**\n\n**Advisory ID:** OS-2023-001\n**Date:** October 12, 2023\n**Risk Level:** Critical\n\n**Affected Versions:**\n- OpenSSL 1.1.1 (versions prior to 1.1.1w)\n- OpenSSL 3.0.0 (versions prior to 3.0.7)\n\n**Summary:**\nA critical vulnerability has been discovered in OpenSSL, a widely used open-source cryptographic library. This vulnerability, identified as CVE-2023-4567, could allow remote attackers to execute arbitrary code, cause a denial of service, or obtain sensitive information on affected systems.\n\n**Details:**\nThe vulnerability is due to a buffer overflow in the OpenSSL library when processing maliciously crafted TLS 1.3 handshake messages. An attacker could exploit this vulnerability by sending a specially crafted handshake message to a vulnerable server or client, potentially leading to remote code execution or a denial of service.\n\n**Mitigation Steps:**\n\n1. **Update OpenSSL:**\n   - Upgrade to the latest patched versions of OpenSSL:\n     - OpenSSL 1.1.1w or later\n     - OpenSSL 3.0.7 or later\n\n2. **Apply Workarounds (if update is not immediately possible):**\n   - Disable TLS 1.3 on affected systems until the update can be applied. This can be done by setting the `OPENSSL_TLS_METHOD` environment variable to `TLSv1_2_method` or by configuring your application to use TLS 1.2 or lower.\n\n3. **Monitor for Exploit Attempts:**\n   - Review logs and monitor network traffic for any signs of exploit attempts. Look for unusual or unexpected TLS handshake messages.\n\n4. **Inform Stakeholders:**\n   - Notify relevant stakeholders, including customers, partners, and internal teams, about the vulnerability and the steps being taken to mitigate it.\n\n5. **Review and Update Incident Response Plans:**\n   - Ensure that your incident response plans are up-to-date and include procedures for handling vulnerabilities of this nature.\n\n**References:**\n- OpenSSL Security Advisory: [https://www.openssl.org/news/secadv/20231012.txt](https://www.openssl.org/news/secadv/20231012.txt)\n- CVE-2023-4567: [https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-4567](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-4567)\n\n**Contact:**\nFor further information or assistance, please contact your organization's security team or the OpenSSL project directly.\n\n**Disclaimer:**\nThis advisory is provided on an \"as is\" basis without warranty of any kind. Your use of the information in this advisory is voluntary, and its use is at your sole risk.",
+    "score": 0.844,
+    "latency_ms": 28361.84291600148,
+    "tokens": 680,
+    "error": null
+  },
+  {
+    "task_id": "gen-004",
+    "input": "Topic: team standup summary. Constraints: 2 sentences max, completed items, blockers.",
+    "expected": "Standup summary for 2026-09-01",
+    "llm_output": "\"Today, we completed the user interface design and resolved the login page bug. Our blocker is the delayed API documentation from the backend team.\"",
+    "score": 0.54,
+    "latency_ms": 1424.1533749991504,
+    "tokens": 90,
+    "error": null
+  },
+  {
+    "task_id": "gen-005",
+    "input": "Topic: on-call handoff notes. Constraints: include active incidents, pending actions, next steps.",
+    "expected": "On-call handoff for 2026-09-01",
+    "llm_output": "**On-Call Handoff Notes**\n\n**Date:** [Insert Date]\n\n**Handing Over:** [Your Name]\n\n**Taking Over:** [Next On-Call's Name]\n\n**Active Incidents:**\n\n1. **Incident ID:** IN-20231001-001\n   - **Description:** High CPU usage on server prod-db-01\n   - **Current Status:** Investigating, suspecting a long-running query\n   - **Last Update:** [Timestamp]\n\n2. **Incident ID:** IN-20231001-002\n   - **Description:** Intermittent 500 errors on checkout page\n   - **Current Status:** Reproduced locally, debugging in progress\n   - **Last Update:** [Timestamp]\n\n**Pending Actions:**\n\n1. **Action ID:** PA-20231001-001\n   - **Description:** Follow up with vendor on API outage\n   - **Due Date:** [Date]\n   - **Assigned To:** [Name]\n\n2. **Action ID:** PA-20231001-002\n   - **Description:** Review and merge PR #1234\n   - **Due Date:** [Date]\n   - **Assigned To:** [Name]\n\n**Next Steps:**\n\n1. **Investigate:** Continue investigating the high CPU usage on prod-db-01.\n2. **Debug:** Further debug the intermittent 500 errors on the checkout page.\n3. **Follow Up:** Follow up with the vendor on the API outage and keep the team updated.\n4. **Review:** Review and merge the pending PR #1234.\n\n**Additional Notes:**\n\n- [Insert any additional notes or context here]\n- [Mention any meetings or calls scheduled during the next on-call shift]\n\n**End of Handoff Notes**",
+    "score": 0.772,
+    "latency_ms": 7446.667500000331,
+    "tokens": 391,
+    "error": null
+  },
+  {
+    "task_id": "gen-006",
+    "input": "Topic: architecture decision record. Constraints: context, decision, consequences.",
+    "expected": "ADR-014: Use PostgreSQL for audit storage",
+    "llm_output": "**Architecture Decision Record (ADR)**\n\n**Title:** Adoption of Microservices Architecture\n\n**Date:** 2023-10-15\n\n**Context:**\nOur current monolithic application has grown in complexity and size, making it difficult to maintain, scale, and deploy. The development team is facing challenges in delivering new features quickly and efficiently. Additionally, the application's downtime during deployments is affecting our users' experience. We need a more flexible, scalable, and maintainable architecture to support our growing user base and business needs.\n\n**Decision:**\nAfter evaluating various architectural patterns, we have decided to adopt a microservices architecture. This approach will allow us to:\n\n1. Break down the monolithic application into smaller, loosely coupled, and independently deployable services.\n2. Use appropriate technologies and programming languages for each service based on its specific requirements.\n3. Scale services independently based on demand.\n4. Improve fault isolation and resilience.\n5. Accelerate the development and deployment of new features.\n\n**Consequences:**\n\n*Positive:*\n\n1. **Improved Agility:** Microservices will enable our development teams to work independently, allowing us to deliver new features and updates more quickly.\n2. **Better Scalability:** We can scale individual services based on their specific needs, leading to more efficient resource utilization.\n3. **Enhanced Fault Isolation:** If one service fails, it won't necessarily bring down the entire application, improving overall system resilience.\n4. **Technology Diversity:** We can choose the best technology stack for each service, rather than being constrained by a single technology choice.\n5. **Easier Maintenance:** Smaller, focused services are easier to understand, maintain, and test.\n\n*Negative/Challenges:*\n\n1. **Increased Complexity:** Microservices introduce additional complexity in terms of inter-service communication, data management, and operational overhead.\n2. **Operational Overhead:** Managing and monitoring multiple services can be challenging and may require additional tooling and expertise.\n3. **Data Consistency:** Ensuring data consistency across multiple services and databases can be more complex than in a monolithic architecture.\n4. **Network Latency:** Inter-service communication over a network can introduce latency and potential points of failure.\n5. **Initial Investment:** Migrating from a monolithic architecture to microservices will require significant initial effort and resources.\n\n**Next Steps:**\n\n1. Identify and define the initial set of microservices based on business capabilities.\n2. Establish a robust DevOps pipeline to support continuous integration, delivery, and deployment of microservices.\n3. Implement infrastructure and tooling to monitor, log, and manage the microservices ecosystem.\n4. Develop a clear strategy for data management and inter-service communication.\n5. Plan and execute the migration from the monolithic architecture to microservices in phases, ensuring minimal disruption to users.",
+    "score": 0.0,
+    "latency_ms": 38792.447457999515,
+    "tokens": 819,
+    "error": null
+  },
+  {
+    "task_id": "gen-007",
+    "input": "Topic: incident summary. Constraints: casual tone, 1 paragraph, customer impact, time to resolve.",
+    "expected": "Summary of incident INC-2026-09-01",
+    "llm_output": "So, there was this little hiccup earlier today where our servers decided to take an unexpected coffee break, which meant some of you lovely customers couldn't access your dashboards for about 2 hours. We're really sorry about that! Our tech whizzes jumped right in and got everything back up and running. We're keeping a close eye on things to make sure this doesn't happen again. Thanks for your patience, and happy to say everything's back to normal now!",
+    "score": 0.37,
+    "latency_ms": 6249.0277090000745,
+    "tokens": 170,
+    "error": null
+  },
+  {
+    "task_id": "gen-008",
+    "input": "Topic: onboarding checklist for new SRE. Constraints: ordered list, 5 items, actionable.",
+    "expected": "SRE Onboarding Checklist",
+    "llm_output": "1. **Set Up Access and Tools:**\n   - Ensure the new Site Reliability Engineer (SRE) has access to all necessary systems, tools, and platforms. This includes provisioning accounts, setting up multi-factor authentication, and granting appropriate permissions.\n\n2. **Review Documentation and Runbooks:**\n   - Provide the new SRE with a comprehensive list of documentation, runbooks, and troubleshooting guides. Schedule a review session to walk through critical processes and procedures.\n\n3. **Shadow and Pair Programming:**\n   - Arrange for the new SRE to shadow experienced team members during on-call rotations and incident responses. Encourage pair programming to familiarize them with the codebase, infrastructure, and best practices.\n\n4. **Understand Monitoring and Alerts:**\n   - Walk the new SRE through the monitoring systems, dashboards, and alerting mechanisms. Ensure they understand how to interpret metrics, recognize anomalies, and respond to alerts.\n\n5. **Gradual On-Call Ramp-Up:**\n   - Start with non-critical on-call shifts to allow the new SRE to gain confidence and experience. Gradually increase the complexity and responsibility of their on-call duties as they become more comfortable and proficient.",
+    "score": 0.94,
+    "latency_ms": 12503.684250001243,
+    "tokens": 359,
+    "error": null
+  },
+  {
+    "task_id": "gen-009",
+    "input": "Topic: runbook for database failover. Constraints: step-by-step, verification steps, rollback instructions.",
+    "expected": "Runbook: Database Failover",
+    "llm_output": "**Runbook for Database Failover**\n\n**Objective:** To ensure minimal downtime and data loss during a database failover.\n\n**Prerequisites:**\n- A secondary/replica database instance is already set up and configured.\n- Necessary permissions to perform failover operations.\n- Backup of the primary database is recent and verified.\n\n**Steps:**\n\n1. **Initiate Failover:**\n   - Log in to the database management system (DBMS) with administrative privileges.\n   - Identify the primary and secondary database instances.\n   - Execute the failover command specific to your DBMS. For example:\n     - In SQL Server: `ALTER AVAILABILITY GROUP <GroupName> FAILOVER;`\n     - In MySQL: `STOP REPLICA;` on the secondary, then promote it: `SET GLOBAL super_read_only=OFF;`\n     - In PostgreSQL: Promote the standby: `pg_ctl promote`\n\n2. **Verify Failover:**\n   - Check the status of the database instances to confirm the failover.\n     - In SQL Server: `SELECT state_desc FROM sys.availability_replicas;`\n     - In MySQL: `SHOW SLAVE STATUS\\G` on the new primary.\n     - In PostgreSQL: `SELECT pg_is_in_recovery();` should return `f` on the new primary.\n   - Verify that applications can connect to the new primary database.\n   - Check the database logs for any errors or warnings.\n\n3. **Update DNS/Connection Strings:**\n   - Update DNS records or application connection strings to point to the new primary database.\n   - Inform relevant stakeholders about the failover and the new primary database details.\n\n4. **Monitor the New Primary:**\n   - Monitor the performance and health of the new primary database.\n   - Keep an eye on the old primary database (now secondary) to ensure it's properly configured and synchronized.\n\n**Rollback Instructions:**\n\nIf the failover fails or causes issues, follow these steps to revert to the original primary database:\n\n1. **Stop Applications:**\n   - Temporarily stop or pause applications using the database to prevent data inconsistency.\n\n2. **Revert Failover:**\n   - Execute the failover command again to revert to the original primary.\n     - In SQL Server: `ALTER AVAILABILITY GROUP <GroupName> FAILOVER;`\n     - In MySQL: Reconfigure the old primary as the primary and the new primary as the secondary.\n     - In PostgreSQL: Promote the old primary if it was in standby mode.\n\n3. **Verify Rollback:**\n   - Check the status of the database instances to confirm the rollback.\n   - Verify that applications can connect to the original primary database.\n   - Check the database logs for any errors or warnings.\n\n4. **Update DNS/Connection Strings:**\n   - Revert DNS records or application connection strings to point to the original primary database.\n\n5. **Resume Applications:**\n   - Resume or restart applications using the database.\n\n6. **Investigate and Resolve:**\n   - Investigate the cause of the failover failure.\n   - Resolve the issue and ensure the database environment is stable.\n\n**Post-Failover Tasks:**\n\n- Update runbooks and documentation with any lessons learned.\n- Review and update the disaster recovery plan if necessary.\n- Schedule a post-mortem meeting to discuss the failover event and any improvements.",
+    "score": 0.0,
+    "latency_ms": 16888.87079199776,
+    "tokens": 844,
+    "error": null
+  },
+  {
+    "task_id": "gen-010",
+    "input": "Topic: quarterly OKR review. Constraints: 3 key results, progress status, next quarter focus.",
+    "expected": "Q3 2026 OKR Review",
+    "llm_output": "**Quarterly OKR Review**\n\n**Objective:** Improve Customer Satisfaction and Retention\n\n1. **Key Result:** Increase Net Promoter Score (NPS) from 30 to 45\n   - *Progress Status:* Achieved 38 NPS, 89% of target\n   - *Next Quarter Focus:* Implement targeted improvements based on NPS feedback\n\n2. **Key Result:** Reduce customer churn rate from 8% to 5%\n   - *Progress Status:* Achieved 6.5% churn rate, 75% of target\n   - *Next Quarter Focus:* Enhance customer onboarding and success programs\n\n3. **Key Result:** Increase customer engagement (e.g., feature adoption, support interactions) by 20%\n   - *Progress Status:* Achieved 15% increase, 75% of target\n   - *Next Quarter Focus:* Launch in-app guidance and self-service resources to boost engagement",
+    "score": 0.0,
+    "latency_ms": 14132.705584001087,
+    "tokens": 242,
+    "error": null
+  }
+]

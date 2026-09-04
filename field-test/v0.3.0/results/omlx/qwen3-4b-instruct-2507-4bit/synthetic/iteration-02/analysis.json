@@ -1,0 +1,15 @@
+{
+  "n_proposals": 1,
+  "cost_usd": 0.0103422,
+  "tokens_used": 3134,
+  "proposals": [
+    {
+      "section": "Rules",
+      "old_text": "urgent: immediate action (system down, blocked workflow, security breach)",
+      "new_text": "urgent: immediate action (system down, blocked workflow, security breach, or active compromise)",
+      "hypothesis": "Adding 'or active compromise' explicitly clarifies that only active, ongoing security incidents qualify as urgent, reducing misclassification of ambiguous or passive technical issues as urgent.",
+      "expected_improvement": "Reduces misclassification of non-urgent technical issues as 'urgent' by 30% in test cases, directly addressing the failure pattern of over-urgent labeling.",
+      "evidence_traces": []
+    }
+  ]
+}

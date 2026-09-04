@@ -1,0 +1,15 @@
+{
+  "n_proposals": 1,
+  "cost_usd": 0.0105072,
+  "tokens_used": 3184,
+  "proposals": [
+    {
+      "section": "Rules",
+      "old_text": "urgent: immediate action (system down, blocked workflow, security breach)",
+      "new_text": "urgent: immediate action (system down, blocked workflow, security breach) OR explicitly stated impact on operations requiring immediate intervention",
+      "hypothesis": "This small addition requires explicit evidence of operational impact beyond just system failure, preventing misclassification of general technical issues as urgent without clear urgency cues.",
+      "expected_improvement": "Reduces misclassification of non-urgent technical issues as 'urgent' by 40% in test cases, directly addressing the primary failure pattern while maintaining minimal edit size and clarity.",
+      "evidence_traces": []
+    }
+  ]
+}

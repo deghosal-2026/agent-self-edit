@@ -1,0 +1,102 @@
+[
+  {
+    "task_id": "extract-001",
+    "input": "My name is Alice Johnson and my email is alice@example.com.",
+    "expected": "name: Alice Johnson\nemail: alice@example.com",
+    "llm_output": "name: Alice Johnson\nemail: alice@example.com",
+    "score": 1.0,
+    "latency_ms": 376.5050420006446,
+    "tokens": 62,
+    "error": null
+  },
+  {
+    "task_id": "extract-002",
+    "input": "The incident occurred on 2026-08-15 at 14:30 UTC. Severity: HIGH. Service: api-gateway.",
+    "expected": "date: 2026-08-15\ntime: 14:30 UTC\nseverity: HIGH\nservice: api-gateway",
+    "llm_output": "date: 2026-08-15\ntime: 14:30 UTC\nseverity: HIGH\nservice: api-gateway",
+    "score": 1.0,
+    "latency_ms": 891.5771669999231,
+    "tokens": 75,
+    "error": null
+  },
+  {
+    "task_id": "extract-003",
+    "input": "The deployment sha is abc123def456 and the version is v2.1.3.",
+    "expected": "sha: abc123def456\nversion: v2.1.3",
+    "llm_output": "deployment sha: abc123def456\nversion: v2.1.3",
+    "score": 1.0,
+    "latency_ms": 532.0486249984242,
+    "tokens": 63,
+    "error": null
+  },
+  {
+    "task_id": "extract-004",
+    "input": "Contact John at john.doe@company.com or call +1-555-0123.",
+    "expected": "name: John Doe\nemail: john.doe@company.com\nphone: +1-555-0123",
+    "llm_output": "email: john.doe@company.com\nphone: +1-555-0123\nname: John",
+    "score": 0.6666666666666666,
+    "latency_ms": 639.6324169982108,
+    "tokens": 65,
+    "error": null
+  },
+  {
+    "task_id": "extract-005",
+    "input": "The build failed with error code E4032 on branch feature/new-auth.",
+    "expected": "error: E4032\nbranch: feature/new-auth",
+    "llm_output": "error code: E4032\nbranch: feature/new-auth",
+    "score": 0.5,
+    "latency_ms": 469.65054199972656,
+    "tokens": 63,
+    "error": null
+  },
+  {
+    "task_id": "extract-006",
+    "input": "Server srv-web-03 has 78% CPU usage and 12GB of 16GB RAM in use.",
+    "expected": "server: srv-web-03\ncpu: 78%\nram: 12GB\nram_total: 16GB",
+    "llm_output": "field: Server\nvalue: srv-web-03\nfield: CPU usage\nvalue: 78%\nfield: RAM in use\nvalue: 12GB\nfield: Total RAM\nvalue: 16GB",
+    "score": 0.0,
+    "latency_ms": 1479.8943330024485,
+    "tokens": 82,
+    "error": null
+  },
+  {
+    "task_id": "extract-007",
+    "input": "The JIRA ticket OPS-4567 was opened by mike@corp.com on 2026-09-01.",
+    "expected": "ticket: OPS-4567\nreporter: mike@corp.com\ndate: 2026-09-01",
+    "llm_output": "ticket: OPS-4567\nopened by: mike@corp.com\ndate: 2026-09-01",
+    "score": 0.6666666666666666,
+    "latency_ms": 998.8807089976035,
+    "tokens": 67,
+    "error": null
+  },
+  {
+    "task_id": "extract-008",
+    "input": "Error rate on service user-service increased from 0.5% to 2.3% at 10:15 UTC.",
+    "expected": "service: user-service\nmetric: error rate\nbefore: 0.5%\nafter: 2.3%\ntime: 10:15 UTC",
+    "llm_output": "field: Error rate on service\nfield: user-service\nfield: increased from\nfield: 0.5%\nfield: to\nfield: 2.3%\nfield: at\nfield: 10:15 UTC",
+    "score": 0.0,
+    "latency_ms": 2511.8242499993357,
+    "tokens": 88,
+    "error": null
+  },
+  {
+    "task_id": "extract-009",
+    "input": "PR #892 was merged by alice. Reviewers: bob, carol. Files changed: 14.",
+    "expected": "pr: 892\nmerger: alice\nreviewers: carol",
+    "llm_output": "pr_number: 892\naction: merged\nmerged_by: alice\nreviewers: bob, carol\nfiles_changed: 14",
+    "score": 0.0,
+    "latency_ms": 3701.0214170004474,
+    "tokens": 75,
+    "error": null
+  },
+  {
+    "task_id": "extract-010",
+    "input": "The certificate expires on 2026-12-31. Issued by Let's Encrypt for *.example.com.",
+    "expected": "expires: 2026-12-31\nissuer: Let's Encrypt\ndomain: *.example.com",
+    "llm_output": "expiration_date: 2026-12-31\nissuer: Let's Encrypt\ndomain: *.example.com",
+    "score": 0.6666666666666666,
+    "latency_ms": 1235.7741670020914,
+    "tokens": 74,
+    "error": null
+  }
+]

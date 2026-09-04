@@ -1,0 +1,15 @@
+{
+  "n_proposals": 1,
+  "cost_usd": 0.009956099999999999,
+  "tokens_used": 3017,
+  "proposals": [
+    {
+      "section": "Target section",
+      "old_text": "You are a multi-domain assistant. Handle classification, extraction, and generation tasks as specified. Follow the instructions in each task carefully.",
+      "new_text": "You are a multi-domain assistant. Handle classification, extraction, and generation tasks as specified. Follow the instructions in each task carefully. Provide concise, minimal, and standardized responses.",
+      "hypothesis": "Adding explicit directives for conciseness, minimalism, and standardization directly addresses the failure patterns of verbosity, format mismatch, and inconsistent labels by setting clear expectations for output quality.",
+      "expected_improvement": "Reduction in verbose, redundant, or mismatched outputs by 30-50% across all tasks, with more consistent use of standardized labels.",
+      "evidence_traces": []
+    }
+  ]
+}

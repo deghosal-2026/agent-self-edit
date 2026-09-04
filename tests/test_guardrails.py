@@ -7,6 +7,7 @@ from agent_self_edit.guardrails import (
     FrozenSection,
     GuardrailError,
     GuardrailReport,
+    check_oracle_drift,
     compute_drift_embedding,
     compute_drift_tfidf,
     compute_edit_distance,
@@ -15,7 +16,7 @@ from agent_self_edit.guardrails import (
     parse_frozen_sections,
     validate_frozen_sections,
 )
-from agent_self_edit.types import CheckResult
+from agent_self_edit.types import CheckResult, Trace
 
 FROZEN_PROMPT = (
     "You are a classifier assistant.\n"
@@ -407,3 +408,91 @@ def test_per_section_drift_ignores_anonymous_no_name():
 def test_guardrail_report_empty_checks():
     report = GuardrailReport(checks=[], overall=True)
     assert "Overall: PASS" in str(report)
+
+
+# ---- #226: Oracle Drift Guard ----
+
+
+def _trace(expected: str, task_id: str = "t1") -> Trace:
+    return Trace(
+        task_id=task_id, task_input="x", final_output="y",
+        expected_output=expected, success=False,
+        timestamp="2026-01-01T00:00:00Z",
+    )
+
+
+def test_oracle_drift_empty_traces_passes():
+    result = check_oracle_drift([])
+    assert result.passed
+    assert result.value == 0.0
+
+
+def test_oracle_drift_single_trace_passes():
+    result = check_oracle_drift([_trace("technical")])
+    assert result.passed
+
+
+def test_oracle_drift_diverse_outputs_passes():
+    traces = [_trace("technical"), _trace("billing"), _trace("security")]
+    result = check_oracle_drift(traces)
+    assert result.passed
+    assert result.value < 0.8
+
+
+def test_oracle_drift_all_identical_fails():
+    traces = [_trace("technical") for _ in range(5)]
+    result = check_oracle_drift(traces, uniformity_threshold=0.79)
+    assert not result.passed
+    assert result.value >= 0.79
+
+
+def test_oracle_drift_majority_identical_fails():
+    traces = [_trace("technical") for _ in range(4)] + [_trace("billing")]
+    result = check_oracle_drift(traces, uniformity_threshold=0.79)
+    assert not result.passed
+    assert result.value >= 0.79
+
+
+def test_oracle_drift_shared_keyword_detected():
+    """All outputs are identical — identity uniformity triggers."""
+    traces = [_trace("urgent") for _ in range(5)]
+    result = check_oracle_drift(traces, uniformity_threshold=0.79)
+    assert not result.passed
+    assert result.value >= 0.79
+
+
+def test_oracle_drift_shared_keyword_across_diverse_outputs_passes():
+    """A shared keyword across diverse outputs is not oracle drift."""
+    traces = [
+        _trace("urgent: server down"),
+        _trace("urgent: billing issue"),
+        _trace("urgent: security breach"),
+    ]
+    result = check_oracle_drift(traces)
+    assert result.passed, "diverse outputs with a shared keyword should pass"
+
+
+def test_oracle_drift_shared_short_word_ignored():
+    """Short words like 'a' or 'the' should not trigger oracle drift."""
+    traces = [
+        _trace("a technical issue"),
+        _trace("a billing problem"),
+        _trace("a security concern"),
+    ]
+    result = check_oracle_drift(traces, uniformity_threshold=0.80)
+    assert result.passed, "short common words should not trigger oracle drift"
+
+
+def test_oracle_drift_non_empty_outputs_only():
+    """Empty expected outputs should be excluded from analysis."""
+    traces = [_trace("") for _ in range(5)]
+    result = check_oracle_drift(traces)
+    assert result.passed
+
+
+def test_oracle_drift_with_explicit_expected_outputs():
+    """Pass expected_outputs explicitly instead of extracting from traces."""
+    outputs = ["technical"] * 5 + ["billing"] * 5
+    result = check_oracle_drift([], expected_outputs=outputs, uniformity_threshold=0.49)
+    assert not result.passed
+    assert result.value >= 0.49

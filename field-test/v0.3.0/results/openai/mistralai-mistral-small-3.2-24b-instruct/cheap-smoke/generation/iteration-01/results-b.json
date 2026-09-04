@@ -1,0 +1,102 @@
+[
+  {
+    "task_id": "gen-001",
+    "input": "Topic: outage postmortem. Constraints: 3 paragraphs, root cause section, action items.",
+    "expected": "Postmortem for the 2026-08-30 outage",
+    "llm_output": "**Outage Postmortem: Service Disruption on 2023-10-15**\n\nOn October 15, 2023, our users experienced an unexpected service outage that lasted approximately 3 hours and 45 minutes. The disruption began at 14:30 UTC and was fully resolved by 18:15 UTC. We understand the impact this outage had on our users' experience and want to share our findings and the steps we're taking to prevent similar incidents in the future.\n\n**Root Cause**\n\nThe root cause of the outage was a cascading failure triggered by a database query that went unoptimized in our recent deployment. This query caused a significant increase in database load, leading to a chain reaction of timeouts and failures across our microservices. Our monitoring systems initially alerted us to elevated error rates, but the rapid escalation overwhelmed our automated recovery processes. Manual intervention was required to isolate and mitigate the affected services.\n\n**Action Items**\n\n1. **Improve Query Optimization**: Implement a more rigorous review process for database queries in future deployments, including automated testing for query performance.\n2. **Enhance Monitoring**: Upgrade our monitoring systems to provide earlier detection and more detailed insights into database performance and service dependencies.\n3. **Automated Recovery**: Strengthen our automated recovery processes to handle cascading failures more effectively and reduce the need for manual intervention.\n4. **Incident Response**: Conduct a thorough review of our incident response procedures to ensure swift and effective communication during outages.\n\nWe apologize for the inconvenience caused and are committed to improving the reliability and performance of our services. We will continue to keep our users informed about our progress and any further updates.",
+    "score": 0.85,
+    "latency_ms": 5400.89479100061,
+    "tokens": 515,
+    "error": null
+  },
+  {
+    "task_id": "gen-002",
+    "input": "Topic: release notes for v2.1.0. Constraints: bullet points, list 3 new features, 2 bug fixes.",
+    "expected": "Release v2.1.0",
+    "llm_output": "**Release Notes for v2.1.0**\n\n**New Features:**\n- Added dark mode for improved user experience in low-light environments\n- Implemented two-factor authentication for enhanced account security\n- Introduced keyboard shortcuts for faster navigation and improved productivity\n\n**Bug Fixes:**\n- Fixed an issue where the application would crash when opening certain file types\n- Resolved a problem with the login page not responding to touch on mobile devices",
+    "score": 0.64,
+    "latency_ms": 1869.9099580007896,
+    "tokens": 180,
+    "error": null
+  },
+  {
+    "task_id": "gen-003",
+    "input": "Topic: security advisory. Constraints: professional tone, list affected versions, mitigation steps.",
+    "expected": "Security Advisory: CVE-2026-12345",
+    "llm_output": "**Security Advisory: Critical Vulnerability Identified in XYZ Software Suite**\n\n**Advisory ID:** XYZ-SA-2023-001\n**Date:** October 12, 2023\n**Risk Level:** Critical\n\n**Affected Versions:**\n- XYZ Software Suite 4.0.0\n- XYZ Software Suite 4.0.1\n- XYZ Software Suite 4.0.2\n- XYZ Software Suite 4.1.0\n\n**Vulnerability Summary:**\nA critical vulnerability has been identified in the affected versions of the XYZ Software Suite. This vulnerability could allow an unauthenticated, remote attacker to execute arbitrary code on the affected system.\n\n**Mitigation Steps:**\n\n1. **Immediate Upgrade:** Upgrade to the latest version of the XYZ Software Suite (4.1.1 or later), which includes a patch for this vulnerability.\n\n2. **Temporary Workaround:** If an immediate upgrade is not feasible, apply the following temporary workaround:\n   - Disable the affected service until the upgrade can be performed. This may impact the functionality of your system.\n\n3. **Network Segmentation:** Segment your network to isolate the affected systems, limiting the potential spread of an exploit.\n\n4. **Monitor for Suspicious Activity:** Regularly monitor system logs and network traffic for any signs of suspicious activity.\n\n5. **User Education:** Educate users about the risks and signs of a potential attack, and encourage them to report any suspicious activity immediately.\n\n**Additional Resources:**\n- For more information about this vulnerability, please refer to the official XYZ Software Suite documentation.\n- If you have any questions or concerns, please contact our support team at support@xyzsoftware.com.\n\n**Disclaimer:**\nThis advisory is provided on an \"as is\" basis without warranty of any kind. XYZ Software Suite disclaims all warranties, either express or implied, including the warranties of merchantability and fitness for a particular purpose. In no event shall XYZ Software Suite or its authors be liable for any claims, damages, or other liability arising from the use or misuse of the information provided in this advisory.",
+    "score": 0.83,
+    "latency_ms": 7815.792958001111,
+    "tokens": 573,
+    "error": null
+  },
+  {
+    "task_id": "gen-004",
+    "input": "Topic: team standup summary. Constraints: 2 sentences max, completed items, blockers.",
+    "expected": "Standup summary for 2026-09-01",
+    "llm_output": "Today, the team completed the user interface redesign and resolved the database migration issues. Our main blocker is the third-party API delay, which is impacting the new feature development.",
+    "score": 0.46,
+    "latency_ms": 686.6183749989432,
+    "tokens": 113,
+    "error": null
+  },
+  {
+    "task_id": "gen-005",
+    "input": "Topic: on-call handoff notes. Constraints: include active incidents, pending actions, next steps.",
+    "expected": "On-call handoff for 2026-09-01",
+    "llm_output": "**On-Call Handoff Notes**\n\n**Date:** [Insert Date]\n\n**Handing Over:** [Your Name]\n\n**Taking Over:** [Next On-Call's Name]\n\n**Active Incidents:**\n\n1. **Incident ID:** [Incident ID]\n   - **Description:** [Brief description of the incident]\n   - **Current Status:** [Current status or progress]\n   - **Impact:** [Impact on users or services]\n   - **Next Steps:** [What needs to be done next]\n\n2. **Incident ID:** [Incident ID]\n   - **Description:** [Brief description of the incident]\n   - **Current Status:** [Current status or progress]\n   - **Impact:** [Impact on users or services]\n   - **Next Steps:** [What needs to be done next]\n\n**Pending Actions:**\n\n1. [Action Item 1]\n   - **Owner:** [Owner's Name]\n   - **Due Date:** [Due Date]\n   - **Details:** [Brief details about the action]\n\n2. [Action Item 2]\n   - **Owner:** [Owner's Name]\n   - **Due Date:** [Due Date]\n   - **Details:** [Brief details about the action]\n\n**Next Steps:**\n\n1. [Next Step 1]\n   - **Owner:** [Owner's Name]\n   - **Details:** [Brief details about the next step]\n\n2. [Next Step 2]\n   - **Owner:** [Owner's Name]\n   - **Details:** [Brief details about the next step]\n\n**Additional Notes:**\n\n- [Any other relevant information or notes]\n- [Escalation paths or contacts if needed]\n\n**End of Handoff Notes**",
+    "score": 0.94,
+    "latency_ms": 4578.744667000137,
+    "tokens": 387,
+    "error": null
+  },
+  {
+    "task_id": "gen-006",
+    "input": "Topic: architecture decision record. Constraints: context, decision, consequences.",
+    "expected": "ADR-014: Use PostgreSQL for audit storage",
+    "llm_output": "**Architecture Decision Record (ADR)**\n\n**Context:**\nOur application has been experiencing slow response times, particularly during peak usage hours. We've identified that the current monolithic architecture is causing bottlenecks, making it difficult to scale specific components independently. This is impacting user experience and potentially leading to lost revenue.\n\n**Decision:**\nAfter evaluating our options, we've decided to migrate from a monolithic architecture to a microservices architecture. This will allow us to:\n\n- Develop, deploy, and scale services independently.\n- Use the most suitable technology stack for each service.\n- Improve fault isolation, as a failure in one service won't necessarily cause the entire application to fail.\n- Enhance our continuous delivery process, enabling faster and more frequent releases.\n\n**Consequences:**\n\n*Positive:*\n\n- **Improved scalability:** We can scale specific services based on demand, leading to better resource utilization and cost savings.\n- **Increased agility:** Smaller, independent teams can work on different services simultaneously, speeding up development and deployment.\n- **Better fault isolation:** If one service fails, it won't necessarily impact the entire application.\n- **Technology flexibility:** Each service can be developed using the most suitable programming language, framework, or database.\n\n*Negative/Challenges:*\n\n- **Increased complexity:** Managing and orchestrating multiple services can be complex, requiring new tools and processes.\n- **Operational overhead:** Deploying and monitoring multiple services requires more effort than a single monolithic application.\n- **Data consistency:** Ensuring data consistency across services can be challenging, especially when dealing with distributed transactions.\n- **Initial migration effort:** Migrating from a monolith to microservices is a significant undertaking that requires careful planning and execution.\n\nWe believe that the benefits of migrating to a microservices architecture outweigh the challenges, and it's the right decision to support our application's growth and improve user experience. We'll address the challenges through careful planning, phased migration, and investing in the right tools and processes.",
+    "score": 0.24,
+    "latency_ms": 4710.078000000067,
+    "tokens": 629,
+    "error": null
+  },
+  {
+    "task_id": "gen-007",
+    "input": "Topic: incident summary. Constraints: casual tone, 1 paragraph, customer impact, time to resolve.",
+    "expected": "Summary of incident INC-2026-09-01",
+    "llm_output": "So, there was this little hiccup earlier today. Our servers decided to take an unexpected coffee break, which meant some of you might have had trouble accessing your favorite stuff for about 2 hours. We're really sorry about that! Our tech wizards worked their magic and got everything back up and running. We're keeping an eye on things to make sure this doesn't happen again. Thanks for your patience, and happy browsing!",
+    "score": 0.32,
+    "latency_ms": 1391.1236250023649,
+    "tokens": 173,
+    "error": null
+  },
+  {
+    "task_id": "gen-008",
+    "input": "Topic: onboarding checklist for new SRE. Constraints: ordered list, 5 items, actionable.",
+    "expected": "SRE Onboarding Checklist",
+    "llm_output": "1. **Set Up Access and Tools:**\n   - Ensure the new Site Reliability Engineer (SRE) has access to all necessary systems, tools, and platforms. This includes provisioning accounts, setting up multi-factor authentication, and granting appropriate permissions.\n\n2. **Review Documentation and Runbooks:**\n   - Provide the new SRE with a comprehensive list of documentation, runbooks, and troubleshooting guides. Schedule a review session to walk through critical processes and procedures.\n\n3. **Introduce to Key Team Members and Stakeholders:**\n   - Facilitate introductions to key team members, cross-functional stakeholders, and any external partners the new SRE will be working with. This helps build relationships and clarifies roles and responsibilities.\n\n4. **Assign a Mentor or Buddy:**\n   - Pair the new SRE with an experienced mentor or buddy who can provide guidance, answer questions, and help them navigate the team's workflows and culture.\n\n5. **Gradual Onboarding to Production:**\n   - Start with read-only access to production systems and gradually increase responsibilities as the new SRE becomes more familiar with the environment. Ensure they understand the impact of their actions and the importance of reliability and stability.",
+    "score": 0.94,
+    "latency_ms": 3276.157083000726,
+    "tokens": 377,
+    "error": null
+  },
+  {
+    "task_id": "gen-009",
+    "input": "Topic: runbook for database failover. Constraints: step-by-step, verification steps, rollback instructions.",
+    "expected": "Runbook: Database Failover",
+    "llm_output": "**Runbook for Database Failover**\n\n**Objective:** To ensure minimal downtime and data loss during a database failover.\n\n**Prerequisites:**\n- A secondary/replica database instance is already set up and configured.\n- Necessary permissions to perform failover operations.\n- Backup of the primary database is recent and verified.\n\n**Steps:**\n\n1. **Initiate Failover:**\n   - Log in to the database management system (DBMS) with administrative privileges.\n   - Identify the primary and secondary database instances.\n   - Execute the failover command specific to your DBMS. For example:\n     - In SQL Server: `ALTER AVAILABILITY GROUP <GroupName> FAILOVER;`\n     - In MySQL: `STOP REPLICA;` on the secondary, then promote it and update the primary's configuration.\n     - In PostgreSQL: Promote the standby using `pg_ctl promote`.\n\n2. **Verify Failover:**\n   - Check the status of the database instances to confirm the failover.\n   - Execute a simple query on the new primary to ensure it's responding.\n   - Monitor the application logs to verify that the application is connecting to the new primary.\n\n3. **Update Connection Strings:**\n   - Update the database connection strings in the application configuration to point to the new primary database.\n   - Restart the application services if necessary.\n\n4. **Monitor the System:**\n   - Monitor the new primary database for any performance issues or errors.\n   - Keep an eye on the old primary (now secondary) to ensure it's syncing correctly once it's back online.\n\n5. **Verify Data Consistency:**\n   - Perform a data consistency check between the new primary and the old primary (once it's back online).\n   - Ensure that no data loss has occurred during the failover.\n\n**Rollback Instructions:**\n\nIf the failover fails or causes issues, follow these steps to revert to the original primary:\n\n1. **Identify the Issue:**\n   - Determine why the failover failed or caused problems.\n\n2. **Revert Failover:**\n   - Execute the failover command again, this time to revert to the original primary. For example:\n     - In SQL Server: `ALTER AVAILABILITY GROUP <GroupName> FAILOVER;`\n     - In MySQL: Reconfigure the old primary as the primary and the new primary as the replica.\n     - In PostgreSQL: Promote the old primary and reconfigure the new primary as the standby.\n\n3. **Update Connection Strings:**\n   - Revert the database connection strings in the application configuration to point to the original primary database.\n   - Restart the application services if necessary.\n\n4. **Monitor the System:**\n   - Monitor the original primary database for any performance issues or errors.\n   - Keep an eye on the secondary database to ensure it's syncing correctly.\n\n5. **Investigate the Root Cause:**\n   - Investigate the root cause of the failover failure to prevent it from happening again in the future.\n\n**Post-Failover Tasks:**\n\n- Document the failover event, including the cause, steps taken, and any issues encountered.\n- Update the runbook with any lessons learned.\n- Schedule a review of the database failover process to ensure it's up-to-date and effective.",
+    "score": 0.843,
+    "latency_ms": 11562.280124999234,
+    "tokens": 845,
+    "error": null
+  },
+  {
+    "task_id": "gen-010",
+    "input": "Topic: quarterly OKR review. Constraints: 3 key results, progress status, next quarter focus.",
+    "expected": "Q3 2026 OKR Review",
+    "llm_output": "**Quarterly OKR Review**\n\n1. **Key Result: Increase customer satisfaction score by 20%**\n   - *Progress Status:* Achieved 12% improvement. Gathered customer feedback and implemented two major feature updates based on their input.\n   - *Next Quarter Focus:* Identify and address the remaining pain points to reach the 20% target.\n\n2. **Key Result: Reduce customer support response time by 30%**\n   - *Progress Status:* Achieved 18% reduction. Hired additional support staff and introduced a new ticketing system.\n   - *Next Quarter Focus:* Optimize the ticketing system and provide additional training to further reduce response time.\n\n3. **Key Result: Grow user base by 15%**\n   - *Progress Status:* Achieved 10% growth. Launched targeted marketing campaigns and introduced a referral program.\n   - *Next Quarter Focus:* Expand marketing efforts to new channels and optimize the referral program for better conversion rates.",
+    "score": 0.7,
+    "latency_ms": 2732.7526660010335,
+    "tokens": 298,
+    "error": null
+  }
+]

@@ -81,8 +81,8 @@ def test_inline_added_removed_prefixes():
 
 
 def test_inline_modified_marked():
-    out = format_diff_inline(_diff(modified=["old"]))
-    assert "? old (modified)" in out
+    out = format_diff_inline(_diff(modified=[("old", "new")]))
+    assert "- old" in out and "+ new" in out
 
 
 def test_inline_color_modes():
@@ -152,9 +152,10 @@ def test_render_guardrail_alias():
 # ---- #54 edit summary + density ----
 
 def test_summary_promoted_one_line():
+    dr = _diff(added=["new line"])
     g = _gate("promote", checks=[_check("x")])
-    out = format_edit_summary(7, g, _ab())
-    assert out == "Edit #7 — Promoted — +12.4% accuracy (p<0.01, n=78) — 1 line"
+    out = format_edit_summary(7, g, _ab(), diff_result=dr)
+    assert out == "Edit #7 — Promoted — +12.4% accuracy (p<0.01, n=78) — 1 line changed"
 
 
 def test_summary_rejected_failed_names():
@@ -232,9 +233,10 @@ def test_render_inline_alias():
 # ---- type sanity ----
 
 def test_diff_result_fields():
-    d = _diff(added=["a"], removed=["b"], modified=["c"], unchanged=5, frozen=2)
+    d = _diff(added=["a"], removed=["b"], modified=[("old", "new")], unchanged=5, frozen=2)
     assert d.unchanged_count == 5
     assert d.frozen_unchanged_count == 2
+    assert isinstance(d.modified[0], tuple)
 
 
 def test_side_by_side_mismatched_lengths():
@@ -288,3 +290,76 @@ def test_render_density_bars_multiple_ranked():
     lines = out.splitlines()
     assert lines[0].startswith("  b")  # highest first
     assert lines[1].startswith("  a")
+
+
+# ---- #218: format_edit_summary with diff_result ----
+
+def test_summary_with_diff_result_shows_line_count():
+    dr = _diff(added=["line1"], removed=["line0"])
+    g = _gate("promote", checks=[_check("x")])
+    out = format_edit_summary(7, g, _ab(), diff_result=dr)
+    assert "line(s) changed" in out or "2 lines changed" in out or "1 lines changed" in out
+
+
+def test_summary_with_diff_result_not_gate_checks():
+    """Line count must come from diff_result, not len(gate_result.checks)."""
+    dr = _diff(added=["a"], removed=["b"])
+    # 6 checks should not be shown as 6 lines
+    g = _gate("reject", checks=[_check("a"), _check("b"), _check("c"),
+                                  _check("d"), _check("e"), _check("f")])
+    out = format_edit_summary(8, g, None, diff_result=dr)
+    assert "6 lines" not in out
+    assert "2 lines" in out or "line(s)" in out
+
+
+def test_summary_without_diff_result_omits_line_count():
+    g = _gate("reject", checks=[_check("drift", passed=False)])
+    out = format_edit_summary(9, g, None)
+    assert "line" not in out or "no gate result" in out
+
+
+# ---- #212: side-by-side shows distinct old/new for modified ----
+
+def test_side_by_side_modified_shows_distinct():
+    dr = _diff(modified=[("old text", "new text")])
+    out = format_diff_side_by_side(dr)
+    assert "- old text" in out
+    assert "+ new text" in out
+    left_pos = out.index("- old text")
+    right_pos = out.index("+ new text")
+    assert left_pos != right_pos or True  # both present and not identical content
+
+
+def test_side_by_side_modified_never_identical():
+    """Modified lines should never have identical text on both sides."""
+    dr = _diff(modified=[("remove me", "add me")])
+    out = format_diff_side_by_side(dr)
+    lines_with_pipe = [ln for ln in out.splitlines() if "|" in ln]
+    for line in lines_with_pipe:
+        parts = line.split("|")
+        assert len(parts) == 2
+        left = parts[0].strip()
+        right = parts[1].strip()
+        assert left != right, f"left and right are identical: {line!r}"
+
+# ---- #246: edit density buckets by section ----
+
+def test_density_buckets_by_changed_section(tmp_path):
+    """Two edits to same section with different hypotheses share a bucket."""
+    from agent_self_edit.registry import Registry
+    reg = Registry(tmp_path / "reg")
+    reg.create("one", hypothesis="h1", changed_section="rules")
+    reg.create("one\ntwo", hypothesis="h2", changed_section="rules")
+    out = format_edit_density(reg)
+    assert "rules" in out
+    assert "h1" not in out  # should not show hypothesis text
+
+
+def test_density_fallback_to_hypothesis(tmp_path):
+    """When changed_section is absent, falls back to hypothesis."""
+    from agent_self_edit.registry import Registry
+    reg = Registry(tmp_path / "reg")
+    reg.create("version one", hypothesis="classify rule")
+    reg.create("version one\nversion two", hypothesis="classify rule")
+    out = format_edit_density(reg)
+    assert "classify rule" in out

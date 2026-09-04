@@ -172,6 +172,9 @@ def load_task_set(path: str | Path) -> TaskSet:
         )
         tasks[task.id] = task
 
+    if not tasks:
+        raise TaskSetError(f"Task set is empty in {path} — add at least one task")
+
     return TaskSet(tasks=tasks, manifest=dict(manifest))
 
 
@@ -197,3 +200,32 @@ def _validate_task_list(data: list[Any]) -> list[str]:
         if "expected_output" not in item:
             errors.append(f"Task #{i}: missing required field 'expected_output'")
     return errors
+
+
+@dataclass(frozen=True)
+class SeededPrompt:
+    """A prompt with known failure modes on specific task IDs."""
+    id: str
+    prompt: str
+    fails_on: list[str]
+
+
+def load_seeded_prompts(path: str | Path) -> list[SeededPrompt]:
+    """Load a list of seeded prompts from a YAML file."""
+    with open(path) as f:
+        data = yaml.safe_load(f)
+    if not isinstance(data, list):
+        raise TaskSetError("Seeded prompts must be a list")
+    prompts: list[SeededPrompt] = []
+    for item in data:
+        if not isinstance(item, dict):
+            raise TaskSetError(f"Seeded prompt entry must be a mapping, got {type(item).__name__}")
+        if "prompt" not in item:
+            eid = item.get("id", "?")
+            raise TaskSetError(f"Seeded prompt {eid} missing required field 'prompt'")
+        prompts.append(SeededPrompt(
+            id=item["id"],
+            prompt=item["prompt"],
+            fails_on=item.get("fails_on", []),
+        ))
+    return prompts

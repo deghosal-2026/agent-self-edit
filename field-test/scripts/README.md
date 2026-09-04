@@ -1,6 +1,6 @@
 # Field Test Scripts
 
-All scripts run from the repo root. Results are stored under `field-test/v0.2.0/results/<provider>/<model>/`.
+All scripts run from the repo root. Results are stored under `field-test/v0.3.0/results/<provider>/<model>/`.
 
 ---
 
@@ -14,7 +14,7 @@ All scripts run from the repo root. Results are stored under `field-test/v0.2.0/
 
 ### Model role recommendation
 
-Based on the v0.2.0 field test results:
+Based on the v0.3.0 field test results:
 
 - **Executor role:** `Qwen3-4B-Instruct-2507-4bit`
 - **Analyzer role:** `Qwen3.5-9B-MLX-4bit`
@@ -69,7 +69,7 @@ python3 field-test/scripts/run_improvement_loop.py --iterations 10 \
 
 Each run creates a separate output directory named after the trace file:
 ```
-field-test/v0.2.0/results/omlx/<model>/
+field-test/v0.3.0/results/omlx/<model>/
   synthetic/                    ← synthetic classification runs
     iteration-01/
     ...
@@ -96,7 +96,7 @@ field-test/v0.2.0/results/omlx/<model>/
 ### Output
 
 ```
-field-test/v0.2.0/results/omlx/<model>/
+field-test/v0.3.0/results/omlx/<model>/
   improvement-loop-report.json    ← aggregate: per-iteration accuracy, gate, cost
   llm-traffic.jsonl                ← all LLM request/response pairs
   iteration-01/
@@ -125,33 +125,42 @@ field-test/v0.2.0/results/omlx/<model>/
 
 ## Docker Tests
 
-### Run full pytest suite (12 tests: build, OMLX connectivity, smoke, multi-domain integration)
+### Run full pytest suite (16 tests: build, OMLX connectivity, smoke, full-loop integration)
 
 ```bash
 export OMLX_KEY=omlx-test
-export OMLX_MODEL=Qwen3.5-4B-4bit
+export OMLX_MODEL=Qwen3-4B-Instruct-2507-4bit
 export OMLX_URL=http://localhost:8000/v1
+
+# Sequential
 pytest tests/test_docker.py -v -m docker --no-cov
+
+# Parallel (4x faster, requires pytest-xdist)
+pytest tests/test_docker.py -v -m docker --no-cov -n 4
 ```
 
 Requires: Docker daemon running, OMLX server at `http://localhost:8000/v1`.
 
 ### Docker tests
 
-| Test | What it does |
-|------|-------------|
-| `test_docker_build` | Builds the image |
-| `test_omlx_is_up` | OMLX reachable from host |
-| `test_omlx_model_available` | Model is loaded |
-| `test_omlx_reachable_from_container` | Container can reach OMLX |
-| `test_docker_help` | All 10 CLI commands listed |
-| `test_docker_validate` | Config validation |
-| `test_docker_status` | Status command |
-| `test_docker_run_classification` | Full loop on classification corpus |
-| `test_docker_run_extraction` | Full loop on extraction corpus with StructuredExtractionScorer |
-| `test_docker_run_generation` | Full loop on generation corpus with LLMJudgeScorer + judge_role |
-| `test_docker_run_staged_analyzer` | Staged analyzer (4-stage pipeline) in container |
-| `test_docker_propose_full` | Propose command with real LLM |
+| Test | What it does | Status |
+|------|-------------|--------|
+| `test_docker_build` | Builds the image | ✅ |
+| `test_omlx_is_up` | OMLX reachable from host | ✅ |
+| `test_omlx_model_available` | Model is loaded | ✅ |
+| `test_omlx_reachable_from_container` | Container can reach OMLX | ✅ |
+| `test_docker_help` | All 10 CLI commands listed | ✅ |
+| `test_docker_validate` | Config validation | ✅ |
+| `test_docker_status` | Status command | ✅ |
+| `test_docker_run_classification` | Full loop on classification corpus | ✅ |
+| `test_docker_run_extraction` | Full loop on extraction corpus with StructuredExtractionScorer | ✅ |
+| `test_docker_run_generation` | Full loop on generation corpus with LLMJudgeScorer + judge_role | ✅ |
+| `test_docker_run_staged_analyzer` | Staged analyzer (4-stage pipeline) in container | ✅ |
+| `test_docker_propose_full` | Propose command with real LLM | ✅ |
+| `test_docker_run_mixed_domain` | Full loop on 100-task mixed-domain corpus | ✅ |
+| `test_docker_run_adversarial` | Bad edits injected, gate blocks | ✅ |
+| `test_docker_ab_cache` | Cache hit on identical re-run | ✅ |
+| `test_docker_materialize_guard` | Missing old_text → proposal skipped | ✅ |
 
 ---
 
@@ -160,10 +169,10 @@ Requires: Docker daemon running, OMLX server at `http://localhost:8000/v1`.
 These run without Docker or OMLX. They use mock providers only.
 
 ```bash
-pytest --ignore=tests/test_docker.py --no-cov
+python3 -m pytest --ignore=tests/test_docker.py -x -q
 ```
 
-### Hermetic tests
+### Hermetic tests (20 tests)
 
 | Test | What it verifies |
 |------|-----------------|
@@ -179,6 +188,14 @@ pytest --ignore=tests/test_docker.py --no-cov
 | `test_registry_integrity_20_versions` | 20 versions, 0 corruption |
 | `test_guardrail_stress_100_edits` | 100 random edits, 0 crashes |
 | `test_sentinel_corpus_loads` | Sentinel corpus loads and validates |
+| `test_sentinel_detects_regression` | Baseline > bad-edit accuracy |
+| `test_adversarial_edits_all_blocked` | 8/8 blocked, FN=0, positive control promoted |
+| `test_real_trace_replay_50_plus` | 200 real traces ingested |
+| `test_gold_corpus_loads` | 30 traces, 7 clusters, 7 interventions |
+| `test_seeded_prompts_load` | 15 prompts, each fails on 3+ known tasks |
+| `test_real_trace_path_valid` | REAL_TRACES_PATH points to existing file |
+| `test_rejection_aware_behavioral_diff` | Novelty/repeat/fixed/broken measured |
+| `test_model_role_separation` | Config + _build_llm_for_role validated |
 
 ---
 
@@ -187,16 +204,7 @@ pytest --ignore=tests/test_docker.py --no-cov
 Run the hermetic adversarial tests:
 
 ```bash
-pytest tests/test_field_test.py -k "gate_rejects" -v
-```
-
-To run adversarial tests with a real LLM (requires OMLX):
-
-```bash
-export OMLX_KEY=omlx-test
-export OMLX_MODEL=Qwen3-4B-Instruct-2507-4bit
-export OMLX_URL=http://localhost:8000/v1
-pytest tests/test_field_test.py -k "gate_rejects or guardrail" -v
+pytest tests/test_field_test.py -k "adversarial" -v
 ```
 
 ---
@@ -222,7 +230,7 @@ Output goes to `field-test/corpus/real-traces/hf-*.jsonl`.
 
 ### Gold corpus
 
-The real-trace gold corpus with human-labeled failure clusters is at `field-test/corpus/real-traces/gold-corpus.jsonl` (30 traces).
+The real-trace gold corpus with human-labeled failure clusters is at `field-test/corpus/real-traces/labeled/gold-corpus.jsonl` (30 traces, 7 failure clusters, 7 ideal interventions).
 
 ---
 
@@ -233,4 +241,31 @@ python3 field-test/scripts/generate_traces.py \
   field-test/corpus/synthetic/classification.yaml \
   --output /tmp/traces.jsonl \
   --failure-rate 0.3
+```
+
+---
+
+## Results Layout
+
+```
+field-test/v0.3.0/
+├── results/
+│   ├── docker/omlx/qwen3-4b-instruct-2507-4bit/
+│   │   ├── docker-run-classification.json
+│   │   ├── docker-run-extraction.json
+│   │   ├── docker-run-generation.json
+│   │   ├── docker-run-mixed-domain.json
+│   │   ├── docker-run-staged-analyzer.json
+│   │   ├── docker-run-adversarial.json
+│   │   ├── docker-propose-full.json
+│   │   ├── docker-ab-cache.json
+│   │   ├── docker-materialize-guard.json
+│   │   └── llm-traffic-*.jsonl          (9 traffic logs)
+│   └── (pending: multi-iteration runs)
+└── docs/field-test/v0.3.0/
+    ├── field-test-plan.md
+    ├── docker-test-plan.md
+    ├── docker-test-run-report.md
+    ├── docker-field-test-summary.md
+    └── FIELD_TEST_REPORT.md
 ```

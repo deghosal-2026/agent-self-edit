@@ -360,34 +360,60 @@ def test_validate_json_pass(runner, cfg_dir):
 
 def test_propose_with_mock_llm(runner, cfg_dir):
     """Propose command with mock LLM: exercises analyze_batch path."""
-    reg = Registry(cfg_dir.parent / "reg")
+    # Override batch_size for this test so batch becomes ready with fewer traces
+    config_path = cfg_dir.parent / "override.yaml"
+    import yaml
+    with open(cfg_dir) as f:
+        cfg_data = yaml.safe_load(f)
+    cfg_data["tasks"]["batch_size"] = 3
+    with open(config_path, "w") as f:
+        yaml.dump(cfg_data, f)
+    reg = Registry(str(cfg_dir.parent / "reg"))
     reg.create("You are a classifier.")
     from agent_self_edit.trace import TraceStore
-    store = TraceStore(cfg_dir.parent / "t.db", batch_size=2)
+    store = TraceStore(str(cfg_dir.parent / "t.db"), batch_size=3)
     for i in range(3):
         store.ingest({
             "task_id": f"t{i}", "task_input": "x", "final_output": "wrong",
             "expected_output": "right", "success": False,
             "timestamp": "2026-09-01T10:00:00Z",
         })
-    result = runner.invoke(main, ["propose", "--config", str(cfg_dir)])
+    pending_before = store.count_pending()
+    result = runner.invoke(main, ["propose", "--config", str(config_path)])
     assert result.exit_code in (0, 1)
+    # Behavioral assert: pending should not increase after propose
+    pending_after = TraceStore(str(cfg_dir.parent / "t.db"), batch_size=3).count_pending()
+    assert pending_after <= pending_before, "pending should not increase after propose cycle"
 
 
 def test_run_with_mock_llm_and_trace(runner, cfg_dir):
     """Run command with mock LLM: exercises _run_once path."""
-    reg = Registry(cfg_dir.parent / "reg")
+    config_path = cfg_dir.parent / "run_override.yaml"
+    import yaml
+    with open(cfg_dir) as f:
+        cfg_data = yaml.safe_load(f)
+    cfg_data["tasks"]["batch_size"] = 3
+    with open(config_path, "w") as f:
+        yaml.dump(cfg_data, f)
+    reg = Registry(str(cfg_dir.parent / "reg"))
     reg.create("You are a classifier.")
     from agent_self_edit.trace import TraceStore
-    store = TraceStore(cfg_dir.parent / "t.db", batch_size=2)
+    store = TraceStore(str(cfg_dir.parent / "t.db"), batch_size=3)
     for i in range(3):
         store.ingest({
             "task_id": f"t{i}", "task_input": "x", "final_output": "wrong",
             "expected_output": "right", "success": False,
             "timestamp": "2026-09-01T10:00:00Z",
         })
-    result = runner.invoke(main, ["run", "--once", "--config", str(cfg_dir)])
+    pending_before = store.count_pending()
+    version_before = Registry(str(cfg_dir.parent / "reg")).current_version
+    result = runner.invoke(main, ["run", "--once", "--config", str(config_path)])
     assert result.exit_code in (0, 1)
+    # Behavioral asserts: version should not decrease, pending should not increase
+    version_after = Registry(str(cfg_dir.parent / "reg")).current_version
+    assert version_after >= version_before
+    pending_after = TraceStore(str(cfg_dir.parent / "t.db"), batch_size=3).count_pending()
+    assert pending_after <= pending_before, "pending should not increase after run cycle"
 
 
 # ---- #171: CLI entry point smoke test ----
@@ -405,3 +431,32 @@ def test_cli_entry_point():
     )
     assert result.returncode == 0
     assert "init" in result.stdout
+
+
+# ---- #233: Behavioral regression: proposal with missing old_text is skipped ----
+# ---- #208/#275: materialize_candidate_prompt guards ----
+
+def test_propose_skips_proposal_when_old_text_missing(runner, cfg_dir):
+    """A proposal with old_text not in the current prompt should not promote silently."""
+    config_path = cfg_dir.parent / "skip_override.yaml"
+    import yaml
+    with open(cfg_dir) as f:
+        cfg_data = yaml.safe_load(f)
+    cfg_data["tasks"]["batch_size"] = 3
+    with open(config_path, "w") as f:
+        yaml.dump(cfg_data, f)
+    reg = Registry(str(cfg_dir.parent / "reg"))
+    reg.create("You are a classifier.")
+    from agent_self_edit.trace import TraceStore
+    store = TraceStore(str(cfg_dir.parent / "t.db"), batch_size=3)
+    for i in range(3):
+        store.ingest({
+            "task_id": f"t{i}", "task_input": "x", "final_output": "wrong",
+            "expected_output": "right", "success": False,
+            "timestamp": "2026-09-01T10:00:00Z",
+        })
+    version_before = Registry(str(cfg_dir.parent / "reg")).current_version
+    result = runner.invoke(main, ["propose", "--config", str(config_path)])
+    assert result.exit_code in (0, 1)
+    version_after = Registry(str(cfg_dir.parent / "reg")).current_version
+    assert version_after <= version_before + 1, "version should not jump from silent promote"

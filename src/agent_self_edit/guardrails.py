@@ -1,9 +1,9 @@
 """Guardrail module: deterministic constraint primitives and report (F-06, F-07).
 
-Frozen-section parsing, edit-distance calculation, TF-IDF drift, and the
-guardrail report are the deterministic primitives the promotion gate, analyzer,
-and diff visualization rely on. This is a standalone module per PRD
-02-architecture §2.2.5 — never LLM-judged.
+Frozen-section parsing, edit-distance calculation, TF-IDF drift, oracle drift
+detection, and the guardrail report are the deterministic primitives the
+promotion gate, analyzer, and diff visualization rely on. This is a standalone
+module per PRD 02-architecture §2.2.5 — never LLM-judged.
 """
 
 from __future__ import annotations
@@ -12,10 +12,11 @@ import difflib
 import json
 import math
 import re
+from collections import Counter
 from dataclasses import dataclass, field
 from typing import Any, Sequence
 
-from .types import CheckResult
+from .types import CheckResult, Trace
 
 
 class GuardrailError(Exception):
@@ -43,8 +44,8 @@ class EditDistance:
     frozen_lines_changed: int = 0
 
 
-_FROZEN_RE = re.compile(r"<!--\s*frozen(:|\s+)(.*?)-->\s*", re.IGNORECASE | re.DOTALL)
-_MALFORMED_RE = re.compile(r"<!--.*", re.IGNORECASE)
+_FROZEN_RE = re.compile(r"<!--\s*frozen(:|\s+)(.*?)-->\s*", re.IGNORECASE)
+_MALFORMED_RE = re.compile(r"<!--\s*frozen\b", re.IGNORECASE)
 
 
 def _marker_name(m: re.Match[str]) -> tuple[str | None, bool]:
@@ -203,7 +204,7 @@ def _tfidf_vectors(prompts: list[str], smooth_idf: bool = True) -> list[dict[str
             df[term] += 1
     for term in vocab_sorted:
         if smooth_idf:
-            idf[term] = 1.0 + (n_docs / (df[term] + 1) if n_docs else 0.0)
+            idf[term] = 1.0 + math.log(n_docs / (df[term] + 1)) if n_docs else 0.0
         else:
             idf[term] = n_docs / (df[term] or n_docs)
     vectors: list[dict[str, float]] = []
@@ -294,6 +295,109 @@ def compute_per_section_drift(
         text_b = "\n".join(lines_b[sec.start_line : sec.end_line + 1])
         result[name] = compute_drift_tfidf(text_a, text_b)
     return result
+
+
+# ---------------------------------------------------------------------------
+# Oracle Drift Guard (#226) — detect shared wrong success definition
+# ---------------------------------------------------------------------------
+
+_TOKENS_RE = re.compile(r"[a-z0-9_]+", re.IGNORECASE)
+
+
+def _extract_tokens(text: str) -> Counter[str]:
+    return Counter(t.lower() for t in _TOKENS_RE.findall(text))
+
+
+def check_oracle_drift(
+    traces: list[Trace],
+    expected_outputs: list[str] | None = None,
+    uniformity_threshold: float = 0.80,
+) -> CheckResult:
+    """Detect when the scorer, expected outputs, and optimizer share a wrong oracle.
+
+    Analyzes the diversity of expected outputs across a batch of traces.
+    If all expected outputs are suspiciously similar (e.g. all contain the
+    same keyword), the system may be optimizing toward a shared wrong
+    definition of success rather than genuine task improvement.
+
+    The drift score is 1.0 when all expected outputs are identical (maximum
+    oracle drift) and 0.0 when they are fully diverse. A score above
+    ``uniformity_threshold`` triggers a warning.
+    """
+    outputs = (
+        expected_outputs
+        if expected_outputs is not None
+        else [t.expected_output for t in traces]
+    )
+    if not outputs:
+        return CheckResult(
+            name="oracle_drift",
+            passed=True,
+            value=0.0,
+            threshold=uniformity_threshold,
+            details="no traces to evaluate for oracle drift",
+        )
+    non_empty = [o for o in outputs if o.strip()]
+    if not non_empty:
+        return CheckResult(
+            name="oracle_drift",
+            passed=True,
+            value=0.0,
+            threshold=uniformity_threshold,
+            details="no non-empty expected outputs to evaluate",
+        )
+
+    if len(non_empty) == 1:
+        return CheckResult(
+            name="oracle_drift",
+            passed=True,
+            value=0.0,
+            threshold=uniformity_threshold,
+            details="only one expected output — insufficient for oracle analysis",
+        )
+
+    # Metric 1: Expected output identity uniformity
+    # What fraction of outputs are identical to the most common output?
+    counts = Counter(non_empty)
+    most_common_count = counts.most_common(1)[0][1]
+    identity_uniformity = most_common_count / len(non_empty)
+
+    # Metric 2: Token overlap — do all outputs share a unique keyword?
+    token_sets = [_extract_tokens(o) for o in non_empty]
+    common_tokens: Counter[str] = Counter()
+    for ts in token_sets:
+        for t in ts:
+            common_tokens[t] += 1
+    ubiquitous = {t for t, c in common_tokens.items() if c == len(non_empty) and len(t) > 2}
+    token_overlap_ratio = len(ubiquitous) / max(len(common_tokens), 1)
+
+    # Combined drift score: weighted average of identity and token uniformity
+    oracle_drift = max(identity_uniformity, token_overlap_ratio)
+    passed = oracle_drift <= uniformity_threshold
+
+    details_parts: list[str] = []
+    if identity_uniformity > uniformity_threshold:
+        most_common = counts.most_common(1)[0][0][:60]
+        details_parts.append(
+            f"{most_common_count}/{len(non_empty)} expected outputs identical "
+            f"({identity_uniformity:.0%}): {most_common!r}"
+        )
+    if ubiquitous:
+        keywords = ", ".join(sorted(ubiquitous)[:5])
+        details_parts.append(f"shared keywords across all outputs: {keywords}")
+
+    if not details_parts:
+        details_parts.append(
+            f"oracle drift {oracle_drift:.2f} (threshold {uniformity_threshold})"
+        )
+
+    return CheckResult(
+        name="oracle_drift",
+        passed=passed,
+        value=float(oracle_drift),
+        threshold=uniformity_threshold,
+        details="; ".join(details_parts),
+    )
 
 
 @dataclass

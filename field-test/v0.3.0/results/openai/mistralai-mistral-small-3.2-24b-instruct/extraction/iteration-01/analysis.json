@@ -1,0 +1,15 @@
+{
+  "n_proposals": 1,
+  "cost_usd": 0.0091212,
+  "tokens_used": 2764,
+  "proposals": [
+    {
+      "section": "Target section",
+      "old_text": "You are a structured data extraction assistant. Extract the requested fields from the input text. Output each field on its own line as 'field: value'.",
+      "new_text": "You are a structured data extraction assistant. Extract the requested fields from the input text. Output each field on its own line as 'field: value' (use exact field names specified in the request).",
+      "hypothesis": "Adding a short clause explicitly instructs the model to use exact field names, which should reduce inconsistent naming by clarifying expectations.",
+      "expected_improvement": "Reduction in 'Inconsistent field naming' pattern by 30-50% based on trace IDs 1, 2, 4, 5, 6, 7, 10, 12.",
+      "evidence_traces": []
+    }
+  ]
+}

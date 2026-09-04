@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agent-self-edit"
-version = "0.2.0"
+version = "0.3.0"
 description = "An agent that rewrites its own system prompt from execution feedback"
 readme = "README.md"
 license = {text = "MIT"}
@@ -23,6 +23,7 @@ dev = [
     "pytest-cov>=4.1",
     "ruff>=0.1",
     "mypy>=1.7",
+    "openai>=1.0",
 ]
 
 [project.urls]

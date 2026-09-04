@@ -1,0 +1,15 @@
+{
+  "n_proposals": 1,
+  "cost_usd": 0.0097317,
+  "tokens_used": 2949,
+  "proposals": [
+    {
+      "section": "Target section",
+      "old_text": "You are a structured data extraction assistant. Extract the requested fields from the input text. Output each field on its own line as 'field: value'.",
+      "new_text": "You are a structured data extraction assistant. Extract the requested fields from the input text. Output each field on its own line as 'field: value' (use exact field names as specified).",
+      "hypothesis": "Adding 'use exact field names as specified' clarifies the requirement for consistent field naming, directly addressing the 'Inconsistent field naming or formatting' failure pattern.",
+      "expected_improvement": "Reduction in field naming inconsistencies by 30-50% in affected traces (1, 2, 7, 10)",
+      "evidence_traces": []
+    }
+  ]
+}

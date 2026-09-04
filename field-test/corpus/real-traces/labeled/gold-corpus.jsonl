@@ -1,28 +1,3 @@
-# Real-Trace Gold Corpus — AgentSelfEdit v0.2.0
-#
-# Curated subset of 30 real traces with human-labeled failure clusters
-# and ideal intervention classes. Used to measure analyzer proposal
-# quality on real trace distributions.
-#
-# Failure clusters:
-#   HALLUCINATION   — agent fabricates information not in context
-#   SEMANTIC_LOOP   — agent repeats the same reasoning pattern
-#   QUALITY_DEGRADATION — output quality decreases over time
-#   CONFUSION       — agent confused about task/role
-#   TOOL_FAILURE    — agent fails to use tools correctly
-#   SCENARIO_FAIL   — agent fails a benchmark scenario
-#   CODING_ERROR    — agent makes coding mistake
-#   SUPPORT_ERROR   — agent mishandles customer support interaction
-#
-# Ideal intervention classes:
-#   PROMPT_CLARIFY  — add clarification about the task scope
-#   PROMPT_CONSTRAIN — add constraint to prevent over-generation
-#   PROMPT_EXAMPLE  — add example of correct behavior
-#   PROMPT_STRUCTURE — add output structure/format instructions
-#   PROMPT_SELF_CORRECT — add self-verification step
-#   PROMPT_GROUNDING — add instruction to ground responses in context
-#   PROMPT_TOOL_USE — add better tool usage instructions
-#   PROMPT_STOP_CONDITION — add stop condition for loops
 {"task_id": "gold-001", "task_input": "Agent task with detector hallucination", "final_output": "43 chars produced", "expected_output": "no hallucination, no loop, no degradation", "success": false, "failure_reason": "hallucination", "failure_cluster": "HALLUCINATION", "ideal_intervention": "PROMPT_GROUNDING", "intervention_detail": "Add instruction: 'Only state facts that are explicitly present in the provided context. If information is not available, say so.'", "source": "agent-observatory", "timestamp": "2026-08-31T07:01:18Z", "prompt_version": 1}
 {"task_id": "gold-002", "task_input": "Agent task with detector hallucination", "final_output": "43 chars produced", "expected_output": "no hallucination, no loop, no degradation", "success": false, "failure_reason": "hallucination", "failure_cluster": "HALLUCINATION", "ideal_intervention": "PROMPT_GROUNDING", "intervention_detail": "Add instruction: 'Only state facts that are explicitly present in the provided context. If information is not available, say so.'", "source": "agent-observatory", "timestamp": "2026-08-31T07:01:18Z", "prompt_version": 1}
 {"task_id": "gold-003", "task_input": "Agent task with detector semantic_loop", "final_output": "39 chars produced", "expected_output": "no hallucination, no loop, no degradation", "success": false, "failure_reason": "semantic_loop", "failure_cluster": "SEMANTIC_LOOP", "ideal_intervention": "PROMPT_STOP_CONDITION", "intervention_detail": "Add instruction: 'If you find yourself repeating the same reasoning pattern, stop and try a different approach. Do not exceed 3 attempts at the same line of reasoning.'", "source": "agent-observatory", "timestamp": "2026-08-31T07:01:18Z", "prompt_version": 1}
