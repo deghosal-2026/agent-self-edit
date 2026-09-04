@@ -1,6 +1,15 @@
 # Final Field Test Report — AgentSelfEdit v0.3.0
 
-> **BLUF:** v0.3.0 proves the self-edit framework is mechanically sound, safety-gated, multi-domain validated in Docker, and now honest enough to distinguish framework correctness from optimizer weakness. The local 4B analyzer still fails to produce promotable edits. A stronger cloud analyzer, `mistralai/mistral-small-3.2-24b-instruct`, produces weak positive movement, but still not enough to clear the promotion gate. The main unresolved problem is now a combination of analyzer search quality and gate sensitivity to small improvements, not broken execution.
+> **BLUF:** v0.3.0 validates the framework much more strongly than the optimizer. The self-edit loop is now mechanically sound, safety-gated, Docker-validated across planned integration paths, and instrumented enough to show exactly where runs fail. No analyzer produced a promotable edit. The dominant bottleneck is analyzer search quality, not hidden execution bugs. A stronger cloud analyzer, `mistralai/mistral-small-3.2-24b-instruct`, produced the first small positive signal, which makes statistical power worth discussing, but only as a secondary question after proposal quality.
+
+## Key Points Up Front
+
+1. **Framework validated, optimizer not yet validated.** v0.3.0 strongly validates mechanics, safety, Docker integration, and observability, but still does not show a promotable edit.
+2. **Analyzer weakness is the main blocker.** The strongest evidence across local, cloud, cross-domain cheap-smoke, and separated-role runs points to proposal quality and search breadth as the primary bottleneck.
+3. **Cross-domain evidence matters.** The same weak local-search pattern appears in extraction, generation, and mixed-domain smoke runs, so this is not just a classification-specific problem.
+4. **Role separation is not an automatic fix.** The first separated-role run produced zero proposals, which is a meaningful negative result.
+5. **Statistical power is secondary, not primary.** It becomes a serious question only once stronger analyzers produce small clean gains like the Mistral classification run.
+6. **The report is artifact-backed.** v0.3.0 now has enough stable evidence to show whether a run failed at proposal generation, A/B comparison, or gate rejection.
 
 **Date:** 2026-09-03  
 **Primary local execution model:** `Qwen3-4B-Instruct-2507-4bit`  
@@ -28,12 +37,13 @@ What v0.3.0 proved:
 
 1. **The framework is mechanically correct end-to-end.**
 2. **The promotion gate is functioning as designed and remains the strongest safety component.**
-3. **Docker multi-domain validation now covers the complete planned surface area.**
-4. **The local 4B model is usable for executor/baseline work, but too weak as an analyzer.**
-5. **A stronger analyzer model produces real positive signal, but still not enough to promote.**
-6. **The unresolved problem is now narrower and more informative: local search quality plus statistical power.**
+3. **Docker validation now covers the planned integration surface area across classification, extraction, generation, staged analyzer, mixed-domain, adversarial, A/B cache, and materialize guard paths.**
+4. **The local 4B model is usable for executor and baseline measurement, but too weak as an analyzer.**
+5. **A stronger analyzer model produces the first small positive signal, but still not enough to promote.**
+6. **Cheap cross-domain smoke runs suggest the analyzer weakness generalizes beyond classification.**
+7. **The first separated-role run did not improve matters; it produced zero proposals.**
 
-That means the central unresolved problem is no longer “is the system broken?” It is now: **can the analyzer find edits with enough breadth and magnitude to satisfy a statistically conservative gate?**
+That means the central unresolved problem is no longer “is the system broken?” It is now: **can the analyzer find edits with enough breadth, diversity, and magnitude to satisfy a statistically conservative gate?**
 
 That distinction matters because v0.2.0 still had enough ambiguity that a 0% improvement run could be dismissed as a pipeline artifact. In v0.3.0, that defense is no longer available. The loop now produces structured artifacts, per-iteration prompt candidates, paired A/B outputs, gate reasons, Docker integration evidence, and corpus-backed regression checks. When the optimizer fails in v0.3.0, it fails in public and with receipts.
 
@@ -42,13 +52,20 @@ The evidence base for that claim is broad:
 - **mechanical correctness**: 807 non-Docker tests pass, including direct `_run_once` coverage, rollback, guardrails, rejection-aware behavior, seeded-prompts validation, and role-routing tests
 - **integration correctness**: 16/16 Docker tests pass, covering classification, extraction, generation, staged analyzer, mixed-domain, adversarial, A/B cache, and materialize guard
 - **corpus maturity**: mixed-domain expanded to 100 tasks, gold corpus operationalized at 30 traces, seeded prompts validated at 15 prompts, sentinel stabilized at 20 tasks
-- **field execution evidence**: the local 4B run and cloud Mistral run both produced complete iteration artifacts and interpretable gate failures
+- **field execution evidence**: the local 4B run, single-model cloud Mistral run, cross-domain cheap-smoke runs, and first separated-role run all produced interpretable artifacts showing whether failure occurred at proposal generation, A/B comparison, or gate rejection
 
 So the correct high-level reading of v0.3.0 is not “self-improvement still failed.” It is:
 
 - the framework is now strong enough to falsify weak optimizer behavior cleanly
 - the analyzer is the active bottleneck
-- once analyzer quality improves, confidence sensitivity becomes the next bottleneck
+- cross-domain evidence suggests that bottleneck is not classification-specific
+- statistical power becomes a serious secondary question only when stronger analyzers produce small clean gains
+
+It is also important to be precise about scope:
+
+- **full multi-iteration field-test evidence** exists today for the classification improvement loop
+- **cross-domain optimizer evidence** currently comes from reduced-cost `cheap-smoke` runs in extraction, generation, and mixed-domain corpora
+- **role separation** is implemented and exercised, but the first run produced zero proposals rather than stronger edits
 
 ### 1.1 Evidence snapshot
 
@@ -59,9 +76,11 @@ So the correct high-level reading of v0.3.0 is not “self-improvement still fai
 | Static quality | `ruff` clean, `mypy --strict` clean | Low implementation ambiguity |
 | Docker integration | `16/16` pass | End-to-end CLI + container behavior is proven |
 | Local synthetic run | `60% -> 60%` | Weak analyzer, null edits |
-| Cloud synthetic run | `64% -> 68%` reported, `0` promotions | Better analyzer, but still below promotion bar |
+| Cloud synthetic run | `64% -> 68%` reported held-out artifact, `0` promotions | Better analyzer, but not a deployed improvement claim |
 | Adversarial gate run | `8/8` blocked | Safety gate rejects bad edits |
 | Sentinel run | regression detected | Regression defenses are operational |
+| Cross-domain cheap-smoke runs | extraction, generation, mixed-domain all reject | Analyzer weakness generalizes beyond classification |
+| First separated-role run | `0` proposals, `0` promotions | Role separation is not an automatic fix |
 
 ---
 
@@ -122,7 +141,7 @@ The key evidence now lives in stable, inspectable locations:
 | Cloud synthetic loop | `field-test/v0.3.0/results/openai/mistralai-mistral-small-3.2-24b-instruct/` |
 | Gold corpus analyzer sample | `field-test/v0.3.0/results/gold-corpus-analyzer.json` |
 | Detailed Docker report | `docs/field-test/v0.3.0/docker-test-run-report.md` |
-| Learnings log | `docs/field-test/v0.3.0/learnings.md` |
+| Release notes | `docs/release/v0.3.0/release-notes.md` |
 
 ---
 
@@ -815,7 +834,7 @@ Still pending:
 | generation multi-iteration loop | pending | tests judge-role path under repeated optimization |
 | mixed-domain multi-iteration loop | pending | tests whether broader corpora change proposal behavior |
 | seeded-prompts execution run | pending | validates known-failure prompt behavior under live loop conditions |
-| separated-role run | pending | tests small executor + stronger analyzer strategy directly |
+| separated-role run | initial smoke run complete; deeper follow-up pending | tests small executor + stronger analyzer strategy directly |
 | model-vs-model A/B | pending | isolates model quality from prompt quality |
 
 ### 10.1 Cheap-smoke corpus runs completed
@@ -1211,7 +1230,7 @@ That would tell us whether the no-proposal outcome came from:
 | Docker integration results | `field-test/v0.3.0/results/docker/omlx/qwen3-4b-instruct-2507-4bit/` |
 | Gold analyzer sample | `field-test/v0.3.0/results/gold-corpus-analyzer.json` |
 | Docker detailed report | `docs/field-test/v0.3.0/docker-test-run-report.md` |
-| Learnings log | `docs/field-test/v0.3.0/learnings.md` |
+| Release notes | `docs/release/v0.3.0/release-notes.md` |
 
 ---
 
@@ -1221,4 +1240,4 @@ That would tell us whether the no-proposal outcome came from:
 - [Field Test Plan](field-test-plan.md)
 - [Docker Test Plan](docker-test-plan.md)
 - [Docker Test Run Report](docker-test-run-report.md)
-- [Learnings](learnings.md)
+- [Release notes](../../release/v0.3.0/release-notes.md)
