@@ -9,7 +9,7 @@
 
 **A self-improving agent prompt optimizer.** Proposes edits to its own system prompt from execution feedback, A/B tests them against a held-out task set, and promotes only statistically-proven winners under deterministic guardrails.
 
-[Changelog](CHANGELOG.md) · [v0.3.0 Release Notes](https://github.com/deghosal-2026/agent-self-edit/releases/tag/v0.3.0) · [v0.2.0 Release Notes](https://github.com/deghosal-2026/agent-self-edit/releases/tag/v0.2.0) · [v0.1.0 Field Test Report](docs/field-test/v0.1.0/final-field-test-report.md) · [v0.2.0 Field Test Report](docs/field-test/v0.2.0/FIELD_TEST_REPORT.md) · [v0.3.0 Field Test Report](docs/field-test/v0.3.0/FIELD_TEST_REPORT.md)
+[Changelog](CHANGELOG.md) · [v0.3.0 Release Notes](docs/release/v0.3.0/release-notes.md) · [v0.2.0 Release Notes](https://github.com/deghosal-2026/agent-self-edit/releases/tag/v0.2.0) · [v0.1.0 Field Test Report](docs/field-test/v0.1.0/final-field-test-report.md) · [v0.2.0 Field Test Report](docs/field-test/v0.2.0/FIELD_TEST_REPORT.md) · [v0.3.0 Field Test Report](docs/field-test/v0.3.0/FIELD_TEST_REPORT.md)
 
 ## Why
 

@@ -64,9 +64,9 @@
 ### M13 Exit Gate
 
 - [x] v0.3.0 released on PyPI (`pip install agent-self-edit==0.3.0`) — #309
-- [ ] Docker image built and published (`agent-self-edit:0.3.0`, GHCR on tag) — #310
-- [ ] README, release notes, CHANGELOG updated; claims tightened — #311
-- [ ] Coverage ≥ 91% enforced in CI — #312
+- [x] Docker image built and published (`agent-self-edit:0.3.0`, GHCR on tag) — #310
+- [x] README, release notes, CHANGELOG updated; claims tightened — #311
+- [x] Coverage ≥ 91% enforced in CI — #312
 - [x] Security audit clean; OpenSSF badge current; gitleaks 0 — #313
 - [ ] GitHub release `v0.3.0` created; milestones M1–M13 closed — #314
 - [ ] Ruff clean: `ruff check .` → 0 errors
