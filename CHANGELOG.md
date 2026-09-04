@@ -5,6 +5,61 @@ All notable changes to AgentSelfEdit are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] — 2026-09-04
+
+### Added
+
+- **Hermetic non-LLM CI suite** (#263): 15 tests, zero LLM calls, all passing — 807 total
+- **Oracle Drift Guard** (#226): detects shared wrong success definition across optimizer/scorer/golden
+- **Mixed-domain corpus** (#259): expanded to 100 tasks across 5 domain sets
+- **Sentinel regression benchmark** (#261): 20 tasks validated end-to-end
+- **Adversarial edit injection** (#260): 8/8 bad edits blocked, FN=0
+- **Rollback validation** (#262): real promoted version reverted, lineage preserved
+- **Real-trace gold corpus** (#268): 30 traces, 7 failure clusters, 7 ideal interventions, operationalized for analyzer quality evaluation
+- **Seeded-prompts corpus** (#271): 15 prompts with known failure modes
+- **Separated-role runner** (#315): executor/analyzer/judge can be different models with fallback
+- **Real-trace ingestion fix** (#264): correct A/B corpus (gold-corpus.jsonl) and result paths
+- **Rejection-aware behavioral diff** (#270): measures novelty/repeat/fixed/broken per iteration
+- **Cost-per-iteration breakdown** (#269): tokens, $, wall-clock per proposal in field test report
+- **Docker multi-domain tests** (#303): 16 tests covering classification, extraction, generation, staged analyzer, mixed-domain, adversarial, A/B cache, materialize guard
+- **Materialize guard** (#303): `materialize_candidate_prompt()` loudly rejects missing `old_text`
+- **`materialize_candidate_prompt()`**: replaces raw `str.replace()`, full prompt materialization
+- **`PromotionGate.check()` wired into propose path**: gate now runs in real proposal flow
+- **Drift measured against original prompt**: not current prompt
+- **Coverage**: 94.86% (exceeds 91% gate)
+- **Ruff + mypy strict**: 0 errors both
+
+### Fixed
+
+- **Confidence fix** (#107): gate checked `p < 0.95` instead of `p < 0.05` — promoted edits were noise (fixed in v0.1.0, confirmed v0.3.0)
+- **Stage 4 fuzzy-match propagation** (#285): corrected proposals now flow through to A/B and gate
+- **Rejection context threading** (#205): rejection_context threaded into Stage 1/2/3 prompts
+- **A/B task set wiring** (#274): runner uses classification-promotion.yaml directly
+- **Staged analyzer default wiring** (#275): staged analyzer is now the default path
+- **Model role wiring** (#275): executor, analyzer, and judge routes through separate provider configs
+- **`materialize_candidate_prompt()`**: old_text not found errors fixed with multi-strategy fuzzy matching
+- **CI coverage threshold** (#312): `--cov-fail-under=91` enforced in CI
+- **`validate` checks runnability** (#275): validates end-to-end runnability, not just parseability
+- **CLI exit code determinism** (#275): all fatal CLI errors produce deterministic non-zero exit codes
+- **`init` writes runnable config** (#275): starter config persisted to disk
+
+### Changed
+
+- **Field-test corpora**: consolidated under field-test/corpus/ with versioned paths
+- **Dockerfile**: multi-stage build, reduced image size, pinned dependencies
+- **Scorer contract**: scorer consistency enforced across task sets; mixed scorer sets fail fast
+- **Analyzer architecture**: staged pipeline replaces monolithic analyzer as default
+- **CI**: Python 3.10–3.12 matrix, ruff covers full repo, coverage enforced at 91%
+- **Field test runner and docs**: moved fully to `v0.3.0` result paths
+
+### Known Issues
+
+- **Analyzer search quality**: no analyzer has yet produced a promotable edit — local 4B gives null edits, Mistral 24B gives weak positive signal (+0.0625 effect size, p=0.79)
+- **Proposal diversity**: analyzer stuck in narrow local search neighborhood (urgency rule rewrites)
+- **Statistical power**: once proposal quality improves, confidence/p-value becomes the next bottleneck
+- **Separated-role runner**: first separated-role run produced zero proposals (analyzer sensitivity to executor outputs)
+- **Generation regressions**: overly strict format-adherence edits cause broader regressions in generation corpus
+
 ## [0.2.0] — 2026-09-02
 
 ### Added
