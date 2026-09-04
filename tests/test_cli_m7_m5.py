@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -17,6 +18,10 @@ from agent_self_edit.llm.base import ProviderError
 from agent_self_edit.registry import Registry
 from agent_self_edit.trace import TraceStore
 from agent_self_edit.types import EditProposal
+
+
+PROPOSE_MODULE = importlib.import_module("agent_self_edit.cli.propose")
+RUN_MODULE = importlib.import_module("agent_self_edit.cli.run")
 
 # ---------------------------------------------------------------------------
 # helpers
@@ -159,13 +164,11 @@ def test_build_llm_for_role_unknown_raises() -> None:
 
 def test_build_llm_wrapper() -> None:
     cfg = Config(project=ProjectConfig(name="x"), llm=LLMConfig(provider="mock"))
-    import importlib
-
-    mod = importlib.import_module("agent_self_edit.cli.propose")
+    mod = PROPOSE_MODULE
     # propose.py references ModelRoleConfig only under TYPE_CHECKING, so inject for test
     mod.ModelRoleConfig = ModelRoleConfig  # type: ignore[attr-defined]
     try:
-        with patch("agent_self_edit.cli.propose._build_llm_for_role") as mock_build:
+        with patch.object(PROPOSE_MODULE, "_build_llm_for_role") as mock_build:
             inst = MagicMock()
             mock_build.return_value = inst
             llm = _build_llm(cfg)
@@ -211,7 +214,7 @@ def test_propose_all_succeeded(tmp_path: Path) -> None:
     runner = CliRunner()
     from agent_self_edit.cli.propose import propose as propose_cmd
 
-    with patch("agent_self_edit.cli.propose._build_llm_for_role") as mock_llm:
+    with patch.object(PROPOSE_MODULE, "_build_llm_for_role") as mock_llm:
         mock_llm.return_value = MagicMock()
         result = runner.invoke(propose_cmd, ["--config", str(cfg_path)])
     assert result.exit_code == 0
@@ -329,7 +332,7 @@ def test_propose_original_prompt_v1(tmp_path: Path) -> None:
                             mock_gate = MagicMock()
                             mock_gate.check.return_value = gate_res
                             mock_gate_cls.return_value = mock_gate
-                            with patch("agent_self_edit.cli.propose._build_llm_for_role", return_value=MagicMock()):
+                            with patch.object(PROPOSE_MODULE, "_build_llm_for_role", return_value=MagicMock()):
                                 runner = CliRunner()
                                 result = runner.invoke(propose_cmd, ["--config", str(cfg_path)])
                                 assert result.exit_code == 0
@@ -375,7 +378,7 @@ def test_propose_original_prompt_exception_fallback(tmp_path: Path) -> None:
                             mock_gate = MagicMock()
                             mock_gate.check.return_value = gate_res
                             mock_gate_cls.return_value = mock_gate
-                            with patch("agent_self_edit.cli.propose._build_llm_for_role", return_value=MagicMock()):
+                            with patch.object(PROPOSE_MODULE, "_build_llm_for_role", return_value=MagicMock()):
                                 # force registry.get to raise
                                 with patch.object(Registry, "get", side_effect=Exception("boom")):
                                     runner = CliRunner()
@@ -395,7 +398,7 @@ def test_propose_no_task_set_skip_ab(tmp_path: Path) -> None:
     proposal = EditProposal(section="x", old_text="classifier", new_text="expert", hypothesis="h", expected_improvement="e")
     fake_result = AnalysisResult(proposals=[proposal], cost_usd=0.01)
     with patch("agent_self_edit.analyzer.analyze_batch", return_value=fake_result):
-        with patch("agent_self_edit.cli.propose._build_llm_for_role", return_value=MagicMock()):
+        with patch.object(PROPOSE_MODULE, "_build_llm_for_role", return_value=MagicMock()):
             runner = CliRunner()
             result = runner.invoke(propose_cmd, ["--config", str(cfg_path)])
             assert result.exit_code == 0
@@ -439,7 +442,7 @@ def test_propose_gate_reject_and_near_miss_context(tmp_path: Path) -> None:
                             mock_gate = MagicMock()
                             mock_gate.check.side_effect = check_side
                             mock_gate_cls.return_value = mock_gate
-                            with patch("agent_self_edit.cli.propose._build_llm_for_role", return_value=MagicMock()):
+                            with patch.object(PROPOSE_MODULE, "_build_llm_for_role", return_value=MagicMock()):
                                 runner = CliRunner()
                                 result = runner.invoke(propose_cmd, ["--config", str(cfg_path)])
                                 assert result.exit_code == 0
@@ -455,7 +458,7 @@ def test_propose_no_proposals_acknowledge(tmp_path: Path) -> None:
 
     fake_result = AnalysisResult(proposals=[], cost_usd=0.0)
     with patch("agent_self_edit.analyzer.analyze_batch", return_value=fake_result):
-        with patch("agent_self_edit.cli.propose._build_llm_for_role", return_value=MagicMock()):
+        with patch.object(PROPOSE_MODULE, "_build_llm_for_role", return_value=MagicMock()):
             runner = CliRunner()
             result = runner.invoke(propose_cmd, ["--config", str(cfg_path), "--dry-run"])
             assert result.exit_code == 0
@@ -523,7 +526,7 @@ def test_run_stale_rejection_context_clear(tmp_path: Path) -> None:
     store.ingest(_valid_trace("stale1", success=False))
     fake_result = AnalysisResult(proposals=[], cost_usd=0.01)
     with patch("agent_self_edit.analyzer.analyze_batch", return_value=fake_result):
-        with patch("agent_self_edit.cli.propose._build_llm_for_role", return_value=MagicMock()):
+        with patch.object(PROPOSE_MODULE, "_build_llm_for_role", return_value=MagicMock()):
             had_work, new_ctx = _run_once(str(cfg_path), batch_size=1, dry_run=False, rejection_context="old ctx")
             assert had_work is True
             assert new_ctx == ""
@@ -536,7 +539,7 @@ def test_run_stale_rejection_context_kept_on_dry_run(tmp_path: Path) -> None:
     store.ingest(_valid_trace("dry1", success=False))
     fake_result = AnalysisResult(proposals=[], cost_usd=0.01)
     with patch("agent_self_edit.analyzer.analyze_batch", return_value=fake_result):
-        with patch("agent_self_edit.cli.propose._build_llm_for_role", return_value=MagicMock()):
+        with patch.object(PROPOSE_MODULE, "_build_llm_for_role", return_value=MagicMock()):
             had_work, new_ctx = _run_once(str(cfg_path), batch_size=1, dry_run=True, rejection_context="keep me")
             assert new_ctx == "keep me"
 
@@ -579,9 +582,9 @@ def test_run_reuse_avoids_reconstruction(tmp_path: Path) -> None:
     from agent_self_edit.config import load_config
 
     cfg = load_config(str(cfg_path))
-    with patch("agent_self_edit.cli.run.load_config") as mock_load:
-        with patch("agent_self_edit.cli.run.TraceStore") as mock_ts:
-            with patch("agent_self_edit.cli.run.Registry") as mock_reg:
+    with patch.object(RUN_MODULE, "load_config") as mock_load:
+        with patch.object(RUN_MODULE, "TraceStore") as mock_ts:
+            with patch.object(RUN_MODULE, "Registry") as mock_reg:
                 mock_load.return_value = cfg
                 mock_ts.return_value = store
                 mock_reg.return_value = Registry(str(tmp_path / "reg"))
@@ -624,7 +627,7 @@ def test_run_near_miss_load_and_original_prompt(tmp_path: Path) -> None:
                                 mock_gate = MagicMock()
                                 mock_gate.check.return_value = gate_res
                                 mock_gate_cls.return_value = mock_gate
-                                with patch("agent_self_edit.cli.propose._build_llm_for_role", return_value=MagicMock()):
+                                with patch.object(PROPOSE_MODULE, "_build_llm_for_role", return_value=MagicMock()):
                                     had_work, new_ctx = _run_once(str(cfg_path), batch_size=1, dry_run=False, rejection_context="prev")
                                     assert had_work is True
                                     # near_misses passed through
@@ -661,7 +664,7 @@ def test_run_original_prompt_exception_fallback(tmp_path: Path) -> None:
                             mock_gate = MagicMock()
                             mock_gate.check.return_value = gate_res
                             mock_gate_cls.return_value = mock_gate
-                            with patch("agent_self_edit.cli.propose._build_llm_for_role", return_value=MagicMock()):
+                            with patch.object(PROPOSE_MODULE, "_build_llm_for_role", return_value=MagicMock()):
                                 with patch.object(Registry, "get", side_effect=Exception("boom")):
                                     had_work, new_ctx = _run_once(str(cfg_path), batch_size=1, dry_run=False, rejection_context="")
                                     assert had_work is True
@@ -689,7 +692,7 @@ def test_run_cli_error_handling(tmp_path: Path) -> None:
     from agent_self_edit.cli import main
 
     runner = CliRunner()
-    with patch("agent_self_edit.cli.run._run_once", side_effect=Exception("cycle boom")):
+    with patch.object(RUN_MODULE, "_run_once", side_effect=Exception("cycle boom")):
         with patch("time.sleep"):
             result = runner.invoke(main, ["run", "--once", "--config", str(cfg_path)])
             assert result.exit_code == 1

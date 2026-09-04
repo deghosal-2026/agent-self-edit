@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
@@ -21,6 +22,10 @@ from agent_self_edit.llm.mock import MockProvider
 from agent_self_edit.registry import Registry
 from agent_self_edit.trace import TraceStore
 from agent_self_edit.types import CheckResult, EditProposal, Trace
+
+
+RUN_MODULE = importlib.import_module("agent_self_edit.cli.run")
+PROPOSE_MODULE = importlib.import_module("agent_self_edit.cli.propose")
 
 
 def _config(tmp_path: Path) -> Config:
@@ -131,7 +136,7 @@ def test_run_once_promotion_increments_version():
         cfg = _config(tmp_path)
 
         with (
-            patch("agent_self_edit.cli.propose._build_llm_for_role", return_value=MockProvider()),
+            patch.object(PROPOSE_MODULE, "_build_llm_for_role", return_value=MockProvider()),
             patch("agent_self_edit.tasks.load_task_set"),
             patch("agent_self_edit.scorers.resolve_scorer"),
             patch("agent_self_edit.analyzer.analyze_batch") as mock_analyze,
@@ -179,7 +184,7 @@ def test_run_once_rejection_updates_context():
         cfg = _config(tmp_path)
 
         with (
-            patch("agent_self_edit.cli.propose._build_llm_for_role", return_value=MockProvider()),
+            patch.object(PROPOSE_MODULE, "_build_llm_for_role", return_value=MockProvider()),
             patch("agent_self_edit.tasks.load_task_set"),
             patch("agent_self_edit.scorers.resolve_scorer"),
             patch("agent_self_edit.analyzer.analyze_batch") as mock_analyze,
@@ -221,7 +226,7 @@ def test_run_once_exception_releases_in_flight():
         reg.create("prompt v1")
         cfg = _config(tmp_path)
 
-        with patch("agent_self_edit.cli.propose._build_llm_for_role", side_effect=ValueError("boom")):
+        with patch.object(PROPOSE_MODULE, "_build_llm_for_role", side_effect=ValueError("boom")):
             try:
                 _run_once(
                     "dummy.yaml", 5, False, "", store=store, registry=reg, config=cfg,
