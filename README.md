@@ -44,9 +44,10 @@ Agent executes task → Execution trace stored (SQLite)
             ───────────────────────────
                            ↓
                Promotion Gate (deterministic)
-               1. Sample floor     4. Frozen sections
-               2. Effect size      5. Edit-distance limit
-               3. Confidence p-val 6. Drift detection
+                1. Sample floor     4. Frozen sections
+                2. Effect size      5. Edit-distance limit
+                3. Confidence p-val 6. Drift detection
+                7. Oracle Drift Guard
                            ↓
                  ┌──────────┼──────────┐
                  ▼          ▼          ▼
@@ -72,7 +73,7 @@ Agent executes task → Execution trace stored (SQLite)
 
 ## The Promotion Gate
 
-Six fail-fast checks before any edit is promoted:
+Seven fail-fast checks before any edit is promoted:
 
 1. **Sample floor** — minimum A/B trials completed
 2. **Effect size** — minimum improvement threshold
